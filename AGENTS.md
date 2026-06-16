@@ -81,6 +81,7 @@ docs/                   # PRD, sequence diagram, dev context
 ./vendor/bin/sail artisan migrate  # migrasi
 ./vendor/bin/sail artisan db:seed  # data contoh
 npm run dev                        # vite (frontend)
+./vendor/bin/sail artisan queue:work  # worker (proses job async, mis. alert stok)
 ./vendor/bin/sail test             # jalankan test (Pest)
 ```
 

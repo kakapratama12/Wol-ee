@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\TelegramNotifier;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -15,7 +16,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(TelegramNotifier::class, function ($app) {
+            $config = $app['config']['services.telegram'] ?? [];
+
+            return new TelegramNotifier(
+                $config['bot_token'] ?? null,
+                $config['alert_chat_id'] ?? null,
+            );
+        });
     }
 
     /**
