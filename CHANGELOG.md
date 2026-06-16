@@ -22,6 +22,11 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 - Middleware `SecurityHeaders` untuk security headers di semua response web.
 - `SECURITY.md`: checklist keamanan & prosedur audit dependency.
 
+### Security
+
+- Memaksa `shell-quote` ≥ 1.8.4 via `overrides` untuk menutup advisory kritikal
+  GHSA-w7jw-789q-3m8p (transitif dari `concurrently`, dev-only).
+
 ## [0.1.0] - 2026-06-16
 
 Rilis awal: MVP dashboard Wol-ee + integrasi API ke bot Telegram.
