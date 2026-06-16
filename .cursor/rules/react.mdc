@@ -1,0 +1,27 @@
+---
+description: React/Inertia frontend conventions for Wol-ee
+globs: resources/js/**/*.tsx,resources/js/**/*.ts
+alwaysApply: false
+---
+
+# React / Inertia Frontend Rules
+
+## Components
+Functional components + TypeScript ketat (hindari `any`). Pages di `resources/js/Pages`, komponen reusable di `resources/js/Components`, primitive UI dari shadcn di `resources/js/Components/ui`.
+
+## Money & formatting
+Backend kirim angka mentah (integer rupiah). Format tampilan via util bersama `resources/js/lib/format.ts`:
+
+```ts
+formatRupiah(45000) // "Rp 45.000"
+```
+Jangan hitung uang/COGS/pajak di frontend — itu tanggung jawab backend.
+
+## Data flow
+Ambil data lewat Inertia props (server-driven), bukan fetch manual ke API. Submit pakai `useForm` dari `@inertiajs/react`.
+
+## Bahasa
+Teks UI dalam Bahasa Indonesia. Identifier kode dalam Bahasa Inggris.
+
+## Styling
+Tailwind utility + shadcn. Jangan inline style. Status stok pakai warna konsisten: aman=hijau, menipis=kuning, kritis=merah.

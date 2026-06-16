@@ -1,0 +1,33 @@
+---
+description: Laravel backend conventions for Wol-ee (services, money, validation, atomicity)
+globs: app/**/*.php,database/**/*.php,routes/**/*.php,tests/**/*.php
+alwaysApply: false
+---
+
+# Laravel Backend Rules
+
+## Money
+Uang SELALU integer rupiah atau `decimal:2`. Jangan pernah `float`. Hitung di backend.
+
+```php
+// BAD
+$total = $qty * $price; // float, bisa 8824.999999
+
+// GOOD: cast kolom ke 'decimal:2' / 'integer', hitung pakai bcmath bila perlu
+$total = (int) round($qty * $price);
+```
+
+## Thin controllers + Service layer
+Business logic di `app/Services`. Controller hanya: validate (Form Request) -> panggil service -> return response. Service yang sama dipakai web (Inertia) & API (bot).
+
+## Validation
+Semua input lewat Form Request (`app/Http/Requests`). Jangan validasi inline di controller.
+
+## Atomicity
+Mutasi stok + pencatatan sale/transaction WAJIB dalam `DB::transaction()`. Tulis `stock_movements` lalu update `ingredients.current_stock` di transaksi yang sama.
+
+## API (bot)
+Route `routes/api.php` pakai `auth:sanctum` + `throttle`. Bot tidak boleh akses DB langsung.
+
+## Schema
+Hanya lewat migration. Tambah factory + seeder untuk data contoh. Test wajib untuk `CogsService` & `TaxSimulatorService` (Pest).
