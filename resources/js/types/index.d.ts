@@ -1,0 +1,31 @@
+export type UserRole = 'owner' | 'admin';
+
+export interface User {
+    id: number;
+    name: string;
+    email: string;
+    role: UserRole;
+    email_verified_at?: string;
+}
+
+export interface FlashMessages {
+    success?: string | null;
+    error?: string | null;
+}
+
+export type PageProps<
+    T extends Record<string, unknown> = Record<string, unknown>,
+> = T & {
+    auth: {
+        user: User;
+    };
+    flash: FlashMessages;
+};
+
+export interface Paginated<T> {
+    data: T[];
+    links: { url: string | null; label: string; active: boolean }[];
+    current_page: number;
+    last_page: number;
+    total: number;
+}

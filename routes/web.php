@@ -1,0 +1,64 @@
+<?php
+
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\IngredientController;
+use App\Http\Controllers\MarginController;
+use App\Http\Controllers\PnlController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SaleController;
+use App\Http\Controllers\TaxController;
+use App\Http\Controllers\TransactionController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return redirect()->route('dashboard');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Inventory & transaksi (Owner + Admin)
+    Route::get('/inventory', [IngredientController::class, 'index'])->name('ingredients.index');
+    Route::post('/inventory', [IngredientController::class, 'store'])->name('ingredients.store')->middleware('owner');
+    Route::put('/inventory/{ingredient}', [IngredientController::class, 'update'])->name('ingredients.update')->middleware('owner');
+    Route::post('/inventory/{ingredient}/adjust', [IngredientController::class, 'adjust'])->name('ingredients.adjust');
+    Route::delete('/inventory/{ingredient}', [IngredientController::class, 'destroy'])->name('ingredients.destroy')->middleware('owner');
+
+    Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+    Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+
+    Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
+    Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
+
+    // Owner only
+    Route::middleware('owner')->group(function () {
+        Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+        Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+        Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+        Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+        Route::put('/products/{product}/recipe', [ProductController::class, 'updateRecipe'])->name('products.recipe.update');
+
+        Route::get('/tax', [TaxController::class, 'index'])->name('tax.index');
+        Route::post('/tax', [TaxController::class, 'simulate'])->name('tax.simulate');
+
+        Route::get('/pnl', [PnlController::class, 'index'])->name('pnl.index');
+        Route::get('/pnl/export', [PnlController::class, 'export'])->name('pnl.export');
+
+        Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index');
+        Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
+        Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
+
+        Route::get('/margin', [MarginController::class, 'index'])->name('margin.index');
+        Route::post('/margin/what-if', [MarginController::class, 'whatIf'])->name('margin.whatif');
+    });
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+require __DIR__.'/auth.php';

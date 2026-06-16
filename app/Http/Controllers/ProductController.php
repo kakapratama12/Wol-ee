@@ -1,0 +1,92 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
+use App\Http\Requests\UpdateRecipeRequest;
+use App\Models\Ingredient;
+use App\Models\Product;
+use App\Models\RecipeItem;
+use App\Services\CogsService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class ProductController extends Controller
+{
+    public function index(CogsService $cogs): Response
+    {
+        $products = Product::query()
+            ->with('recipeItems.ingredient:id,name,base_unit,unit_price')
+            ->orderBy('name')
+            ->get()
+            ->map(function (Product $product) use ($cogs) {
+                $cogsValue = $cogs->cogsForProduct($product);
+
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'unit' => $product->unit,
+                    'selling_price' => (float) $product->selling_price,
+                    'is_active' => $product->is_active,
+                    'cogs' => $cogsValue,
+                    'margin' => $cogs->margin($product),
+                    'recipe' => $product->recipeItems->map(fn (RecipeItem $item) => [
+                        'ingredient_id' => $item->ingredient_id,
+                        'ingredient' => $item->ingredient?->name,
+                        'base_unit' => $item->ingredient?->base_unit,
+                        'unit_price' => (float) ($item->ingredient?->unit_price ?? 0),
+                        'quantity' => (float) $item->quantity,
+                        'cost' => round((float) $item->quantity * (float) ($item->ingredient?->unit_price ?? 0), 2),
+                    ])->values(),
+                ];
+            });
+
+        return Inertia::render('Products/Index', [
+            'products' => $products,
+            'ingredients' => Ingredient::orderBy('name')->get(['id', 'name', 'base_unit', 'unit_price']),
+        ]);
+    }
+
+    public function store(StoreProductRequest $request): RedirectResponse
+    {
+        Product::create($request->validated());
+
+        return back()->with('success', 'Produk ditambahkan.');
+    }
+
+    public function update(UpdateProductRequest $request, Product $product): RedirectResponse
+    {
+        $product->update($request->validated());
+
+        return back()->with('success', 'Produk diperbarui.');
+    }
+
+    public function destroy(Product $product): RedirectResponse
+    {
+        $product->delete();
+
+        return back()->with('success', 'Produk dihapus.');
+    }
+
+    public function updateRecipe(UpdateRecipeRequest $request, Product $product): RedirectResponse
+    {
+        $items = $request->validated()['items'];
+
+        DB::transaction(function () use ($product, $items) {
+            $product->recipeItems()->delete();
+
+            foreach ($items as $item) {
+                RecipeItem::create([
+                    'product_id' => $product->id,
+                    'ingredient_id' => $item['ingredient_id'],
+                    'quantity' => $item['quantity'],
+                ]);
+            }
+        });
+
+        return back()->with('success', 'Resep disimpan & COGS diperbarui.');
+    }
+}

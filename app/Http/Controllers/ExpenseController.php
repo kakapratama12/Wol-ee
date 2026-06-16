@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\StoreExpenseRequest;
+use App\Models\Expense;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class ExpenseController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $now = Carbon::now();
+        $month = max(1, min(12, (int) $request->integer('month', $now->month)));
+        $year = (int) $request->integer('year', $now->year);
+
+        $expenses = Expense::query()
+            ->where('period_year', $year)
+            ->where('period_month', $month)
+            ->latest()
+            ->get()
+            ->map(fn (Expense $e) => [
+                'id' => $e->id,
+                'category' => $e->category,
+                'description' => $e->description,
+                'amount' => (float) $e->amount,
+            ]);
+
+        return Inertia::render('Expenses/Index', [
+            'expenses' => $expenses,
+            'total' => round((float) $expenses->sum('amount'), 2),
+            'period' => ['month' => $month, 'year' => $year],
+            'periodLabel' => Carbon::create($year, $month)->translatedFormat('F Y'),
+        ]);
+    }
+
+    public function store(StoreExpenseRequest $request): RedirectResponse
+    {
+        Expense::create($request->validated());
+
+        return back()->with('success', 'Biaya ditambahkan.');
+    }
+
+    public function destroy(Expense $expense): RedirectResponse
+    {
+        $expense->delete();
+
+        return back()->with('success', 'Biaya dihapus.');
+    }
+}
