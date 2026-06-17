@@ -27,6 +27,79 @@ Dashboard: auto-update (real-time dari DB yang sama)
 
 ## 2. Authentication
 
+---
+
+## 1.5 User Registration Flow
+
+### Flow:
+```
+1. Owner setup (sekali aja):
+   - Login ke dashboard
+   - Buka Settings > Bot Integration
+   - Copy API token: 1:abc123def456
+
+2. Staff registration:
+   - Buka bot Telegram: @wol_ee_bot
+   - Ketik: /start
+   - Bot tanya: "Masukkan token dari dashboard"
+   - Staff paste: 1:abc123def456
+   - Bot validate token via API
+   - Bot simpan: {telegram_user_id: 123456, token: "1:abc123"}
+   - Bot reply: "Berhasil terdaftar! Ketik 'bantuan' untuk lihat perintah."
+
+3. Selesai:
+   - Staff ketik: "Beli tepung 2kg"
+   - Bot tau: ini dari tenant 1 (dari token)
+   - Data masuk ke Kafe Contoh
+```
+
+### Bot Storage:
+```
+bot_users table:
+- telegram_user_id (primary key)
+- tenant_id (foreign key)
+- token (hashed)
+- registered_at
+- last_active_at
+```
+
+### Registration Validation:
+```
+Bot kirim token ke Laravel: POST /api/bot/validate-token
+
+Request:
+{
+  "token": "1:abc123def456"
+}
+
+Response (valid):
+{
+  "success": true,
+  "tenant": {
+    "id": 1,
+    "name": "Kafe Contoh",
+    "plan": "pro"
+  }
+}
+
+Response (invalid):
+{
+  "success": false,
+  "message": "Token tidak valid"
+}
+```
+
+### Multi-User同一Tenant:
+```
+Kafe Contoh punya 3 staff:
+├── Staff A (telegram: 111) → token: 1:abc123
+├── Staff B (telegram: 222) → token: 1:abc123
+├── Staff C (telegram: 333) → token: 1:abc123
+└── Semua input masuk ke tenant 1 (Kafe Contoh)
+```
+
+
+
 ### 2.1 Token Structure
 ```
 Token format: {tenant_id}:{secret_key}
