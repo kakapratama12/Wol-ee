@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sale;
+use App\Services\AgingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 
 class ReportController extends Controller
 {
+    public function __construct(private readonly AgingService $aging) {}
+
     public function today(): JsonResponse
     {
         $today = Carbon::today();
@@ -28,5 +31,10 @@ class ReportController extends Controller
             'margin' => $revenue > 0 ? round(($profit / $revenue) * 100, 2) : 0.0,
             'transactions' => $count,
         ]);
+    }
+
+    public function aging(): JsonResponse
+    {
+        return response()->json($this->aging->report());
     }
 }

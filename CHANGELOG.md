@@ -21,6 +21,9 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 ### Added
 
+- Sprint 2 API: Partner CRUD, Invoice tracking (create, pay, outstanding), aging report
+  (`/api/partners`, `/api/invoices`, `/api/reports/aging`).
+- Seeder sample partner & invoice untuk tenant `kafe-contoh`.
 - Workflow rekayasa: kebijakan commit, changelog, dan ADR di `AGENTS.md`.
 - `CHANGELOG.md` dan direktori `docs/adr/` (Architecture Decision Records).
 - Fondasi queue: event `SaleRecorded` + listener `SendLowStockAlert` (queued)
