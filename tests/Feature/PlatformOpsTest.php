@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\BotAiRequest;
 use App\Models\BotAiUsage;
 use App\Models\BotFeedback;
 use App\Models\Tenant;
@@ -41,6 +42,19 @@ it('super admin bisa melihat platform overview tenant feedback dan usage', funct
         'usage_date' => now('Asia/Jakarta')->toDateString(),
         'count' => 7,
     ]);
+    BotAiRequest::create([
+        'tenant_id' => $tenant->id,
+        'telegram_user_id' => 123,
+        'plan' => Tenant::PLAN_PRO,
+        'provider' => 'openrouter',
+        'model' => 'deepseek/deepseek-chat',
+        'status' => BotAiRequest::STATUS_SUCCESS,
+        'latency_ms' => 850,
+        'prompt_tokens' => 100,
+        'completion_tokens' => 40,
+        'total_tokens' => 140,
+        'requested_at' => now('Asia/Jakarta'),
+    ]);
 
     $this->actingAs(superAdmin());
 
@@ -72,7 +86,10 @@ it('super admin bisa melihat platform overview tenant feedback dan usage', funct
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Platform/AiUsage')
-            ->where('summary.today', 7)
+            ->where('summary.today', 1)
+            ->where('summary.quota_today', 7)
+            ->where('byProvider.1.provider', 'openrouter')
+            ->where('byTenant.0.tokens', 140)
         );
 });
 

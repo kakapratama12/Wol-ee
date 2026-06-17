@@ -44,6 +44,11 @@ class Tenant extends Model
         return $this->hasMany(BotAiUsage::class);
     }
 
+    public function aiRequests(): HasMany
+    {
+        return $this->hasMany(BotAiRequest::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;

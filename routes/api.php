@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\BotAuthController;
+use App\Http\Controllers\Api\BotAiRequestController;
 use App\Http\Controllers\Api\BotFeedbackController;
 use App\Http\Controllers\Api\BotUsageController;
 use App\Http\Controllers\Api\InvoiceController;
@@ -18,6 +19,7 @@ Route::post('/bot/validate-token', [BotAuthController::class, 'validateToken'])
 Route::middleware(['bot.token', 'throttle:bot'])->group(function () {
     Route::get('/bot/usage', [BotUsageController::class, 'show']);
     Route::post('/bot/ai-usage', [BotUsageController::class, 'consume']);
+    Route::post('/bot/ai-requests', [BotAiRequestController::class, 'store']);
     Route::post('/bot/feedback', [BotFeedbackController::class, 'store']);
 
     Route::get('/transactions', [TransactionController::class, 'index']);

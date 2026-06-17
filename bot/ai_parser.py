@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from typing import Any
 
 import httpx
@@ -95,8 +96,9 @@ UNIT_TO_BASE: dict[str, dict[str, float]] = {
 
 async def call_groq(user_input: str, system_prompt: str) -> dict:
     if not config.GROQ_API_KEY:
-        return {"error": "Groq API key not configured"}
+        return {"error": "Groq API key not configured", "provider": "groq", "model": config.GROQ_MODEL}
 
+    started = time.perf_counter()
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -116,18 +118,44 @@ async def call_groq(user_input: str, system_prompt: str) -> dict:
                 },
                 timeout=10.0,
             )
+            latency_ms = int((time.perf_counter() - started) * 1000)
             if response.status_code == 200:
-                content = response.json()["choices"][0]["message"]["content"]
-                return {"raw": content, "provider": "groq"}
-            return {"error": f"Groq API error: {response.status_code}"}
+                payload = response.json()
+                content = payload["choices"][0]["message"]["content"]
+                usage = payload.get("usage") or {}
+                return {
+                    "raw": content,
+                    "provider": "groq",
+                    "model": config.GROQ_MODEL,
+                    "status": "success",
+                    "latency_ms": latency_ms,
+                    "usage": usage,
+                }
+            return {
+                "error": f"Groq API error: {response.status_code}",
+                "provider": "groq",
+                "model": config.GROQ_MODEL,
+                "status": "error",
+                "error_code": f"http_{response.status_code}",
+                "latency_ms": latency_ms,
+            }
     except Exception as exc:
-        return {"error": f"Groq error: {exc}"}
+        latency_ms = int((time.perf_counter() - started) * 1000)
+        return {
+            "error": f"Groq error: {exc}",
+            "provider": "groq",
+            "model": config.GROQ_MODEL,
+            "status": "error",
+            "error_code": exc.__class__.__name__,
+            "latency_ms": latency_ms,
+        }
 
 
 async def call_openrouter(user_input: str, system_prompt: str) -> dict:
     if not config.OPENROUTER_API_KEY:
-        return {"error": "OpenRouter API key not configured"}
+        return {"error": "OpenRouter API key not configured", "provider": "openrouter", "model": config.OPENROUTER_MODEL}
 
+    started = time.perf_counter()
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -147,12 +175,37 @@ async def call_openrouter(user_input: str, system_prompt: str) -> dict:
                 },
                 timeout=10.0,
             )
+            latency_ms = int((time.perf_counter() - started) * 1000)
             if response.status_code == 200:
-                content = response.json()["choices"][0]["message"]["content"]
-                return {"raw": content, "provider": "openrouter"}
-            return {"error": f"OpenRouter API error: {response.status_code}"}
+                payload = response.json()
+                content = payload["choices"][0]["message"]["content"]
+                usage = payload.get("usage") or {}
+                return {
+                    "raw": content,
+                    "provider": "openrouter",
+                    "model": config.OPENROUTER_MODEL,
+                    "status": "success",
+                    "latency_ms": latency_ms,
+                    "usage": usage,
+                }
+            return {
+                "error": f"OpenRouter API error: {response.status_code}",
+                "provider": "openrouter",
+                "model": config.OPENROUTER_MODEL,
+                "status": "error",
+                "error_code": f"http_{response.status_code}",
+                "latency_ms": latency_ms,
+            }
     except Exception as exc:
-        return {"error": f"OpenRouter error: {exc}"}
+        latency_ms = int((time.perf_counter() - started) * 1000)
+        return {
+            "error": f"OpenRouter error: {exc}",
+            "provider": "openrouter",
+            "model": config.OPENROUTER_MODEL,
+            "status": "error",
+            "error_code": exc.__class__.__name__,
+            "latency_ms": latency_ms,
+        }
 
 
 async def _call_llm(user_input: str, system_prompt: str, is_pro: bool = False) -> dict:
@@ -268,9 +321,25 @@ async def parse_wolee_inventory(
 
     parsed = _extract_json(result.get("raw", ""))
     if not parsed:
-        return {"error": "Gak bisa parse input. Coba: \"Beli tepung 2kg Rp 36 ribu\" atau \"Jual matcha latte 10\""}
+        return {
+            "error": "Gak bisa parse input. Coba: \"Beli tepung 2kg Rp 36 ribu\" atau \"Jual matcha latte 10\"",
+            "provider": result.get("provider", "unknown"),
+            "model": result.get("model"),
+            "status": "error",
+            "error_code": "parse_failed",
+            "latency_ms": result.get("latency_ms"),
+            "usage": result.get("usage"),
+        }
 
     parsed["_provider"] = result.get("provider", "unknown")
+    parsed["_ai_request"] = {
+        "provider": result.get("provider", "unknown"),
+        "model": result.get("model"),
+        "status": result.get("status", "success"),
+        "error_code": result.get("error_code"),
+        "latency_ms": result.get("latency_ms"),
+        "usage": result.get("usage") or {},
+    }
     intent = parsed.get("intent", "unknown")
 
     if intent in {"sale_batch", "purchase_batch"}:

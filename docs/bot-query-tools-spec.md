@@ -76,6 +76,7 @@ Pesan masuk (user Wol-ee terdaftar)
 |--------|----------|--------|
 | GET | `/api/bot/usage?telegram_user_id=` | Sisa kuota, limit, plan, `uses_premium_llm` |
 | POST | `/api/bot/ai-usage` | Body `{telegram_user_id}` — consume 1; 429 jika habis |
+| POST | `/api/bot/ai-requests` | Event log LLM: provider, model, status, latency, token usage |
 
 `POST /api/bot/validate-token` response tenant menyertakan `plan` (sudah ada).
 
@@ -100,8 +101,10 @@ Upgrade ke Pro untuk kuota lebih besar & respons lebih akurat.
 - Migration: `bot_feedbacks` (`tenant_id`, `telegram_user_id`, `original_message`, `feedback_text`, `status`, `note`)
 - Service: `BotUsageService`
 - Controller: `BotUsageController` atau extend `BotAuthController`
+- Controller: `BotAiRequestController::store` (`POST /api/bot/ai-requests`)
 - Controller: `BotFeedbackController::store` (`POST /api/bot/feedback`)
 - Report: `ReportController::pnl`, `::marginAlerts`, `::stockAlerts`
+- Config: `config/ai.php` untuk quota produk dan batas provider (`rpm_limit`, `rpd_limit`)
 
 ---
 
@@ -110,11 +113,11 @@ Upgrade ke Pro untuk kuota lebih besar & respons lebih akurat.
 | File | Peran |
 |------|--------|
 | `query_router.py` | Klasifikasi QUERY tanpa LLM |
-| `handlers.py` | Handler PnL, stock/margin alerts, capabilities, feedback |
+| `handlers.py` | Handler PnL, stock/margin alerts, capabilities, feedback, event log AI |
 | `wol_ee_client.py` | Client endpoint baru |
 | `wol_ee_bridge.py` | QUERY sebelum ACTION |
 | `bot_storage.py` | Kolom `tenant_plan` |
-| `ai_parser.py` | `consume` kuota sebelum `_call_llm` |
+| `ai_parser.py` | Metadata provider/model/status/latency/token dari `_call_llm` |
 
 ---
 
@@ -127,9 +130,9 @@ Fallback unknown command wajib mengarahkan user ke `feedback <kebutuhan>`. Feedb
 ## 8. Out of scope (demo)
 
 - Tax simulation via bot
-- Top products, compare period
+- Compare period
 - Billing / payment gateway
-- Super admin monitoring (`api_calls`/AI usage analytics — Sprint 5): token/LLM usage, request per minute, quota consumption per tenant dan aggregate
+- Super admin monitoring non-AI (`api_calls`, active users, error logs)
 
 ---
 

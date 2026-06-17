@@ -451,6 +451,31 @@ it('memberi kuota ai lebih besar untuk tenant pro', function () {
         ->assertJsonPath('data.uses_premium_llm', true);
 });
 
+it('mencatat event request ai bot untuk analitik provider', function () {
+    $response = $this->postJson('/api/bot/ai-requests', [
+        'telegram_user_id' => 445500,
+        'plan' => 'free',
+        'provider' => 'groq',
+        'model' => 'llama-3.1-8b-instant',
+        'status' => 'success',
+        'latency_ms' => 720,
+        'prompt_tokens' => 90,
+        'completion_tokens' => 30,
+        'total_tokens' => 120,
+    ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('success', true);
+
+    $this->assertDatabaseHas('bot_ai_requests', [
+        'tenant_id' => $this->auth['tenant']->id,
+        'telegram_user_id' => 445500,
+        'provider' => 'groq',
+        'status' => 'success',
+        'total_tokens' => 120,
+    ]);
+});
+
 it('mencatat feedback bot untuk kurasi roadmap', function () {
     $response = $this->postJson('/api/bot/feedback', [
         'telegram_user_id' => 445566,

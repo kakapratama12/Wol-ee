@@ -155,6 +155,9 @@ class WolEeClient:
             payload["original_message"] = original_message
         return self._request("POST", "/bot/feedback", json=payload)
 
+    def post_ai_request(self, data: dict[str, Any]) -> dict[str, Any]:
+        return self._request("POST", "/bot/ai-requests", json=data)
+
     def get_aging(self) -> dict[str, Any]:
         return self._request("GET", "/reports/aging")
 

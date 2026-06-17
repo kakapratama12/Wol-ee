@@ -159,6 +159,7 @@ class BotHandlers:
             return None
         except WolEeApiError as exc:
             if exc.error_code == "AI_QUOTA_EXCEEDED":
+                self._log_ai_request(client, user_id, {"status": "quota_exceeded"})
                 return (
                     "⚠️ Kuota AI hari ini habis.\n"
                     "Reset besok jam 00:00 WIB.\n"
@@ -166,6 +167,28 @@ class BotHandlers:
                 )
             logger.warning("Gagal cek kuota AI: %s", exc)
             return None
+
+    def _log_ai_request(self, client: WolEeClient, user_id: int, meta: dict) -> None:
+        plan = self.storage.get_tenant_plan(user_id)
+        usage = meta.get("usage") or {}
+        provider = meta.get("provider") or ("openrouter" if plan in {"pro", "business"} else "groq")
+        try:
+            client.post_ai_request(
+                {
+                    "telegram_user_id": user_id,
+                    "plan": plan,
+                    "provider": provider,
+                    "model": meta.get("model"),
+                    "status": meta.get("status", "success"),
+                    "error_code": meta.get("error_code"),
+                    "latency_ms": meta.get("latency_ms"),
+                    "prompt_tokens": usage.get("prompt_tokens"),
+                    "completion_tokens": usage.get("completion_tokens"),
+                    "total_tokens": usage.get("total_tokens"),
+                }
+            )
+        except WolEeApiError as exc:
+            logger.warning("Gagal mencatat AI request: %s", exc)
 
     def handle_feedback(self, user_id: int, text: str, original_message: str | None = None) -> str:
         client = self._client_for(user_id)
@@ -206,6 +229,11 @@ class BotHandlers:
             return "❌ Gagal mengambil katalog dari API."
 
         parsed = await parse_wolee_inventory(text, ingredients, products, is_pro=is_pro)
+        ai_request = parsed.get("_ai_request") or (
+            parsed if parsed.get("provider") and parsed.get("provider") != "regex" else None
+        )
+        if ai_request:
+            await asyncio.to_thread(self._log_ai_request, client, user_id, ai_request)
         if "error" in parsed:
             return f"❌ {parsed['error']}"
 

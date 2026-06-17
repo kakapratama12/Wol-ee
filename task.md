@@ -145,7 +145,7 @@
 - [x] `/platform` overview operasional
 - [x] `/platform/tenants` tenant overview
 - [x] `/platform/feedback` feedback inbox + update status/note
-- [x] `/platform/ai-usage` usage summary dari `bot_ai_usages`
+- [x] `/platform/ai-usage` usage summary + provider/request analytics dari `bot_ai_usages` dan `bot_ai_requests`
 
 ### 5.1 Tenant Management
 - [x] Role: `super_admin` (terpisah dari owner/admin)
@@ -163,7 +163,7 @@
 - [x] AI usage analytics basic: quota consumption per tenant dan aggregate
 - [x] Filter monitoring basic per tenant/plan/periode (`bot_ai_usages`)
 - [x] Feedback inbox: review `bot_feedbacks`, status `new/reviewed/planned/shipped/rejected`
-- [ ] Token/LLM usage detail, provider metrics, dan request per minute
+- [x] Token/LLM usage detail, provider metrics, dan request per minute (`bot_ai_requests`)
 - [ ] Feedback tag/kategori kebutuhan
 - [ ] Active users & error logs stats
 

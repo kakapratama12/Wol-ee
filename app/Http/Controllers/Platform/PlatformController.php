@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
+use App\Models\BotAiRequest;
 use App\Models\BotAiUsage;
 use App\Models\BotFeedback;
 use App\Models\Tenant;
@@ -149,28 +150,42 @@ class PlatformController extends Controller
 
     public function aiUsage(): Response
     {
-        $today = Carbon::now('Asia/Jakarta')->toDateString();
-        $start = Carbon::now('Asia/Jakarta')->subDays(6)->startOfDay();
+        $now = Carbon::now('Asia/Jakarta');
+        $today = $now->toDateString();
+        $start = $now->copy()->subDays(6)->startOfDay();
+        $requests = BotAiRequest::query()
+            ->with('tenant:id,name,plan')
+            ->where('requested_at', '>=', $start)
+            ->get();
+        $todayRequests = $requests->filter(fn (BotAiRequest $request) => $request->requested_at->isSameDay($now));
 
         $usageByTenant = Tenant::query()
             ->orderBy('name')
             ->get()
-            ->map(function (Tenant $tenant) use ($today, $start) {
-                $todayCount = (int) BotAiUsage::query()
+            ->map(function (Tenant $tenant) use ($today, $start, $requests, $todayRequests) {
+                $tenantRequests = $requests->where('tenant_id', $tenant->id);
+                $tenantTodayRequests = $todayRequests->where('tenant_id', $tenant->id);
+                $quotaToday = (int) BotAiUsage::query()
                     ->where('tenant_id', $tenant->id)
                     ->whereDate('usage_date', $today)
                     ->sum('count');
-                $last7Days = (int) BotAiUsage::query()
-                    ->where('tenant_id', $tenant->id)
-                    ->whereDate('usage_date', '>=', $start->toDateString())
-                    ->sum('count');
+                $peakRpm = $tenantRequests
+                    ->groupBy(fn (BotAiRequest $request) => $request->requested_at->timezone('Asia/Jakarta')->format('Y-m-d H:i'))
+                    ->map->count()
+                    ->max() ?? 0;
+                $errors = $tenantRequests->where('status', BotAiRequest::STATUS_ERROR)->count();
+                $total = $tenantRequests->count();
 
                 return [
                     'tenant_id' => $tenant->id,
                     'tenant' => $tenant->name,
                     'plan' => $tenant->plan,
-                    'today' => $todayCount,
-                    'last_7_days' => $last7Days,
+                    'today' => $tenantTodayRequests->count(),
+                    'quota_today' => $quotaToday,
+                    'last_7_days' => $total,
+                    'peak_rpm' => $peakRpm,
+                    'error_rate' => $total > 0 ? round(($errors / $total) * 100, 1) : 0,
+                    'tokens' => (int) $tenantRequests->sum('total_tokens'),
                 ];
             });
 
@@ -179,7 +194,11 @@ class PlatformController extends Controller
 
             return [
                 'date' => $date,
-                'count' => (int) BotAiUsage::query()->whereDate('usage_date', $date)->sum('count'),
+                'count' => (int) BotAiRequest::query()->whereDate('requested_at', $date)->count(),
+                'errors' => (int) BotAiRequest::query()
+                    ->whereDate('requested_at', $date)
+                    ->where('status', BotAiRequest::STATUS_ERROR)
+                    ->count(),
             ];
         });
 
@@ -188,27 +207,73 @@ class PlatformController extends Controller
             ->selectRaw('COUNT(*) as tenants')
             ->groupBy('plan')
             ->get()
-            ->map(function ($row) use ($today) {
+            ->map(function ($row) use ($today, $requests) {
                 $tenantIds = Tenant::query()->where('plan', $row->plan)->pluck('id');
+                $planRequests = $requests->whereIn('tenant_id', $tenantIds);
+                $provider = config("ai.plans.{$row->plan}.provider", 'groq');
 
                 return [
                     'plan' => $row->plan,
                     'tenants' => (int) $row->tenants,
-                    'usage_today' => (int) BotAiUsage::query()
+                    'usage_today' => (int) BotAiRequest::query()
+                        ->whereIn('tenant_id', $tenantIds)
+                        ->whereDate('requested_at', $today)
+                        ->count(),
+                    'quota_today' => (int) BotAiUsage::query()
                         ->whereIn('tenant_id', $tenantIds)
                         ->whereDate('usage_date', $today)
                         ->sum('count'),
+                    'daily_quota' => (int) config("ai.plans.{$row->plan}.daily_ai_quota", 25),
+                    'provider' => $provider,
+                    'provider_rpm_limit' => (int) config("ai.providers.{$provider}.rpm_limit", 0),
+                    'provider_rpd_limit' => (int) config("ai.providers.{$provider}.rpd_limit", 0),
+                    'tokens' => (int) $planRequests->sum('total_tokens'),
                 ];
             });
 
+        $byProvider = collect(config('ai.providers'))
+            ->map(function (array $config, string $provider) use ($requests, $todayRequests) {
+                $providerRequests = $requests->where('provider', $provider);
+                $providerTodayRequests = $todayRequests->where('provider', $provider);
+                $peakRpm = $providerRequests
+                    ->groupBy(fn (BotAiRequest $request) => $request->requested_at->timezone('Asia/Jakarta')->format('Y-m-d H:i'))
+                    ->map->count()
+                    ->max() ?? 0;
+                $errors = $providerRequests->where('status', BotAiRequest::STATUS_ERROR)->count();
+                $total = $providerRequests->count();
+
+                return [
+                    'provider' => $provider,
+                    'label' => $config['label'] ?? $provider,
+                    'today' => $providerTodayRequests->count(),
+                    'last_7_days' => $total,
+                    'peak_rpm' => $peakRpm,
+                    'rpm_limit' => (int) ($config['rpm_limit'] ?? 0),
+                    'rpd_limit' => (int) ($config['rpd_limit'] ?? 0),
+                    'error_rate' => $total > 0 ? round(($errors / $total) * 100, 1) : 0,
+                    'tokens' => (int) $providerRequests->sum('total_tokens'),
+                ];
+            })
+            ->values();
+
         return Inertia::render('Platform/AiUsage', [
             'summary' => [
-                'today' => (int) BotAiUsage::query()->whereDate('usage_date', $today)->sum('count'),
-                'last_7_days' => (int) BotAiUsage::query()->whereDate('usage_date', '>=', $start->toDateString())->sum('count'),
+                'today' => $todayRequests->count(),
+                'quota_today' => (int) BotAiUsage::query()->whereDate('usage_date', $today)->sum('count'),
+                'last_7_days' => $requests->count(),
+                'peak_rpm' => $requests
+                    ->groupBy(fn (BotAiRequest $request) => $request->requested_at->timezone('Asia/Jakarta')->format('Y-m-d H:i'))
+                    ->map->count()
+                    ->max() ?? 0,
+                'error_rate' => $requests->count() > 0
+                    ? round(($requests->where('status', BotAiRequest::STATUS_ERROR)->count() / $requests->count()) * 100, 1)
+                    : 0,
+                'tokens' => (int) $requests->sum('total_tokens'),
             ],
             'daily' => $daily,
             'byTenant' => $usageByTenant,
             'byPlan' => $byPlan,
+            'byProvider' => $byProvider,
         ]);
     }
 }

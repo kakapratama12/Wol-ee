@@ -15,15 +15,12 @@ class BotUsageService
 
     public function dailyLimit(Tenant $tenant): int
     {
-        return match ($tenant->plan) {
-            Tenant::PLAN_PRO, Tenant::PLAN_BUSINESS => self::LIMIT_PRO,
-            default => self::LIMIT_FREE,
-        };
+        return (int) config("ai.plans.{$tenant->plan}.daily_ai_quota", self::LIMIT_FREE);
     }
 
     public function usesPremiumLlm(Tenant $tenant): bool
     {
-        return in_array($tenant->plan, [Tenant::PLAN_PRO, Tenant::PLAN_BUSINESS], true);
+        return config("ai.plans.{$tenant->plan}.provider", 'groq') !== 'groq';
     }
 
     /**
