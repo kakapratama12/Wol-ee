@@ -15,6 +15,7 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 ### Added
 
+- Dashboard overview: chart Revenue vs Expense 6 bulan terakhir dan daftar pembelian terbaru.
 - Bot feedback collection: fallback mengarahkan `feedback ...`, API `POST /api/bot/feedback`, dan tabel `bot_feedbacks` untuk kurasi roadmap early adopter.
 - Bot query tools (demo owner): `GET /api/reports/pnl`, `/stock-alerts`, `/margin-alerts`, `/top-products`, `/bottom-products`; query router NL tanpa LLM (profit bulan ini, top/bottom products, strategi, stok/margin alert, meta "bisa nanya apa").
 - Kuota AI bot: 25/hari (free/Groq), 150/hari (pro/business/DeepSeek); `GET /api/bot/usage`, `POST /api/bot/ai-usage`.

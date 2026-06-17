@@ -67,9 +67,9 @@
 
 ### 3.1 Dashboard Overview
 - [x] Summary cards: Omset, COGS, Profit, Margin
-- [ ] Chart: Revenue vs Expense (bulanan) — **GAP**
+- [x] Chart: Revenue vs Expense (bulanan)
 - [x] Recent sales list
-- [ ] Recent purchase transactions list — **GAP** (hanya penjualan, belum pembelian)
+- [x] Recent purchase transactions list
 
 ### 3.2 P&L Report
 - [x] P&L calculation (Revenue - COGS - Expenses)
@@ -86,7 +86,7 @@
 - [x] Margin alerts (margin turun > 2%)
 - [x] What-if simulator (kalau harga naik X%, margin jadi berapa)
 
-**Sprint 3 Done Criteria:** ✅ (dengan gaps chart & recent purchases di atas)
+**Sprint 3 Done Criteria:** ✅
 
 ---
 
@@ -112,7 +112,7 @@
 ### 4.3 Bot → Dashboard Sync
 - [x] Data dari bot muncul di dashboard (setelah tenant scoping)
 - [x] Source tagging (bot vs dashboard via `source` column)
-- [ ] Edit data bot via dashboard — **partial** (belum semua field)
+- [x] Edit data bot via dashboard (penjualan & pembelian bot bisa dikoreksi/hapus via dashboard)
 
 ### 4.4 Bot Query Tools (demo owner) — [x] DONE
 - [x] `GET /api/reports/pnl`, `/margin-alerts`, `/stock-alerts`
