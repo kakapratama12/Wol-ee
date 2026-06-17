@@ -113,6 +113,7 @@
 - [x] Data dari bot muncul di dashboard (setelah tenant scoping)
 - [x] Source tagging (bot vs dashboard via `source` column)
 - [x] Edit data bot via dashboard (penjualan & pembelian bot bisa dikoreksi/hapus via dashboard)
+- [x] Bot bisa mencatat biaya operasional via `POST /api/expenses`
 
 ### 4.4 Bot Query Tools (demo owner) — [x] DONE
 - [x] `GET /api/reports/pnl`, `/margin-alerts`, `/stock-alerts`

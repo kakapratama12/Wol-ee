@@ -9,7 +9,9 @@ from typing import Callable
 
 from ai_parser import (
     format_amount,
+    parse_regex_expense,
     parse_wolee_inventory,
+    to_api_expense_payload,
     to_api_purchase_payload,
     to_api_sale_payload,
 )
@@ -217,6 +219,13 @@ class BotHandlers:
         if client is None:
             return "Belum terdaftar. Ketik /start <token> dulu."
 
+        expense = parse_regex_expense(text)
+        if expense:
+            payload = to_api_expense_payload(expense)
+            if not payload:
+                return "❌ Data biaya tidak lengkap. Contoh: bayar listrik bulan ini 1.5jt"
+            return self._post_expense(client, user_id, payload)
+
         quota_msg = self._ensure_ai_quota(client, user_id)
         if quota_msg:
             return quota_msg
@@ -269,6 +278,11 @@ class BotHandlers:
             if not payload:
                 return "❌ Data penjualan tidak lengkap. Sebutkan produk dan jumlah."
             return self._post_sale(client, user_id, payload, products)
+        if intent == "expense":
+            payload = to_api_expense_payload(parsed)
+            if not payload:
+                return "❌ Data biaya tidak lengkap. Contoh: bayar listrik bulan ini 1.5jt"
+            return self._post_expense(client, user_id, payload)
 
         return (
             "❌ Aku belum bisa memahami perintah itu.\n\n"
@@ -517,6 +531,22 @@ class BotHandlers:
             if exc.error_code == "API_ERROR":
                 self.queue.enqueue("post_sale", parsed)
                 return "⚠️ API tidak tersedia. Data disimpan offline."
+            return f"❌ {exc}"
+
+    def _post_expense(self, client: WolEeClient, user_id: int, parsed: dict) -> str:
+        try:
+            result = client.post_expense(parsed)
+            data = result["data"]
+            self.storage.touch(user_id)
+            return (
+                f"✅ {result['message']}\n"
+                f"Biaya {data['category']}: {format_amount(data['amount'])}\n"
+                f"Periode: {data['period_month']:02d}/{data['period_year']}"
+            )
+        except WolEeApiError as exc:
+            if exc.error_code == "API_ERROR":
+                self.queue.enqueue("post_expense", parsed)
+                return "⚠️ API tidak tersedia. Data biaya disimpan offline."
             return f"❌ {exc}"
 
     def handle_stok(self, user_id: int, text: str) -> str:

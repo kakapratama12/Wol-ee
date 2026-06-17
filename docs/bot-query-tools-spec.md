@@ -50,6 +50,7 @@ Pesan masuk (user Wol-ee terdaftar)
 | `get_bottom_products` | `GET /api/reports/bottom-products?month=&year=` | "barang paling ga laku", "produk sepi" | ❌ |
 | `business_insight` | PnL + top/bottom + alerts | "strategi kedepannya", "saran dong" | ❌ |
 | `explain_capabilities` | bot-only | "bisa nanya apa", "kamu bisa apa" | ❌ |
+| `record_expense` | `POST /api/expenses` | "bayar listrik bulan ini 1.5jt", "bayar gaji 15jt" | ❌ |
 | `record_*` | existing | beli/jual/batch | ✅ |
 
 **Perbaikan:** `/summary` dan "ringkasan" → PnL **bulan ini** (bukan hari ini).
@@ -77,6 +78,7 @@ Pesan masuk (user Wol-ee terdaftar)
 | GET | `/api/bot/usage?telegram_user_id=` | Sisa kuota, limit, plan, `uses_premium_llm` |
 | POST | `/api/bot/ai-usage` | Body `{telegram_user_id}` — consume 1; 429 jika habis |
 | POST | `/api/bot/ai-requests` | Event log LLM: provider, model, status, latency, token usage |
+| POST | `/api/expenses` | Catat biaya operasional dari bot |
 
 `POST /api/bot/validate-token` response tenant menyertakan `plan` (sudah ada).
 
@@ -103,6 +105,7 @@ Upgrade ke Pro untuk kuota lebih besar & respons lebih akurat.
 - Controller: `BotUsageController` atau extend `BotAuthController`
 - Controller: `BotAiRequestController::store` (`POST /api/bot/ai-requests`)
 - Controller: `BotFeedbackController::store` (`POST /api/bot/feedback`)
+- Controller: `Api\ExpenseController::store` (`POST /api/expenses`)
 - Report: `ReportController::pnl`, `::marginAlerts`, `::stockAlerts`
 - Config: `config/ai.php` untuk quota produk dan batas provider (`rpm_limit`, `rpd_limit`)
 

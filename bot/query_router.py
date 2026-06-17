@@ -23,7 +23,9 @@ MONTH_MAP: dict[str, int] = {
 
 def _looks_like_transaction(text: str) -> bool:
     normalized = text.strip().lower()
-    if normalized.startswith(("beli ", "jual ")):
+    if normalized.startswith(("beli ", "jual ", "bayar ", "biaya ", "pengeluaran ")):
+        return True
+    if re.search(r"\b(bayar|biaya|pengeluaran)\b.*\d", normalized):
         return True
     if re.search(r"\d+\s*,\s*\w+", normalized):
         return True
@@ -161,7 +163,6 @@ def classify_query(text: str) -> str | None:
         "laporan profit",
         "profit bulan ini",
         "omset bulan ini",
-        "bulan ini",
         "ringkasan",
         "summary",
         "pnl",
@@ -172,7 +173,7 @@ def classify_query(text: str) -> str | None:
         "knp kok bisa rugi",
         "kenapa bisa rugi",
     )
-    if any(h in normalized for h in pnl_hints) or any(m in normalized for m in MONTH_MAP):
+    if normalized == "bulan ini" or any(h in normalized for h in pnl_hints) or any(m in normalized for m in MONTH_MAP):
         if "hari ini" not in normalized:
             return "report_pnl"
 

@@ -451,6 +451,27 @@ it('memberi kuota ai lebih besar untuk tenant pro', function () {
         ->assertJsonPath('data.uses_premium_llm', true);
 });
 
+it('mencatat biaya operasional via API bot', function () {
+    $response = $this->postJson('/api/expenses', [
+        'category' => 'Listrik',
+        'description' => 'bayar listrik bulan ini 1.5jt',
+        'amount' => 1500000,
+        'period_month' => 6,
+        'period_year' => 2026,
+    ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.category', 'Listrik')
+        ->assertJsonPath('data.amount', 1500000);
+
+    $this->assertDatabaseHas('expenses', [
+        'tenant_id' => $this->auth['tenant']->id,
+        'category' => 'Listrik',
+        'amount' => 1500000,
+    ]);
+});
+
 it('mencatat event request ai bot untuk analitik provider', function () {
     $response = $this->postJson('/api/bot/ai-requests', [
         'telegram_user_id' => 445500,

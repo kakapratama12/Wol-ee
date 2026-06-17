@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import time
+from datetime import datetime
 from typing import Any
 
 import httpx
@@ -91,6 +92,21 @@ UNIT_TO_BASE: dict[str, dict[str, float]] = {
     "ml": {"l": 1000, "ml": 1, "liter": 1000},
     "butir": {"butir": 1, "pcs": 1},
     "pcs": {"pcs": 1, "biji": 1, "cup": 1, "porsi": 1},
+}
+
+MONTH_NAMES: dict[str, int] = {
+    "januari": 1,
+    "februari": 2,
+    "maret": 3,
+    "april": 4,
+    "mei": 5,
+    "juni": 6,
+    "juli": 7,
+    "agustus": 8,
+    "september": 9,
+    "oktober": 10,
+    "november": 11,
+    "desember": 12,
 }
 
 
@@ -299,6 +315,80 @@ def parse_regex_inventory(text: str) -> dict | None:
     return None
 
 
+def _parse_rupiah_amount(text: str) -> tuple[int, str] | None:
+    match = re.search(
+        r"(?:rp\s*)?(\d+(?:[.,]\d+)?)\s*(jt|juta|rb|ribu|k)?",
+        text,
+        re.IGNORECASE,
+    )
+    if not match:
+        return None
+
+    raw_amount, suffix = match.groups()
+    amount = float(raw_amount.replace(",", "."))
+    suffix = (suffix or "").lower()
+    if suffix in {"jt", "juta"}:
+        amount *= 1_000_000
+    elif suffix in {"rb", "ribu", "k"}:
+        amount *= 1_000
+
+    return int(amount), match.group(0)
+
+
+def _parse_expense_period(text: str) -> tuple[int, int]:
+    normalized = text.lower()
+    now = datetime.now()
+    for name, month in MONTH_NAMES.items():
+        if name in normalized:
+            year_match = re.search(r"(20\d{2})", normalized)
+            return month, int(year_match.group(1)) if year_match else now.year
+    if "bulan lalu" in normalized:
+        if now.month == 1:
+            return 12, now.year - 1
+        return now.month - 1, now.year
+    return now.month, now.year
+
+
+def parse_regex_expense(text: str) -> dict | None:
+    normalized = text.strip().lower()
+    if not re.search(r"\b(bayar|biaya|expense|pengeluaran)\b", normalized):
+        return None
+
+    parsed_amount = _parse_rupiah_amount(normalized)
+    if not parsed_amount:
+        return None
+
+    amount, amount_text = parsed_amount
+    category = normalized
+    category = re.sub(r"\b(bayar|biaya|expense|pengeluaran|untuk)\b", " ", category)
+    category = category.replace(amount_text.lower(), " ")
+    category = re.sub(r"\bbulan\s+(ini|lalu)\b", " ", category)
+    category = re.sub(r"\b(20\d{2})\b", " ", category)
+    for month_name in MONTH_NAMES:
+        category = re.sub(rf"\b{month_name}\b", " ", category)
+    category = re.sub(r"\s+", " ", category).strip(" ,-")
+
+    if not category:
+        category = "operasional"
+    if "gaji" in category:
+        category = "gaji"
+    elif "listrik" in category:
+        category = "listrik"
+    elif "sewa" in category:
+        category = "sewa"
+
+    month, year = _parse_expense_period(normalized)
+    return {
+        "intent": "expense",
+        "category": category.title(),
+        "description": text.strip(),
+        "amount": amount,
+        "period_month": month,
+        "period_year": year,
+        "_provider": "regex",
+    }
+
+
 async def parse_wolee_inventory(
     user_input: str,
     ingredients: list[dict],
@@ -402,6 +492,22 @@ def to_api_sale_payload(parsed: dict) -> dict | None:
     if parsed.get("note"):
         payload["note"] = parsed["note"]
     return payload
+
+
+def to_api_expense_payload(parsed: dict) -> dict | None:
+    if parsed.get("intent") != "expense":
+        return None
+    amount = parsed.get("amount")
+    category = parsed.get("category")
+    if not amount or not category:
+        return None
+    return {
+        "category": category,
+        "description": parsed.get("description"),
+        "amount": int(amount),
+        "period_month": int(parsed.get("period_month")),
+        "period_year": int(parsed.get("period_year")),
+    }
 
 
 async def parse_transaction(user_input: str, is_pro: bool = False) -> dict:

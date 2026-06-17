@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\BotAuthController;
 use App\Http\Controllers\Api\BotAiRequestController;
 use App\Http\Controllers\Api\BotFeedbackController;
 use App\Http\Controllers\Api\BotUsageController;
+use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\PartnerController;
 use App\Http\Controllers\Api\ProductController;
@@ -28,6 +29,7 @@ Route::middleware(['bot.token', 'throttle:bot'])->group(function () {
     Route::get('/sales', [SaleController::class, 'index']);
     Route::post('/sales', [SaleController::class, 'store']);
     Route::post('/sales/batch', [SaleController::class, 'storeBatch']);
+    Route::post('/expenses', [ExpenseController::class, 'store']);
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/stock', [StockController::class, 'index']);
     Route::get('/reports/today', [ReportController::class, 'today']);
