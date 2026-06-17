@@ -61,6 +61,8 @@ ATURAN PENTING:
 - quantity adalah jumlah barang; quantity_unit: kg, g, ml, l, butir, pcs, cup, atau null.
 - JANGAN menganggap quantity sebagai uang. "2kg" adalah quantity 2 unit kg, BUKAN amount 2000.
 - Jika user bilang "bayar X buat beli telur 2kg" maka intent record_purchase, bukan record_expense, karena ada pembelian bahan.
+- Jika ada orang/customer membeli produk toko (contoh: "Mariot beli tarlet 50 biji total 10jt"), intent record_sale. "Mariot" adalah customer/note, "tarlet" adalah product, quantity 50.
+- Kata "beli" bisa berarti customer membeli dari toko. Jika item-nya ada di katalog produk jadi, prioritaskan record_sale; jika item-nya bahan baku, gunakan record_purchase.
 - Untuk record_expense, amount wajib berupa uang eksplisit: Rp, ribu/rb/k, juta/jt, atau angka Rupiah jelas.
 - Untuk "bulan ini", isi period_month dan period_year bulan/tahun sekarang: {current_month}/{current_year}.
 - Untuk sale_batch/purchase_batch: ekstrak SEMUA baris item ke array items
