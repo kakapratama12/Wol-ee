@@ -36,28 +36,28 @@
 ## Sprint 2: Partner & Invoice
 
 ### 2.1 Partner Management
-- [ ] Partners table (id, tenant_id, name, type[customer/supplier], contact, phone, email, address)
-- [ ] Partner model + migration
-- [ ] PartnerController: CRUD
+- [x] Partners table (id, tenant_id, name, type[customer/supplier], contact, phone, email, address)
+- [x] Partner model + migration
+- [x] PartnerController: CRUD (API)
 - [ ] Dashboard: Partner list page
 - [ ] Dashboard: Partner detail page (history transaksi)
 
 ### 2.2 Partner Aging
-- [ ] Aging calculation logic (0-30, 31-60, 61-90, 90+ days)
+- [x] Aging calculation logic (0-30, 31-60, 61-90, 90+ days)
 - [ ] Dashboard: Aging report page
-- [ ] Bot endpoint: GET /api/partners/aging
+- [x] Bot endpoint: GET /api/reports/aging (+ GET /api/partners/{id}/aging)
 
 ### 2.3 Invoice Tracking
-- [ ] Invoices table (id, tenant_id, partner_id, amount, due_date, status[paid/outstanding], paid_at)
-- [ ] Invoice model + migration
-- [ ] InvoiceController: CRUD
+- [x] Invoices table (id, tenant_id, partner_id, amount, due_date, status[paid/outstanding/partial], paid_at)
+- [x] Invoice model + migration
+- [x] InvoiceController: CRUD (API)
 - [ ] Dashboard: Invoice list page
-- [ ] Dashboard: Mark invoice as paid
+- [ ] Dashboard: Mark invoice as paid (dashboard UI)
 
 **Sprint 2 Done Criteria:**
-- [ ] Bisa CRUD partner
+- [x] Bisa CRUD partner (API)
 - [ ] Aging report tampil di dashboard
-- [ ] Bisa create & track invoice
+- [x] Bisa create & track invoice (API)
 
 ---
 
@@ -97,7 +97,7 @@
 - [x] POST /api/sales (penjualan)
 - [x] GET /api/stock (cek stok)
 - [x] GET /api/reports/today
-- [ ] GET /api/partners/aging (cek aging) — menunggu Sprint 2
+- [ ] GET /api/partners/aging (cek aging) — **API ready** (`GET /api/reports/aging`, `GET /api/partners/{id}/aging`)
 - [ ] Auth: **1 API token per tenant** (bukan per bot instance)
   - Token disimpan di `tenants.api_token` (hashed)
   - Bot kirim header: `Authorization: Bearer <token>`
