@@ -47,6 +47,8 @@ Pesan masuk (user Wol-ee terdaftar)
 | `get_stock_alerts` | `GET /api/reports/stock-alerts` | "stok menipis", "ada yang kritis" | ❌ |
 | `get_margin_alerts` | `GET /api/reports/margin-alerts` | "margin turun", "produk boncos" | ❌ |
 | `get_top_products` | `GET /api/reports/top-products?month=&year=` | "barang paling laku", "produk terlaris" | ❌ |
+| `get_bottom_products` | `GET /api/reports/bottom-products?month=&year=` | "barang paling ga laku", "produk sepi" | ❌ |
+| `business_insight` | PnL + top/bottom + alerts | "strategi kedepannya", "saran dong" | ❌ |
 | `explain_capabilities` | bot-only | "bisa nanya apa", "kamu bisa apa" | ❌ |
 | `record_*` | existing | beli/jual/batch | ✅ |
 
@@ -119,7 +121,7 @@ Upgrade ke Pro untuk kuota lebih besar & respons lebih akurat.
 - Tax simulation via bot
 - Top products, compare period
 - Billing / payment gateway
-- Super admin monitoring (`api_calls` — Sprint 5)
+- Super admin monitoring (`api_calls`/AI usage analytics — Sprint 5): token/LLM usage, request per minute, quota consumption per tenant dan aggregate
 
 ---
 

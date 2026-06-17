@@ -375,6 +375,50 @@ it('mengembalikan produk paling laku via API', function () {
         ->assertJsonPath('data.items.0.quantity', 5);
 });
 
+it('mengembalikan produk paling sepi via API', function () {
+    $tenantId = $this->auth['tenant']->id;
+    $kopi = Product::create([
+        'tenant_id' => $tenantId,
+        'name' => 'Kopi Susu',
+        'unit' => 'cup',
+        'selling_price' => 18000,
+    ]);
+    $teh = Product::create([
+        'tenant_id' => $tenantId,
+        'name' => 'Es Teh',
+        'unit' => 'cup',
+        'selling_price' => 8000,
+    ]);
+
+    foreach ([$kopi, $teh] as $product) {
+        $ingredient = Ingredient::create([
+            'tenant_id' => $tenantId,
+            'name' => 'Bahan '.$product->name,
+            'unit_type' => 'gramasi',
+            'base_unit' => 'g',
+            'unit_price' => 10,
+            'current_stock' => 10000,
+            'minimum_stock' => 100,
+        ]);
+        RecipeItem::create([
+            'tenant_id' => $tenantId,
+            'product_id' => $product->id,
+            'ingredient_id' => $ingredient->id,
+            'quantity' => 10,
+        ]);
+    }
+
+    $this->postJson('/api/sales', ['product' => 'Kopi Susu', 'quantity' => 2])->assertCreated();
+    $this->postJson('/api/sales', ['product' => 'Es Teh', 'quantity' => 5])->assertCreated();
+
+    $response = $this->getJson('/api/reports/bottom-products?month='.now()->month.'&year='.now()->year);
+
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.items.0.product', 'Kopi Susu')
+        ->assertJsonPath('data.items.0.quantity', 2);
+});
+
 it('melacak dan membatasi kuota ai harian per user telegram', function () {
     $telegramUserId = 99887766;
 

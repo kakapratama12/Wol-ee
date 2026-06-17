@@ -54,6 +54,8 @@ OPENROUTER_API_KEY=...
 | `stok menipis` / `stok kritis` | GET /api/reports/stock-alerts |
 | `margin turun` | GET /api/reports/margin-alerts |
 | `barang paling laku` | GET /api/reports/top-products |
+| `barang paling ga laku` | GET /api/reports/bottom-products |
+| `strategi kedepannya` | PnL + top/bottom products + stock/margin alerts |
 | `bisa nanya apa` / `bantuan` | Daftar kemampuan bot |
 
 ### Transaksi (pakai kuota AI untuk NL kompleks)

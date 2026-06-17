@@ -31,6 +31,7 @@ Route::middleware(['bot.token', 'throttle:bot'])->group(function () {
     Route::get('/reports/stock-alerts', [ReportController::class, 'stockAlerts']);
     Route::get('/reports/margin-alerts', [ReportController::class, 'marginAlerts']);
     Route::get('/reports/top-products', [ReportController::class, 'topProducts']);
+    Route::get('/reports/bottom-products', [ReportController::class, 'bottomProducts']);
     Route::get('/reports/aging', [ReportController::class, 'aging']);
 
     Route::get('/partners', [PartnerController::class, 'index']);

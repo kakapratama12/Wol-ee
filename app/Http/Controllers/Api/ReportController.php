@@ -105,6 +105,40 @@ class ReportController extends Controller
 
     public function topProducts(Request $request): JsonResponse
     {
+        $result = $this->productPopularity($request, 'desc');
+        if ($result instanceof JsonResponse) {
+            return $result;
+        }
+
+        return ApiResponse::success('Produk paling laku.', [
+            'period_label' => $result['period_label'],
+            'items' => $result['items'],
+        ]);
+    }
+
+    public function bottomProducts(Request $request): JsonResponse
+    {
+        $result = $this->productPopularity($request, 'asc');
+        if ($result instanceof JsonResponse) {
+            return $result;
+        }
+
+        return ApiResponse::success('Produk paling sepi.', [
+            'period_label' => $result['period_label'],
+            'items' => $result['items'],
+        ]);
+    }
+
+    public function aging(): JsonResponse
+    {
+        return ApiResponse::success('Laporan aging.', $this->aging->report());
+    }
+
+    /**
+     * @return array{period_label: string, items: array<int, array<string, mixed>>}
+     */
+    private function productPopularity(Request $request, string $direction): array|JsonResponse
+    {
         $now = Carbon::now();
         $month = $request->integer('month', $now->month);
         $year = $request->integer('year', $now->year);
@@ -118,13 +152,18 @@ class ReportController extends Controller
             return ApiResponse::error('Tahun tidak valid.', 'VALIDATION_ERROR', 422);
         }
 
-        $items = Sale::query()
+        $query = Sale::query()
             ->with('product:id,name')
             ->selectRaw('product_id, SUM(quantity) as total_quantity, SUM(revenue) as revenue, SUM(profit) as profit, COUNT(*) as transactions')
             ->whereYear('occurred_at', $year)
             ->whereMonth('occurred_at', $month)
-            ->groupBy('product_id')
-            ->orderByDesc('total_quantity')
+            ->groupBy('product_id');
+
+        $direction === 'asc'
+            ? $query->orderBy('total_quantity')
+            : $query->orderByDesc('total_quantity');
+
+        $items = $query
             ->limit($limit)
             ->get()
             ->map(fn (Sale $sale) => [
@@ -138,14 +177,9 @@ class ReportController extends Controller
             ->values()
             ->all();
 
-        return ApiResponse::success('Produk paling laku.', [
+        return [
             'period_label' => Carbon::create($year, $month, 1)->locale('id')->translatedFormat('F Y'),
             'items' => $items,
-        ]);
-    }
-
-    public function aging(): JsonResponse
-    {
-        return ApiResponse::success('Laporan aging.', $this->aging->report());
+        ];
     }
 }

@@ -64,6 +64,7 @@ Sertakan header `Authorization: Bearer <token>` pada tiap request.
 | GET    | `/api/reports/stock-alerts` | Bahan menipis/kritis saja |
 | GET    | `/api/reports/margin-alerts` | Produk dengan margin turun |
 | GET    | `/api/reports/top-products` | Produk paling laku (`?month=&year=&limit=`) |
+| GET    | `/api/reports/bottom-products` | Produk paling sepi (`?month=&year=&limit=`) |
 | GET    | `/api/bot/usage`      | Sisa kuota AI harian (`?telegram_user_id=`) |
 | POST   | `/api/bot/ai-usage`   | Konsumsi 1 kuota AI (body: `telegram_user_id`) |
 

@@ -152,6 +152,8 @@
 ### 5.3 Monitoring
 - [ ] Laravel activity log
 - [ ] Bot API call count (`api_calls` table)
+- [ ] AI usage analytics: token/LLM usage, request per minute, quota consumption per tenant dan aggregate
+- [ ] Filter monitoring per tenant, plan (`free`/`pro`/`business`), provider (Groq/DeepSeek), dan periode
 - [ ] Active users & error logs stats
 
 ### 5.4 Support

@@ -128,6 +128,13 @@ class WolEeClient:
             params={"month": month, "year": year, "limit": limit},
         )
 
+    def get_bottom_products(self, month: int, year: int, limit: int = 5) -> dict[str, Any]:
+        return self._request(
+            "GET",
+            "/reports/bottom-products",
+            params={"month": month, "year": year, "limit": limit},
+        )
+
     def get_ai_usage(self, telegram_user_id: int) -> dict[str, Any]:
         return self._request("GET", "/bot/usage", params={"telegram_user_id": telegram_user_id})
 

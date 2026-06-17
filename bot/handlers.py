@@ -140,6 +140,12 @@ class BotHandlers:
         if kind == "top_products":
             month, year = parse_period(text)
             return self.handle_top_products(user_id, month, year)
+        if kind == "bottom_products":
+            month, year = parse_period(text)
+            return self.handle_bottom_products(user_id, month, year)
+        if kind == "business_insight":
+            month, year = parse_period(text)
+            return self.handle_business_insight(user_id, month, year)
         if kind == "report_today":
             return self.handle_report_today(user_id)
         if kind == "report_pnl":
@@ -612,6 +618,86 @@ class BotHandlers:
         except WolEeApiError:
             return "❌ Gagal mengambil produk paling laku."
 
+    def handle_bottom_products(self, user_id: int, month: int, year: int) -> str:
+        client = self._client_for(user_id)
+        if client is None:
+            return "Belum terdaftar. Ketik /start <token> dulu."
+
+        try:
+            data = client.get_bottom_products(month, year)["data"]
+            self.storage.touch(user_id)
+            items = data.get("items") or []
+            label = data.get("period_label", f"{month}/{year}")
+            if not items:
+                return f"Belum ada penjualan di {label}."
+
+            lines = [f"📉 <b>Produk paling sepi — {label}</b>\n"]
+            for idx, item in enumerate(items[:5], start=1):
+                lines.append(
+                    f"{idx}. {item['product']} — {item['quantity']} terjual, "
+                    f"omset {format_amount(item['revenue'])}, profit {format_amount(item['profit'])}"
+                )
+            return "\n".join(lines)
+        except WolEeApiError:
+            return "❌ Gagal mengambil produk paling sepi."
+
+    def handle_business_insight(self, user_id: int, month: int, year: int) -> str:
+        client = self._client_for(user_id)
+        if client is None:
+            return "Belum terdaftar. Ketik /start <token> dulu."
+
+        try:
+            pnl = client.get_report_pnl(month, year)["data"]
+            top = client.get_top_products(month, year, limit=3)["data"].get("items") or []
+            bottom = client.get_bottom_products(month, year, limit=3)["data"].get("items") or []
+            stock_alerts = client.get_stock_alerts()["data"].get("alerts") or []
+            margin_alerts = client.get_margin_alerts()["data"].get("alerts") or []
+            self.storage.touch(user_id)
+        except WolEeApiError:
+            return "❌ Gagal mengambil data strategi."
+
+        label = pnl.get("period_label", f"{month}/{year}")
+        lines = [f"🧭 <b>Strategi dari data {label}</b>\n"]
+
+        if pnl["net_profit"] < 0:
+            gap = abs(pnl["net_profit"])
+            lines.append(
+                f"1. Fokus break-even dulu: laba bersih masih {format_amount(pnl['net_profit'])}. "
+                f"Laba kotor {format_amount(pnl['gross_profit'])} belum nutup biaya "
+                f"{format_amount(pnl['total_expenses'])} (gap {format_amount(gap)})."
+            )
+        else:
+            lines.append(
+                f"1. Bisnis sudah profit {format_amount(pnl['net_profit'])}. "
+                "Fokusnya pertahankan margin dan dorong produk yang paling cepat muter."
+            )
+
+        if top:
+            best = top[0]
+            lines.append(
+                f"2. Dorong produk yang sudah kebukti laku: {best['product']} "
+                f"({best['quantity']} terjual, profit {format_amount(best['profit'])})."
+            )
+
+        if bottom:
+            slow = bottom[0]
+            lines.append(
+                f"3. Review produk sepi: {slow['product']} baru {slow['quantity']} terjual. "
+                "Coba bundling, promo kecil, atau cek apakah perlu diganti menu lain."
+            )
+
+        if margin_alerts:
+            names = ", ".join(row["product"] for row in margin_alerts[:2])
+            lines.append(f"4. Cek margin turun di {names}; harga bahan/resep mungkin perlu dievaluasi.")
+        elif stock_alerts:
+            names = ", ".join(row["ingredient"] for row in stock_alerts[:3])
+            lines.append(f"4. Amankan stok bermasalah: {names}. Jangan sampai produk laku kehabisan bahan.")
+        else:
+            lines.append("4. Stok dan margin belum menunjukkan alarm besar. Prioritasnya naikin omset.")
+
+        lines.append("\nIni rekomendasi operasional dari data toko, bukan ramalan.")
+        return "\n".join(lines)
+
     def handle_capabilities(self, user_id: int) -> str:
         self.storage.touch(user_id)
         return (
@@ -619,7 +705,9 @@ class BotHandlers:
             "<b>📊 Laporan</b> (gratis, tanpa kuota AI)\n"
             "• profit bulan ini / ringkasan\n"
             "• omset hari ini\n"
-            "• barang paling laku\n\n"
+            "• barang paling laku\n"
+            "• barang paling ga laku\n"
+            "• strategi kedepannya\n\n"
             "<b>⚠️ Pantau</b> (gratis)\n"
             "• stok menipis / kritis\n"
             "• margin turun\n\n"
