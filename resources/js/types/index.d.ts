@@ -20,6 +20,7 @@ export type PageProps<
         user: User;
     };
     flash: FlashMessages;
+    hasInvoices: boolean;
 };
 
 export interface Paginated<T> {

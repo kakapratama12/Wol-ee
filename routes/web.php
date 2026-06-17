@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AgingReportController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\BotIntegrationController;
@@ -54,6 +55,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/pnl', [PnlController::class, 'index'])->name('pnl.index');
         Route::get('/pnl/export', [PnlController::class, 'export'])->name('pnl.export');
+
+        Route::get('/reports/aging', [AgingReportController::class, 'index'])->name('reports.aging');
 
         Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index');
         Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');

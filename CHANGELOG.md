@@ -13,8 +13,16 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 ## [Unreleased]
 
+### Added
+
+- Sidebar navigasi dikategorikan (Transaksi, Inventory, Laporan, Partner, Settings) dengan section collapsible.
+- Halaman web **Aging Report** (`/reports/aging`) — tersembunyi jika tenant belum punya invoice.
+- Kolom `weighted_avg_price` pada bahan baku; COGS memakai rata-rata tertimbang, snapshot penjualan tetap akurat.
+
 ### Changed
 
+- `InventoryService::recordPurchase()` memperbarui weighted average (bukan hanya harga beli terakhir).
+- `CogsService` memakai `weighted_avg_price` untuk perhitungan COGS live & snapshot penjualan.
 - Dokumentasi produk (`docs/PRD`, `docs/Roles-Sequence-Diagram`, `docs/Development-Context`)
   diperbarui: prioritas fitur (Partner, Aging, Invoice tracking P1), MVP scope
   diselaraskan dengan implementasi v0.1.0, stack Inertia/React, status deploy.

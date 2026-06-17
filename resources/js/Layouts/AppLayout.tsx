@@ -1,53 +1,107 @@
-import { PropsWithChildren, ReactNode, useEffect, useState } from 'react';
+import { PropsWithChildren, ReactNode, useEffect, useMemo, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutDashboard,
-    Boxes,
-    ShoppingCart,
     Receipt,
-    BookOpen,
-    Calculator,
+    Boxes,
     FileSpreadsheet,
-    Wallet,
-    TrendingDown,
-    Bot,
     Users,
-    FileText,
+    Settings,
     LogOut,
     Menu,
     X,
+    ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PageProps } from '@/types';
 
-interface NavItem {
+interface NavSingle {
     label: string;
     href: string;
     icon: ReactNode;
     ownerOnly?: boolean;
 }
 
-const navItems: NavItem[] = [
+interface NavLink {
+    label: string;
+    href: string;
+    ownerOnly?: boolean;
+    hideIfNoInvoices?: boolean;
+}
+
+interface NavGroup {
+    label: string;
+    icon: ReactNode;
+    ownerOnly?: boolean;
+    children: NavLink[];
+}
+
+const navigation: (NavSingle | NavGroup)[] = [
     { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
-    { label: 'Inventory', href: '/inventory', icon: <Boxes className="h-4 w-4" /> },
-    { label: 'Pembelian', href: '/transactions', icon: <Receipt className="h-4 w-4" /> },
-    { label: 'Penjualan', href: '/sales', icon: <ShoppingCart className="h-4 w-4" /> },
-    { label: 'Produk & Resep', href: '/products', icon: <BookOpen className="h-4 w-4" />, ownerOnly: true },
-    { label: 'Tax Simulator', href: '/tax', icon: <Calculator className="h-4 w-4" />, ownerOnly: true },
-    { label: 'Laporan P&L', href: '/pnl', icon: <FileSpreadsheet className="h-4 w-4" />, ownerOnly: true },
-    { label: 'Biaya', href: '/expenses', icon: <Wallet className="h-4 w-4" />, ownerOnly: true },
-    { label: 'Partners', href: '/partners', icon: <Users className="h-4 w-4" /> },
-    { label: 'Invoices', href: '/invoices', icon: <FileText className="h-4 w-4" /> },
-    { label: 'Margin Protection', href: '/margin', icon: <TrendingDown className="h-4 w-4" />, ownerOnly: true },
-    { label: 'Bot Integration', href: '/settings/bot', icon: <Bot className="h-4 w-4" />, ownerOnly: true },
+    {
+        label: 'Transaksi',
+        icon: <Receipt className="h-4 w-4" />,
+        children: [
+            { label: 'Pembelian', href: '/transactions' },
+            { label: 'Penjualan', href: '/sales' },
+            { label: 'Biaya', href: '/expenses', ownerOnly: true },
+        ],
+    },
+    {
+        label: 'Inventory',
+        icon: <Boxes className="h-4 w-4" />,
+        children: [
+            { label: 'Stok Bahan', href: '/inventory' },
+            { label: 'Produk & Resep', href: '/products', ownerOnly: true },
+        ],
+    },
+    {
+        label: 'Laporan',
+        icon: <FileSpreadsheet className="h-4 w-4" />,
+        ownerOnly: true,
+        children: [
+            { label: 'Laporan P&L', href: '/pnl' },
+            { label: 'Tax Simulator', href: '/tax' },
+            { label: 'Margin Protection', href: '/margin' },
+            { label: 'Aging Report', href: '/reports/aging', hideIfNoInvoices: true },
+        ],
+    },
+    {
+        label: 'Partner',
+        icon: <Users className="h-4 w-4" />,
+        children: [
+            { label: 'Daftar Partner', href: '/partners' },
+            { label: 'Invoices', href: '/invoices' },
+        ],
+    },
+    {
+        label: 'Settings',
+        icon: <Settings className="h-4 w-4" />,
+        ownerOnly: true,
+        children: [{ label: 'Bot Integration', href: '/settings/bot' }],
+    },
 ];
+
+function isNavGroup(item: NavSingle | NavGroup): item is NavGroup {
+    return 'children' in item;
+}
+
+function isActive(url: string, href: string): boolean {
+    return url === href || url.startsWith(`${href}/`);
+}
+
+function groupHasActiveChild(url: string, children: NavLink[]): boolean {
+    return children.some((child) => isActive(url, child.href));
+}
 
 export default function AppLayout({ title, children }: PropsWithChildren<{ title?: string }>) {
     const { props, url } = usePage<PageProps>();
     const user = props.auth.user;
     const isOwner = user.role === 'owner';
+    const hasInvoices = props.hasInvoices ?? false;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
     const flash = props.flash;
     useEffect(() => {
@@ -61,11 +115,119 @@ export default function AppLayout({ title, children }: PropsWithChildren<{ title
         return () => clearTimeout(t);
     }, [toast]);
 
-    const visibleNav = navItems.filter((item) => !item.ownerOnly || isOwner);
+    const visibleNav = useMemo(() => {
+        return navigation
+            .map((item) => {
+                if (!isNavGroup(item)) {
+                    if ('ownerOnly' in item && item.ownerOnly && !isOwner) return null;
+                    return item;
+                }
+
+                if (item.ownerOnly && !isOwner) return null;
+
+                const children = item.children.filter((child) => {
+                    if (child.ownerOnly && !isOwner) return false;
+                    if (child.hideIfNoInvoices && !hasInvoices) return false;
+                    return true;
+                });
+
+                if (children.length === 0) return null;
+
+                return { ...item, children };
+            })
+            .filter(Boolean) as (NavSingle | NavGroup)[];
+    }, [isOwner, hasInvoices]);
+
+    useEffect(() => {
+        const initial: Record<string, boolean> = {};
+        visibleNav.forEach((item) => {
+            if (isNavGroup(item) && groupHasActiveChild(url, item.children)) {
+                initial[item.label] = true;
+            }
+        });
+        setOpenGroups((prev) => ({ ...prev, ...initial }));
+    }, [url, visibleNav]);
+
+    const toggleGroup = (label: string) => {
+        setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
+    };
+
+    const renderNav = () => (
+        <nav className="flex flex-col gap-1 p-3">
+            {visibleNav.map((item) => {
+                if (!isNavGroup(item)) {
+                    const active = isActive(url, item.href);
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setSidebarOpen(false)}
+                            className={cn(
+                                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                                active
+                                    ? 'bg-primary/10 text-primary'
+                                    : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                            )}
+                        >
+                            {item.icon}
+                            {item.label}
+                        </Link>
+                    );
+                }
+
+                const isOpen = openGroups[item.label] ?? false;
+                const groupActive = groupHasActiveChild(url, item.children);
+
+                return (
+                    <div key={item.label}>
+                        <button
+                            type="button"
+                            onClick={() => toggleGroup(item.label)}
+                            className={cn(
+                                'flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                                groupActive
+                                    ? 'text-primary'
+                                    : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                            )}
+                        >
+                            <span className="flex items-center gap-3">
+                                {item.icon}
+                                {item.label}
+                            </span>
+                            <ChevronDown
+                                className={cn('h-4 w-4 transition-transform', isOpen && 'rotate-180')}
+                            />
+                        </button>
+                        {isOpen && (
+                            <div className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-border pl-3">
+                                {item.children.map((child) => {
+                                    const active = isActive(url, child.href);
+                                    return (
+                                        <Link
+                                            key={child.href}
+                                            href={child.href}
+                                            onClick={() => setSidebarOpen(false)}
+                                            className={cn(
+                                                'rounded-lg px-3 py-1.5 text-sm transition-colors',
+                                                active
+                                                    ? 'bg-primary/10 font-medium text-primary'
+                                                    : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                                            )}
+                                        >
+                                            {child.label}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </nav>
+    );
 
     return (
         <div className="min-h-screen bg-muted/30">
-            {/* Sidebar */}
             <aside
                 className={cn(
                     'fixed inset-y-0 left-0 z-40 w-64 transform border-r border-border bg-card transition-transform lg:translate-x-0',
@@ -78,34 +240,13 @@ export default function AppLayout({ title, children }: PropsWithChildren<{ title
                     </div>
                     <span className="text-lg font-bold tracking-tight">Wol-ee</span>
                 </div>
-                <nav className="flex flex-col gap-1 p-3">
-                    {visibleNav.map((item) => {
-                        const active = url.startsWith(item.href);
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                onClick={() => setSidebarOpen(false)}
-                                className={cn(
-                                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                                    active
-                                        ? 'bg-primary/10 text-primary'
-                                        : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-                                )}
-                            >
-                                {item.icon}
-                                {item.label}
-                            </Link>
-                        );
-                    })}
-                </nav>
+                {renderNav()}
             </aside>
 
             {sidebarOpen && (
                 <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setSidebarOpen(false)} />
             )}
 
-            {/* Main */}
             <div className="lg:pl-64">
                 <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-card/80 px-4 backdrop-blur sm:px-6">
                     <div className="flex items-center gap-3">

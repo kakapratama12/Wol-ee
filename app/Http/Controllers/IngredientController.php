@@ -28,6 +28,7 @@ class IngredientController extends Controller
                 'unit_type' => $i->unit_type,
                 'base_unit' => $i->base_unit,
                 'unit_price' => (float) $i->unit_price,
+                'weighted_avg_price' => (float) $i->weighted_avg_price,
                 'current_stock' => (float) $i->current_stock,
                 'minimum_stock' => (float) $i->minimum_stock,
                 'supplier' => $i->supplier?->name,
@@ -45,6 +46,7 @@ class IngredientController extends Controller
     {
         $data = $request->validated();
         $data['current_stock'] = $data['current_stock'] ?? 0;
+        $data['weighted_avg_price'] = $data['unit_price'];
 
         $ingredient = Ingredient::create($data);
 
@@ -61,6 +63,10 @@ class IngredientController extends Controller
     {
         $data = $request->validated();
         $priceChanged = round((float) $ingredient->unit_price, 4) !== round((float) $data['unit_price'], 4);
+
+        if ($priceChanged) {
+            $data['weighted_avg_price'] = $data['unit_price'];
+        }
 
         $ingredient->update($data);
 

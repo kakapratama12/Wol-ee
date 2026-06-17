@@ -21,6 +21,7 @@ class Ingredient extends Model
         'unit_type',
         'base_unit',
         'unit_price',
+        'weighted_avg_price',
         'current_stock',
         'minimum_stock',
         'supplier_id',
@@ -29,6 +30,7 @@ class Ingredient extends Model
 
     protected $casts = [
         'unit_price' => 'decimal:4',
+        'weighted_avg_price' => 'decimal:4',
         'current_stock' => 'decimal:4',
         'minimum_stock' => 'decimal:4',
     ];

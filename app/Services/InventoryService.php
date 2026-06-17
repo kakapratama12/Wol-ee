@@ -42,8 +42,16 @@ class InventoryService
 
             $priceChanged = round((float) $ingredient->unit_price, 4) !== round($unitPrice, 4);
 
-            $ingredient->current_stock = (float) $ingredient->current_stock + $quantity;
+            $oldStock = (float) $ingredient->current_stock;
+            $oldWeightedAvg = (float) ($ingredient->weighted_avg_price ?: $ingredient->unit_price);
+            $newStock = $oldStock + $quantity;
+            $totalValue = ($oldStock * $oldWeightedAvg) + ($quantity * $unitPrice);
+
+            $ingredient->current_stock = $newStock;
             $ingredient->unit_price = $unitPrice;
+            $ingredient->weighted_avg_price = $newStock > 0
+                ? round($totalValue / $newStock, 4)
+                : $unitPrice;
             $ingredient->save();
 
             StockMovement::create([
