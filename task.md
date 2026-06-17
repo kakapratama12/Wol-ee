@@ -93,27 +93,73 @@
 
 ## Sprint 4: Bot Integration
 
-### 4.1 API untuk Bot
-- [ ] POST /api/transactions (pembelian)
-- [ ] POST /api/sales (penjualan)
-- [ ] GET /api/stock (cek stok)
-- [ ] GET /api/partners/aging (cek aging)
+> **Integration Spec:** Bot (Python) → HTTP POST → Laravel API → DB Wol-ee
+
+### 4.1 Laravel API (sudah ada, perlu review)
+- [ ] POST /api/transactions (pembelian) ✓
+- [ ] POST /api/sales (penjualan) ✓
+- [ ] GET /api/stock (cek stok) ✓
+- [ ] GET /api/partners/aging (cek aging) —待Sprint 2
 - [ ] Auth: API token per tenant
 
-### 4.2 Bot Logic
-- [ ] NL parsing rules (item, qty, unit, price)
-- [ ] Incomplete data handling (tanya clarification / save draft)
-- [ ] Response format (JSON untuk bot consume)
+### 4.2 Bot Changes (Python)
+- [ ] Tambah config: `WOL_EE_API_URL` & `WOL_EE_API_TOKEN`
+- [ ] Tambah function: `post_to_wol_ee(endpoint, data)`
+- [ ] Update transaction handler: setelah parse NL → call Laravel API
+- [ ] Update sales handler: setelah parse NL → call Laravel API
+- [ ] Update stock check: call Laravel API (atau query langsung)
+- [ ] Fallback: kalau API down → simpan ke local DB, retry nanti
+- [ ] Logging: log semua API calls (success/failure)
 
-### 4.3 Bot → Dashboard Sync
-- [ ] Data dari bot muncul di dashboard
-- [ ] Source tagging (bot vs dashboard)
-- [ ] Edit data bot via dashboard
+### 4.3 Integration Flow
+```
+User: "Beli tepung 2kg harga 18rb"
+    ↓
+Bot: Parse NL → {item: "tepung", qty: 2, unit: "kg", price: 18000}
+    ↓
+Bot: POST /api/transactions {ingredient: "tepung", quantity: 2, unit_price: 18000, source: "bot"}
+    ↓
+Laravel: Validate → Save ke DB → Update stock
+    ↓
+Laravel: Return {message: "Tercatat", new_stock: 5.5, stock_status: "aman"}
+    ↓
+Bot: Reply ke user: "✅ Pembelian tercatat. Stok tepung: 5.5 kg (aman)"
+```
+
+### 4.4 Response Format (Bot → User)
+```json
+// Success
+{
+  "success": true,
+  "message": "Pembelian tercatat.",
+  "data": {
+    "ingredient": "tepung",
+    "quantity": 2,
+    "unit": "kg",
+    "total": 36000,
+    "new_stock": 5.5,
+    "stock_status": "aman"
+  }
+}
+
+// Incomplete data
+{
+  "success": false,
+  "message": "Harga belum diisi. Berapa per kg?",
+  "missing": ["unit_price"]
+}
+```
+
+### 4.5 Error Handling
+- API timeout → retry 1x → fallback ke local DB
+- API error 422 → return validation error ke user
+- API error 500 → log error, return generic message
 
 **Sprint 4 Done Criteria:**
-- ✅ Bot bisa input transaksi
-- ✅ Bot bisa cek stok
-- ✅ Data sync bot ↔ dashboard
+- ✅ Bot bisa input transaksi → masuk ke DB Wol-ee
+- ✅ Bot bisa cek stok → data dari DB Wol-ee
+- ✅ Data sync bot ↔ dashboard real-time
+- ✅ Fallback works kalau API down
 
 ---
 
