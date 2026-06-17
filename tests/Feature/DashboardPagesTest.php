@@ -32,7 +32,7 @@ it('mengarahkan tamu ke halaman login', function () {
 it('owner bisa mengakses semua halaman utama', function () {
     $this->actingAs(owner());
 
-    foreach (['/dashboard', '/inventory', '/transactions', '/sales', '/products', '/tax', '/pnl', '/expenses', '/margin', '/settings/bot'] as $url) {
+    foreach (['/dashboard', '/inventory', '/transactions', '/sales', '/partners', '/invoices', '/products', '/tax', '/pnl', '/expenses', '/margin', '/settings/bot'] as $url) {
         $this->get($url)->assertOk();
     }
 });
@@ -43,6 +43,8 @@ it('admin bisa akses inventory & transaksi tapi tidak halaman owner', function (
     $this->get('/inventory')->assertOk();
     $this->get('/transactions')->assertOk();
     $this->get('/sales')->assertOk();
+    $this->get('/partners')->assertOk();
+    $this->get('/invoices')->assertOk();
 
     foreach (['/products', '/tax', '/pnl', '/expenses', '/margin'] as $url) {
         $this->get($url)->assertForbidden();

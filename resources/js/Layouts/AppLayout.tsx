@@ -11,6 +11,8 @@ import {
     Wallet,
     TrendingDown,
     Bot,
+    Users,
+    FileText,
     LogOut,
     Menu,
     X,
@@ -34,6 +36,8 @@ const navItems: NavItem[] = [
     { label: 'Tax Simulator', href: '/tax', icon: <Calculator className="h-4 w-4" />, ownerOnly: true },
     { label: 'Laporan P&L', href: '/pnl', icon: <FileSpreadsheet className="h-4 w-4" />, ownerOnly: true },
     { label: 'Biaya', href: '/expenses', icon: <Wallet className="h-4 w-4" />, ownerOnly: true },
+    { label: 'Partners', href: '/partners', icon: <Users className="h-4 w-4" /> },
+    { label: 'Invoices', href: '/invoices', icon: <FileText className="h-4 w-4" /> },
     { label: 'Margin Protection', href: '/margin', icon: <TrendingDown className="h-4 w-4" />, ownerOnly: true },
     { label: 'Bot Integration', href: '/settings/bot', icon: <Bot className="h-4 w-4" />, ownerOnly: true },
 ];

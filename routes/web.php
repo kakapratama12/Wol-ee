@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\BotIntegrationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
@@ -33,6 +35,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
     Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
 
+    Route::get('/partners', [PartnerController::class, 'index'])->name('partners.index');
+    Route::get('/partners/{partner}', [PartnerController::class, 'show'])->name('partners.show');
+
+    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+
     // Owner only
     Route::middleware('owner')->group(function () {
         Route::get('/products', [ProductController::class, 'index'])->name('products.index');
@@ -56,6 +64,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/settings/bot', [BotIntegrationController::class, 'index'])->name('settings.bot');
         Route::post('/settings/bot/token', [BotIntegrationController::class, 'generate'])->name('settings.bot.generate');
+
+        Route::post('/partners', [PartnerController::class, 'store'])->name('partners.store');
+        Route::put('/partners/{partner}', [PartnerController::class, 'update'])->name('partners.update');
+        Route::delete('/partners/{partner}', [PartnerController::class, 'destroy'])->name('partners.destroy');
+
+        Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
+        Route::post('/invoices/{invoice}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
     });
 });
 
