@@ -451,3 +451,22 @@ it('memberi kuota ai lebih besar untuk tenant pro', function () {
         ->assertJsonPath('data.uses_premium_llm', true);
 });
 
+it('mencatat feedback bot untuk kurasi roadmap', function () {
+    $response = $this->postJson('/api/bot/feedback', [
+        'telegram_user_id' => 445566,
+        'feedback_text' => 'bandingin profit bulan ini vs bulan lalu',
+        'original_message' => 'bisa bandingin bulan lalu ga?',
+    ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.status', 'new');
+
+    $this->assertDatabaseHas('bot_feedbacks', [
+        'tenant_id' => $this->auth['tenant']->id,
+        'telegram_user_id' => 445566,
+        'feedback_text' => 'bandingin profit bulan ini vs bulan lalu',
+        'status' => 'new',
+    ]);
+});
+

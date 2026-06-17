@@ -141,6 +141,20 @@ class WolEeClient:
     def consume_ai_quota(self, telegram_user_id: int) -> dict[str, Any]:
         return self._request("POST", "/bot/ai-usage", json={"telegram_user_id": telegram_user_id})
 
+    def post_feedback(
+        self,
+        telegram_user_id: int,
+        feedback_text: str,
+        original_message: str | None = None,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {
+            "telegram_user_id": telegram_user_id,
+            "feedback_text": feedback_text,
+        }
+        if original_message:
+            payload["original_message"] = original_message
+        return self._request("POST", "/bot/feedback", json=payload)
+
     def get_aging(self) -> dict[str, Any]:
         return self._request("GET", "/reports/aging")
 

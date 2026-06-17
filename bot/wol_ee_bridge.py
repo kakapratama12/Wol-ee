@@ -40,6 +40,9 @@ def try_handle(user_id: int, text: str) -> str | BotResponse | None:
     if not is_wolee_user(user_id):
         return None
 
+    if clean.startswith("feedback "):
+        return _handlers.handle_feedback(user_id, text)
+
     if clean in {"profit", "ringkasan hari ini"} or "profit hari ini" in normalized or "omset hari ini" in normalized:
         return _handlers.handle_report_today(user_id)
 
@@ -85,6 +88,9 @@ async def handle_wolee_message(user_id: int, text: str, is_pro: bool = False) ->
     pending_reply = _handlers.handle_pending_reply(user_id, text)
     if pending_reply is not None:
         return pending_reply
+
+    if text.strip().lower().lstrip("/").startswith("feedback "):
+        return _handlers.handle_feedback(user_id, text)
 
     query_kind = classify_query(text)
     if query_kind is not None:

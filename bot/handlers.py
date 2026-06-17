@@ -167,6 +167,28 @@ class BotHandlers:
             logger.warning("Gagal cek kuota AI: %s", exc)
             return None
 
+    def handle_feedback(self, user_id: int, text: str, original_message: str | None = None) -> str:
+        client = self._client_for(user_id)
+        if client is None:
+            return "Belum terdaftar. Ketik /start <token> dulu."
+
+        feedback_text = re.sub(r"^/?feedback\\b", "", text.strip(), flags=re.IGNORECASE).strip()
+        if len(feedback_text) < 3:
+            return (
+                "Tulis feedback setelah kata <b>feedback</b>.\n"
+                "Contoh: feedback bandingin profit bulan ini vs bulan lalu"
+            )
+
+        try:
+            client.post_feedback(user_id, feedback_text, original_message=original_message)
+            self.storage.touch(user_id)
+            return (
+                "✅ Feedback dicatat. Tim Wol-ee akan review dulu apakah relevan "
+                "untuk fitur bisnis F&B."
+            )
+        except WolEeApiError:
+            return "❌ Gagal mencatat feedback. Coba lagi nanti."
+
     async def handle_natural_language(self, user_id: int, text: str, is_pro: bool = False) -> str | BotResponse:
         client = self._client_for(user_id)
         if client is None:
@@ -221,12 +243,16 @@ class BotHandlers:
             return self._post_sale(client, user_id, payload, products)
 
         return (
-            "❌ Perintah tidak dikenali.\n\n"
-            "Contoh:\n"
-            "• Beli tepung 2kg Rp 36 ribu\n"
-            "• Jual matcha latte 10\n"
-            "• matcha 10, croissant 5, latte 8\n"
-            "• stok tepung"
+            "❌ Aku belum bisa memahami perintah itu.\n\n"
+            "Yang bisa kamu coba:\n"
+            "• profit bulan ini\n"
+            "• barang paling laku\n"
+            "• stok menipis\n"
+            "• jual matcha 10\n"
+            "• beli tepung 2kg Rp 36 ribu\n\n"
+            "Kalau ini kebutuhan bisnis kamu, balas:\n"
+            "feedback <perintah/pertanyaan yang kamu harapkan>\n"
+            "Contoh: feedback bandingin profit bulan ini vs bulan lalu"
         )
 
     def _build_batch_preview(

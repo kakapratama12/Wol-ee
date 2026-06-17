@@ -97,8 +97,10 @@ Upgrade ke Pro untuk kuota lebih besar & respons lebih akurat.
 ## 5. Laravel
 
 - Migration: `bot_ai_usages` (`tenant_id`, `telegram_user_id`, `usage_date`, `count`)
+- Migration: `bot_feedbacks` (`tenant_id`, `telegram_user_id`, `original_message`, `feedback_text`, `status`, `note`)
 - Service: `BotUsageService`
 - Controller: `BotUsageController` atau extend `BotAuthController`
+- Controller: `BotFeedbackController::store` (`POST /api/bot/feedback`)
 - Report: `ReportController::pnl`, `::marginAlerts`, `::stockAlerts`
 
 ---
@@ -108,7 +110,7 @@ Upgrade ke Pro untuk kuota lebih besar & respons lebih akurat.
 | File | Peran |
 |------|--------|
 | `query_router.py` | Klasifikasi QUERY tanpa LLM |
-| `handlers.py` | Handler PnL, stock/margin alerts, capabilities |
+| `handlers.py` | Handler PnL, stock/margin alerts, capabilities, feedback |
 | `wol_ee_client.py` | Client endpoint baru |
 | `wol_ee_bridge.py` | QUERY sebelum ACTION |
 | `bot_storage.py` | Kolom `tenant_plan` |
@@ -116,7 +118,13 @@ Upgrade ke Pro untuk kuota lebih besar & respons lebih akurat.
 
 ---
 
-## 7. Out of scope (demo)
+## 7. Feedback collection
+
+Fallback unknown command wajib mengarahkan user ke `feedback <kebutuhan>`. Feedback disimpan untuk kurasi, bukan janji otomatis masuk roadmap. Status kurasi: `new`, `reviewed`, `planned`, `shipped`, `rejected`.
+
+---
+
+## 8. Out of scope (demo)
 
 - Tax simulation via bot
 - Top products, compare period

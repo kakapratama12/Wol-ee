@@ -67,6 +67,7 @@ Sertakan header `Authorization: Bearer <token>` pada tiap request.
 | GET    | `/api/reports/bottom-products` | Produk paling sepi (`?month=&year=&limit=`) |
 | GET    | `/api/bot/usage`      | Sisa kuota AI harian (`?telegram_user_id=`) |
 | POST   | `/api/bot/ai-usage`   | Konsumsi 1 kuota AI (body: `telegram_user_id`) |
+| POST   | `/api/bot/feedback`   | Catat feedback early adopter untuk kurasi roadmap |
 
 `quantity` dikirim dalam *base unit* bahan (mis. gram, ml). Rate limit 60 req/menit per tenant.
 

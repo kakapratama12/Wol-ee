@@ -154,6 +154,7 @@
 - [ ] Bot API call count (`api_calls` table)
 - [ ] AI usage analytics: token/LLM usage, request per minute, quota consumption per tenant dan aggregate
 - [ ] Filter monitoring per tenant, plan (`free`/`pro`/`business`), provider (Groq/DeepSeek), dan periode
+- [ ] Feedback inbox: review `bot_feedbacks`, status `new/reviewed/planned/shipped/rejected`, tag/kategori kebutuhan
 - [ ] Active users & error logs stats
 
 ### 5.4 Support
