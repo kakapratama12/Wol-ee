@@ -26,21 +26,27 @@
 - Margin tracking
 - Integration ke Laravel API (dashboard)
 
-### 1.2 Laravel Dashboard (Belum Ada)
+### 1.2 Laravel Dashboard (Sudah Ada — MVP v0.1.0)
 
-**Stack:**
-- Laravel + Blade/Livewire
-- PostgreSQL (shared dengan bot)
-- Deploy: VPS Nawasena (178.128.23.108) atau VPS baru
+**Stack (aktual):**
+- Laravel 13 + Inertia.js + React + TypeScript
+- Tailwind CSS 3 + shadcn/ui
+- PostgreSQL (shared dengan bot di produksi)
+- Auth: Breeze (session web) + Sanctum (API bot)
+- Repo: [github.com/kakapratama12/Wol-ee](https://github.com/kakapratama12/Wol-ee)
 
-**Yang perlu dibangun:**
-- Dashboard overview
-- Inventory management
-- Recipe management
-- P&L report
-- Tax simulator
-- Margin protection
-- User authentication (Owner/Admin)
+**Sudah dibangun:**
+- Dashboard overview, inventory, transaksi (pembelian), penjualan
+- Produk & resep, COGS otomatis, tax simulator, P&L + export Excel
+- Margin protection, expenses, stock alerts (queue)
+- API bot: `POST /api/transactions`, `POST /api/sales`, `GET /api/stock`, `GET /api/reports/today`
+- RBAC Owner/Admin (middleware)
+
+**Belum / berikutnya:**
+- Partner management terpadu (customer + supplier), aging, invoice tracking
+- Endpoint API partner & invoice (lihat §5.7–5.8)
+- Wire bot Python ke API Laravel (bot saat ini belum memanggil endpoint ini)
+- Deploy produksi + beta user
 
 ---
 
@@ -55,15 +61,15 @@
                           ┌──────▼──────┐
                           │  🔌 API     │
                           │  (Laravel)  │
-                          │  [NEW]      │
+                          │  [LIVE]     │
                           └──────┬──────┘
                                  │
                     ┌────────────┼────────────┐
                     │            │            │
               ┌─────▼─────┐ ┌───▼───┐
               │  💾 DB    │ │ 🖥️ Web│
-              │ (Postgres)│ │ (NEW) │
-              │ [EXIST]   │ │       │
+              │ (Postgres)│ │(LIVE) │
+              │ [EXIST]   │ │Inertia│
               └───────────┘ └───────┘
 ```
 
@@ -75,9 +81,9 @@
 - Endpoint: POST /api/transactions, POST /api/sales
 
 **Dashboard → DB:**
-- Laravel langsung query DB
-- Tampilkan data real-time
-- User bisa input/edit via form
+- Inertia (web) dan API bot memakai **service layer** yang sama (`app/Services`)
+- Mutasi stok & penjualan atomic (`DB::transaction()`), stok sebagai ledger
+- User input via form dashboard; bot via HTTP API (bukan query DB langsung)
 
 ---
 
@@ -257,17 +263,30 @@ Laba Bersih:    Rp XX
 │ unit_price  │     │ cogs        │     │ minimum     │
 │ total       │     │ profit      │     │             │
 │ date        │     │ date        │     │             │
+│ partner_id  │     │ partner_id  │     │             │
 └─────────────┘     └─────────────┘     └─────────────┘
 
-┌─────────────┐     ┌─────────────┐
-│ PRICE_HISTORY│    │   USERS     │
-├─────────────┤     ├─────────────┤
-│ id          │     │ id          │
-│ ingredient_id│    │ name        │
-│ price       │     │ email       │
-│ date        │     │ role        │
-│             │     │ (owner/admin)│
-└─────────────┘     └─────────────┘
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  PARTNERS   │     │   INVOICES  │     │PRICE_HISTORY│
+├─────────────┤     ├─────────────┤     ├─────────────┤
+│ id          │     │ id          │     │ id          │
+│ name        │     │ partner_id  │     │ ingredient_id│
+│ type        │     │ amount      │     │ price       │
+│ (customer/  │     │ due_date    │     │ date        │
+│  supplier)  │     │ status      │     │             │
+│ contact     │     │ (paid/      │     │             │
+│             │     │  outstanding)│    │             │
+└─────────────┘     └─────────────┘     └─────────────┘
+
+┌─────────────┐
+│   USERS     │
+├─────────────┤
+│ id          │
+│ name        │
+│ email       │
+│ role        │
+│ (owner/admin)│
+└─────────────┘
 ```
 
 ---
@@ -309,15 +328,31 @@ Laba Bersih:    Rp XX
 - PUT /api/sales/{id}
 - DELETE /api/sales/{id}
 
-### 5.7 Reports
+### 5.7 Partners
+- GET /api/partners
+- POST /api/partners
+- PUT /api/partners/{id}
+- DELETE /api/partners/{id}
+- GET /api/partners/{id}/transactions
+- GET /api/partners/{id}/aging
+
+### 5.8 Invoices
+- GET /api/invoices
+- POST /api/invoices
+- PUT /api/invoices/{id}
+- DELETE /api/invoices/{id}
+- GET /api/invoices/outstanding
+
+### 5.9 Reports
 - GET /api/reports/pnl?month=&year=
 - GET /api/reports/cashflow?month=&year=
+- GET /api/reports/aging
 - GET /api/reports/export/pnl?month=&year=
 
-### 5.8 Tax
+### 5.10 Tax
 - GET /api/tax/simulator?omset=&cogs=&expense=&waste=&type=
 
-### 5.9 Margin
+### 5.11 Margin
 - GET /api/margin/alerts
 - GET /api/margin/what-if?product_id=&increase%
 
@@ -377,10 +412,12 @@ def handle_check_stock(message):
 - Path: /home/ubuntu/keuangan-bot/
 - Start: cd /home/ubuntu/keuangan-bot && source venv/bin/activate && python bot.py
 
-### 7.2 Dashboard (New)
-- VPS: Nawasena (178.128.23.108) atau VPS baru
-- Stack: Laravel + Nginx
-- Path: /var/www/wol-ee/
+### 7.2 Dashboard (MVP v0.1.0 — belum deploy produksi)
+
+- **Dev:** Laravel Sail (`./vendor/bin/sail up`), http://localhost
+- **Produksi (rencana):** VPS Nawasena (178.128.23.108) atau VPS baru
+- Stack: Laravel 13 + Inertia/React + Nginx + PHP-FPM 8.5
+- Path: `/var/www/wol-ee/` (lihat `README.md` § Deploy)
 
 ### 7.3 Database
 - Shared: PostgreSQL di Hermes
@@ -390,16 +427,17 @@ def handle_check_stock(message):
 
 ## 8. Notes for Developer
 
-1. **Bot sudah ada** — jangan buat dari scratch, tambah fitur aja
-2. **Database bisa shared** atau pisah, sesuaikan dengan scalability
-3. **API harus RESTful** — biar bot dan dashboard bisa akses
-4. **Gunakan Laravel best practices** — Repository pattern, Service layer
-5. **Database schema flexible** — developer bisa define sendiri sesuai kebutuhan
-6. **Focus di business logic** — COGS calculation, waste, tax simulator
-7. **Export Excel** — gunakan library seperti PhpSpreadsheet
+1. **Bot sudah ada** — jangan buat dari scratch; tambah fitur + wire ke API Laravel
+2. **Dashboard sudah ada (v0.1.0)** — Inertia/React, bukan Blade/Livewire; lihat `AGENTS.md`
+3. **Service layer wajib** — web & API bot pakai `app/Services` yang sama (ADR-0003)
+4. **Schema saat ini vs rencana:** MVP punya tabel `suppliers`; rencana P1 menggabungkan
+   customer+supplier ke `partners` + `invoices` (lihat diagram §4)
+5. **API bot MVP live** — partner/invoice endpoints di §5.7–5.8 belum diimplementasi
+6. **Uang = decimal**, mutasi atomic, stok sebagai ledger — lihat ADR-0002, ADR-0003
+7. **Export Excel** — PhpSpreadsheet langsung (bukan maatwebsite/excel)
 
 ---
 
-*Document version: 0.1*
-*Last updated: 16 June 2026*
+*Document version: 0.4*
+*Last updated: 17 June 2026*
 *Author: Sena (AI Assistant)*
