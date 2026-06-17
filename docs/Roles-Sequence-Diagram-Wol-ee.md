@@ -433,14 +433,18 @@ Bot   → "📦 Tepung: 5kg ✅ | Susu: 2L ⚠️ | Telur: 100 ✅"
 | **Bot: Input transaksi** | ✅ | ✅ |
 | **Bot: Input penjualan** | ✅ | ✅ |
 | **Bot: Cek stok** | ✅ | ✅ |
-| **Bot: Lihat profit** | ✅ | ⚠️ Hari ini saja |
-| **Dashboard: Overview** | ✅ | ⚠️ Limited |
-| **Dashboard: Inventory** | ✅ | ✅ View only |
-| **Dashboard: Resep** | ✅ | ❌ |
-| **Dashboard: Tax Simulator** | ✅ | ❌ |
-| **Dashboard: P&L** | ✅ | ❌ |
-| **Dashboard: Margin Protection** | ✅ | ❌ |
+| **Bot: Cek partner aging** | ✅ | ⚠️ Limit |
+| **Bot: Follow-up customer** | ✅ | ❌ |
+| **Dashboard: Overview & operasional** | ✅ | ⚠️ Lihat catatan |
+| **Dashboard: Partner & invoice** | ✅ | ❌ |
+| **Dashboard: Resep, P&L, Tax, Margin** | ✅ | ❌ |
+| **Dashboard: Edit/hapus master data** | ✅ | ❌ |
 | **Dashboard: Multi-user** | ✅ | ❌ |
+
+> **Catatan implementasi (MVP v0.1.0):** Role `admin` saat ini masih bisa akses web untuk
+> inventory, transaksi, dan penjualan (operasional harian). Baris "operasional" di atas
+> = target setelah RBAC diselaraskan; owner-only pages (produk, pajak, P&L, margin) sudah
+> sesuai target.
 
 ---
 
@@ -474,6 +478,6 @@ Status: ✅ Aman | ⚠️ Menipis | 🔴 Kritis
 
 ---
 
-*Document version: 0.3*
-*Last updated: 16 June 2026*
+*Document version: 0.4*
+*Last updated: 17 June 2026*
 *Author: Sena (AI Assistant)*

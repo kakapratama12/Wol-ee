@@ -137,13 +137,16 @@ Wol-ee:
 | Fitur | Deskripsi | Priority |
 |-------|-----------|----------|
 | **Dashboard Overview** | Omset, COGS, Profit, Margin | P0 |
-| **Transaction List** | Daftar semua transaksi | P0 |
-| **Inventory Management** | Tabel stok dengan status (gramasi + packaged) | P0 |
-| **Recipe Management** | Setup resep + gramasi per produk | P0 |
-| **COGS Calculator** | Hitung COGS per produk otomatis | P0 |
-| **P&L Report** | Profit & Loss, export ke Excel | P0 |
-| **Tax Simulator** | Estimasi pajak berdasarkan input | P0 |
-| **Margin Protection** | Price tracker, margin alert, what-if simulator | P0 |
+| **Transaction List** | Daftar semua transaksi | P1 |
+| **Inventory Management** | Stok, value, history | P1 |
+| **Recipe Management** | Resep + gramasi produk | P1 |
+| **Partner Management** | Daftar customer & supplier | P1 |
+| **Partner Aging** | Siapa yang belum bayar, umur berapa lama | P1 |
+| **Invoice Tracking** | Daftar invoice outstanding | P1 |
+| **P&L Report** | Laporan laba rugi + export Excel | P1 |
+| **Tax Simulator** | Kalkulasi estimasi pajak | P1 |
+| **Margin Protection** | Price tracker, margin alert, what-if | P0 |
+| **User Settings** | Profil, role, password | P2 |
 
 ### 5.2 Phase 2 — Finance & Reporting
 
@@ -464,24 +467,41 @@ Stok Tepung: 4kg
 
 ## 12. MVP Scope
 
-### What's IN (MVP):
-- ✅ Transaction input via bot (NL)
-- ✅ Sales input via bot (NL)
-- ✅ Stock tracking (gramasi + packaged)
-- ✅ Recipe management
-- ✅ COGS calculation
-- ✅ Dashboard overview
-- ✅ Inventory alerts
-- ✅ Tax simulator
-- ✅ P&L report + export Excel
-- ✅ Margin protection (price tracker, margin alert, what-if simulator)
+### What's IN (MVP — sudah live v0.1.0):
+
+**Bot (via API, bot Python perlu di-wire):**
+- Transaction input via bot (NL)
+- Sales input via bot (NL)
+- Stock check & COGS estimate per penjualan
+
+**Dashboard (web):**
+- Dashboard overview (omset, COGS, profit, margin)
+- Transaction list + input pembelian (form)
+- Sales list + input penjualan (form)
+- Inventory management (gramasi + packaged, status stok)
+- Recipe management + COGS otomatis per produk
+- Tax simulator (PP 23 vs normal)
+- P&L report + export Excel
+- Margin protection (price tracker, alert, what-if)
+- Expenses
+- Stock alerts (queue → Telegram, bila dikonfigurasi)
+- Auth Owner/Admin (RBAC dasar)
+
+### What's IN (MVP — berikutnya, P1):
+
+- Partner management (customer + supplier terpadu)
+- Partner aging (siapa belum bayar, umur piutang)
+- Invoice tracking (daftar outstanding)
+- Integrasi penuh bot Python ↔ API Laravel
+- User settings (profil, role, password) — P2
 
 ### What's OUT (MVP):
-- ❌ POS/Receipt printing (Phase 3)
+
+- ❌ POS / receipt printing (Phase 3)
 - ❌ Email parsing (Phase 3)
-- ❌ Multi-user (Phase 2)
-- ❌ Invoice generation (Phase 3)
+- ❌ Invoice generation / kirim invoice (Phase 3 — beda dengan *tracking* P1)
 - ❌ B2B order management (Phase 3)
+- ❌ Multi-user lanjutan / staff granular (Phase 2)
 
 ---
 
@@ -531,24 +551,26 @@ Stok Tepung: 4kg
 2. **Bot personality:** Formal atau friendly?
 3. **Language:** Bahasa Indonesia only atau bilingual?
 4. **Support:** WhatsApp? Email? Telegram group?
-5. **Timeline:** Kapan mau mulai development?
+5. **RBAC admin:** Konfirmasi target — admin hanya via bot, atau tetap akses web terbatas (inventory/transaksi)?
 
 ---
 
 ## 16. Next Steps
 
 1. [x] Review & finalize PRD
-2. [ ] Buat Roles & Sequence Diagram
-3. [ ] Database schema design
-4. [ ] API spec (endpoints)
-5. [ ] Wireframe detail per page
-6. [ ] Setup development environment
-7. [ ] Mulai development (agent)
-8. [ ] Deploy beta version
-9. [ ] Onboard beta user
+2. [x] Buat Roles & Sequence Diagram
+3. [x] Database schema design (domain inti: inventory, produk, resep, transaksi, penjualan)
+4. [x] API spec & endpoint bot MVP (Sanctum)
+5. [ ] Wireframe detail halaman Partner & Invoice
+6. [x] Setup development environment (Sail + Postgres)
+7. [x] Development dashboard MVP (v0.1.0)
+8. [ ] Schema + API + UI: Partner, Aging, Invoice tracking
+9. [ ] Wire bot Python ke API Laravel
+10. [ ] Deploy beta version (VPS)
+11. [ ] Onboard beta user (temen Odi)
 
 ---
 
-*Document version: 0.3*
-*Last updated: 16 June 2026*
+*Document version: 0.4*
+*Last updated: 17 June 2026*
 *Author: Sena (AI Assistant)*

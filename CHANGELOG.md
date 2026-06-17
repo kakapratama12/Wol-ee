@@ -13,6 +13,12 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 ## [Unreleased]
 
+### Changed
+
+- Dokumentasi produk (`docs/PRD`, `docs/Roles-Sequence-Diagram`, `docs/Development-Context`)
+  diperbarui: prioritas fitur (Partner, Aging, Invoice tracking P1), MVP scope
+  diselaraskan dengan implementasi v0.1.0, stack Inertia/React, status deploy.
+
 ### Added
 
 - Workflow rekayasa: kebijakan commit, changelog, dan ADR di `AGENTS.md`.
