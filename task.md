@@ -5,6 +5,22 @@
 
 ---
 
+## ⚠️ Git Workflow (IMPORTANT)
+
+```
+main     → production (hanya dari develop via PR/merge)
+develop  → current development (cursor push ke sini)
+feature/ → optional, untuk feature besar
+```
+
+**Rules:**
+1. **Cursor push ke `develop`**, BUKAN ke `main`
+2. **Main hanya diupdate** via PR dari develop (atau merge manual setelah review)
+3. **Commit message format:** `[Sprint X] Description` (contoh: `[Sprint 1] Add tenant_id to ingredients`)
+4. **Setiap selesai task**, update status di `task.md` (centang `[x]`)
+
+---
+
 ## Sprint 1: Foundation
 
 ### 1.1 Multi-Tenant Isolation
