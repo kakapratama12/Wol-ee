@@ -16,8 +16,10 @@ Route::post('/bot/validate-token', [BotAuthController::class, 'validateToken'])
 Route::middleware(['bot.token', 'throttle:bot'])->group(function () {
     Route::get('/transactions', [TransactionController::class, 'index']);
     Route::post('/transactions', [TransactionController::class, 'store']);
+    Route::post('/transactions/batch', [TransactionController::class, 'storeBatch']);
     Route::get('/sales', [SaleController::class, 'index']);
     Route::post('/sales', [SaleController::class, 'store']);
+    Route::post('/sales/batch', [SaleController::class, 'storeBatch']);
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/stock', [StockController::class, 'index']);
     Route::get('/reports/today', [ReportController::class, 'today']);

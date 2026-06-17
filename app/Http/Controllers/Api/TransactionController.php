@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\StoreBatchTransactionRequest;
 use App\Http\Requests\Api\StoreTransactionRequest;
 use App\Http\Support\ApiResponse;
 use App\Models\Ingredient;
@@ -10,6 +11,7 @@ use App\Models\Transaction;
 use App\Services\InventoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
@@ -51,17 +53,11 @@ class TransactionController extends Controller
         $ingredient = $this->resolveIngredient($request);
 
         if (! $ingredient) {
-            $extra = [];
-
-            if ($searchName !== '') {
-                $extra['suggestions'] = $this->suggestIngredients($searchName);
-            }
-
             return ApiResponse::error(
                 message: "Bahan '{$searchName}' tidak ditemukan.",
                 errorCode: 'INGREDIENT_NOT_FOUND',
                 status: 422,
-                extra: $extra,
+                extra: $this->ingredientNotFoundExtra(),
             );
         }
 
@@ -93,6 +89,89 @@ class TransactionController extends Controller
         ], 201);
     }
 
+    public function storeBatch(StoreBatchTransactionRequest $request): JsonResponse
+    {
+        $items = $request->input('items', []);
+        $resolved = [];
+        $errors = [];
+
+        foreach ($items as $index => $item) {
+            $searchName = trim((string) ($item['ingredient'] ?? ''));
+            $ingredient = $this->resolveIngredientByInput($item);
+
+            if (! $ingredient) {
+                $errors[] = [
+                    'index' => $index,
+                    'ingredient' => $searchName,
+                    'error_code' => 'INGREDIENT_NOT_FOUND',
+                    'message' => "Bahan '{$searchName}' tidak ditemukan.",
+                ];
+
+                continue;
+            }
+
+            $quantity = (float) $item['quantity'];
+            $unitPrice = ! empty($item['unit_price'])
+                ? (float) $item['unit_price']
+                : round((float) $item['total'] / max($quantity, 1e-9), 4);
+
+            $resolved[] = [
+                'ingredient' => $ingredient,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+            ];
+        }
+
+        if ($errors !== []) {
+            return ApiResponse::error(
+                message: 'Beberapa bahan tidak ditemukan.',
+                errorCode: 'BATCH_VALIDATION_FAILED',
+                status: 422,
+                extra: array_merge(['errors' => $errors], $this->ingredientNotFoundExtra()),
+            );
+        }
+
+        $note = $request->input('note');
+        $occurredAt = $request->date('occurred_at');
+        $userId = $request->user()?->id;
+
+        $results = DB::transaction(function () use ($resolved, $note, $occurredAt, $userId) {
+            $transactions = [];
+            $totalAmount = 0.0;
+
+            foreach ($resolved as $row) {
+                $ingredient = $row['ingredient'];
+                $transaction = $this->inventory->recordPurchase(
+                    ingredient: $ingredient,
+                    quantity: $row['quantity'],
+                    unitPrice: $row['unit_price'],
+                    source: 'bot',
+                    userId: $userId,
+                    note: $note,
+                    occurredAt: $occurredAt,
+                );
+
+                $ingredient->refresh();
+                $totalAmount += (float) $transaction->total;
+
+                $transactions[] = [
+                    'id' => $transaction->id,
+                    'ingredient' => $ingredient->name,
+                    'quantity' => (float) $transaction->quantity,
+                    'total' => (float) $transaction->total,
+                    'new_stock' => (float) $ingredient->current_stock,
+                ];
+            }
+
+            return [
+                'transactions' => $transactions,
+                'total_amount' => round($totalAmount, 2),
+            ];
+        });
+
+        return ApiResponse::success('Batch pembelian tercatat.', $results, 201);
+    }
+
     private function resolveIngredient(StoreTransactionRequest $request): ?Ingredient
     {
         if ($request->filled('ingredient_id')) {
@@ -105,15 +184,31 @@ class TransactionController extends Controller
     }
 
     /**
-     * @return list<string>
+     * @param  array<string, mixed>  $item
      */
-    private function suggestIngredients(string $search): array
+    private function resolveIngredientByInput(array $item): ?Ingredient
     {
-        return Ingredient::query()
-            ->whereRaw('LOWER(name) LIKE ?', ['%'.mb_strtolower($search).'%'])
-            ->orderBy('name')
-            ->limit(3)
-            ->pluck('name')
-            ->all();
+        if (! empty($item['ingredient_id'])) {
+            return Ingredient::find((int) $item['ingredient_id']);
+        }
+
+        $name = trim((string) ($item['ingredient'] ?? ''));
+
+        return Ingredient::whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->first();
+    }
+
+    /**
+     * @return array{available_items: list<string>, dashboard_url: string}
+     */
+    private function ingredientNotFoundExtra(): array
+    {
+        return [
+            'available_items' => Ingredient::query()
+                ->orderBy('name')
+                ->limit(50)
+                ->pluck('name')
+                ->all(),
+            'dashboard_url' => rtrim(config('app.url'), '/').'/inventory',
+        ];
     }
 }

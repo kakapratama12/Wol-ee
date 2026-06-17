@@ -45,19 +45,22 @@ Katalog produk jadi tenant:
 {products}
 
 Intent yang didukung:
-- purchase: beli bahan baku (contoh: "Beli tepung 2kg Rp 36 ribu", "Beli bahan Rp 200 ribu")
-- sale: jual produk jadi (contoh: "Jual matcha latte 10", "Jual 5 croissant")
-- stock: cek stok (contoh: "stok tepung", "cek stok")
+- purchase: beli SATU bahan baku (contoh: "Beli tepung 2kg Rp 36 ribu")
+- sale: jual SATU produk (contoh: "Jual matcha latte 10")
+- sale_batch: laporan penjualan multi-item / copas dari WA (contoh: "laporan hari ini: matcha 10, croissant 5" atau multi-baris)
+- purchase_batch: pembelian multi-bahan (contoh: "beli: tepung 10kg 100000, gula 5kg 50000" atau "beli dari CV Tepung: ...")
+- stock: cek stok (contoh: "stok tepung")
 - unknown: tidak bisa diparse
 
-ATURAN:
-- amount/total dalam Rupiah integer (200 ribu = 200000)
-- quantity dalam angka; quantity_unit: kg, g, ml, l, butir, pcs, cup, atau null
-- Untuk purchase: ingredient harus cocok dengan katalog (atau paling mirip)
-- Untuk sale: product harus cocok dengan katalog; quantity = jumlah porsi/unit terjual
-- Jika hanya nominal tanpa nama bahan spesifik, set ingredient ke nama paling umum dari deskripsi
+ATURAN PENTING:
+- JANGAN map/menebak nama ke katalog. Kirim nama persis seperti user tulis.
+- amount/total dalam Rupiah integer (200 ribu = 200000, 50rb = 50000)
+- quantity_unit: kg, g, ml, l, butir, pcs, cup, atau null
+- Untuk sale_batch/purchase_batch: ekstrak SEMUA baris item ke array items
+- Pahami konteks laporan (mis. "nih dari barista", "laporan hari ini") → intent sale_batch
+- partner_name: isi jika user menyebut supplier (mis. "beli dari CV Tepung")
 
-Output JSON:
+Output JSON untuk single item:
 {{
     "intent": "purchase" | "sale" | "stock" | "unknown",
     "ingredient": "nama bahan atau null",
@@ -65,6 +68,17 @@ Output JSON:
     "quantity": angka atau null,
     "quantity_unit": "kg" | "g" | "ml" | "l" | "butir" | "pcs" | "cup" | null,
     "total": angka Rupiah untuk purchase atau null,
+    "partner_name": "nama partner atau null",
+    "note": "deskripsi singkat atau null"
+}}
+
+Output JSON untuk batch:
+{{
+    "intent": "sale_batch" | "purchase_batch",
+    "partner_name": "nama partner atau null",
+    "items": [
+        {{"name": "nama item", "quantity": angka, "quantity_unit": "kg"|null, "total": angka|null}}
+    ],
     "note": "deskripsi singkat atau null"
 }}
 
@@ -98,7 +112,7 @@ async def call_groq(user_input: str, system_prompt: str) -> dict:
                         {"role": "user", "content": user_input},
                     ],
                     "temperature": 0.1,
-                    "max_tokens": 400,
+                    "max_tokens": 800,
                 },
                 timeout=10.0,
             )
@@ -129,7 +143,7 @@ async def call_openrouter(user_input: str, system_prompt: str) -> dict:
                         {"role": "user", "content": user_input},
                     ],
                     "temperature": 0.1,
-                    "max_tokens": 400,
+                    "max_tokens": 800,
                 },
                 timeout=10.0,
             )
@@ -256,6 +270,18 @@ async def parse_wolee_inventory(
 
     parsed["_provider"] = result.get("provider", "unknown")
     intent = parsed.get("intent", "unknown")
+
+    if intent in {"sale_batch", "purchase_batch"}:
+        items = parsed.get("items") or []
+        if not items:
+            from batch_resolver import parse_batch_regex
+            fallback_items = parse_batch_regex(user_input)
+            if fallback_items:
+                parsed["items"] = fallback_items
+                parsed["_provider"] = parsed.get("_provider", "unknown") + "+regex"
+            else:
+                return {"error": "Tidak ada item yang terbaca. Contoh: matcha 10, croissant 5"}
+        return parsed
 
     if intent == "purchase" and not parsed.get("total"):
         return {"error": "Nominal belum ketemu. Contoh: \"Beli tepung Rp 200 ribu\""}

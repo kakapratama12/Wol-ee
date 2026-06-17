@@ -4,19 +4,23 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from bot_response import BotResponse
 from bot_storage import BotUserStorage
 from config import config
 from handlers import BotHandlers
 from offline_queue import OfflineQueue
+from pending_batch import PendingBatchStorage
 
 _data = Path(__file__).parent / "data"
 _storage = BotUserStorage(_data / "bot_users.db")
 _queue = OfflineQueue(_data / "offline_queue.db")
+_pending = PendingBatchStorage(_data / "pending_batches.db")
 _handlers = BotHandlers(
     api_url=config.WOL_EE_API_URL,
     default_token=config.WOL_EE_API_TOKEN,
     storage=_storage,
     queue=_queue,
+    pending=_pending,
 )
 
 
@@ -24,7 +28,7 @@ def is_wolee_user(user_id: int) -> bool:
     return _storage.is_registered(user_id)
 
 
-def try_handle(user_id: int, text: str) -> str | None:
+def try_handle(user_id: int, text: str) -> str | BotResponse | None:
     """Sync handler untuk command/keyword."""
     normalized = text.strip().lower()
     clean = normalized.lstrip("/")
@@ -61,6 +65,7 @@ def try_handle(user_id: int, text: str) -> str | None:
             "Perintah Wol-ee:\n"
             "• Beli tepung Rp 200 ribu — catat pembelian (NL)\n"
             "• Jual matcha latte 10 — catat penjualan\n"
+            "• Copas laporan multi-item (matcha 10, croissant 5)\n"
             "• stok [bahan] — cek stok\n"
             "• /profit — laporan hari ini\n"
             "• /history — riwayat transaksi\n"
@@ -72,12 +77,21 @@ def try_handle(user_id: int, text: str) -> str | None:
     return None
 
 
-async def handle_wolee_message(user_id: int, text: str, is_pro: bool = False) -> str | None:
+async def handle_wolee_message(user_id: int, text: str, is_pro: bool = False) -> str | BotResponse | None:
     """Async NL handler untuk pesan bebas. Hanya untuk user terdaftar Wol-ee."""
     if not is_wolee_user(user_id):
         return None
 
-    if try_handle(user_id, text) is not None:
-        return try_handle(user_id, text)
+    pending_reply = _handlers.handle_pending_reply(user_id, text)
+    if pending_reply is not None:
+        return pending_reply
+
+    sync_reply = try_handle(user_id, text)
+    if sync_reply is not None:
+        return sync_reply
 
     return await _handlers.handle_natural_language(user_id, text, is_pro=is_pro)
+
+
+def handle_callback_query(user_id: int, callback_data: str) -> str | BotResponse:
+    return _handlers.handle_callback_query(user_id, callback_data)

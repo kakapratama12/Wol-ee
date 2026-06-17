@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\StoreBatchSaleRequest;
 use App\Http\Requests\Api\StoreSaleRequest;
 use App\Http\Support\ApiResponse;
 use App\Models\Ingredient;
@@ -11,6 +12,7 @@ use App\Models\Sale;
 use App\Services\SaleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SaleController extends Controller
 {
@@ -54,17 +56,11 @@ class SaleController extends Controller
         $product = $this->resolveProduct($request);
 
         if (! $product) {
-            $extra = [];
-
-            if ($searchName !== '') {
-                $extra['suggestions'] = $this->suggestProducts($searchName);
-            }
-
             return ApiResponse::error(
                 message: "Produk '{$searchName}' tidak ditemukan.",
                 errorCode: 'PRODUCT_NOT_FOUND',
                 status: 422,
-                extra: $extra,
+                extra: $this->productNotFoundExtra(),
             );
         }
 
@@ -92,6 +88,87 @@ class SaleController extends Controller
         ], 201);
     }
 
+    public function storeBatch(StoreBatchSaleRequest $request): JsonResponse
+    {
+        $items = $request->input('items', []);
+        $resolved = [];
+        $errors = [];
+
+        foreach ($items as $index => $item) {
+            $searchName = trim((string) ($item['product'] ?? ''));
+            $product = $this->resolveProductByInput($item);
+
+            if (! $product) {
+                $errors[] = [
+                    'index' => $index,
+                    'product' => $searchName,
+                    'error_code' => 'PRODUCT_NOT_FOUND',
+                    'message' => "Produk '{$searchName}' tidak ditemukan.",
+                ];
+
+                continue;
+            }
+
+            $resolved[] = [
+                'index' => $index,
+                'product' => $product,
+                'quantity' => (int) $item['quantity'],
+                'unit_price' => ! empty($item['unit_price']) ? (float) $item['unit_price'] : null,
+            ];
+        }
+
+        if ($errors !== []) {
+            return ApiResponse::error(
+                message: 'Beberapa produk tidak ditemukan.',
+                errorCode: 'BATCH_VALIDATION_FAILED',
+                status: 422,
+                extra: array_merge(['errors' => $errors], $this->productNotFoundExtra()),
+            );
+        }
+
+        $note = $request->input('note');
+        $occurredAt = $request->date('occurred_at');
+        $userId = $request->user()?->id;
+
+        $results = DB::transaction(function () use ($resolved, $note, $occurredAt, $userId) {
+            $sales = [];
+            $totalRevenue = 0.0;
+            $totalProfit = 0.0;
+
+            foreach ($resolved as $row) {
+                $sale = $this->sales->record(
+                    product: $row['product'],
+                    quantity: $row['quantity'],
+                    unitPrice: $row['unit_price'],
+                    source: 'bot',
+                    userId: $userId,
+                    note: $note,
+                    occurredAt: $occurredAt,
+                );
+
+                $totalRevenue += (float) $sale->revenue;
+                $totalProfit += (float) $sale->profit;
+
+                $sales[] = [
+                    'id' => $sale->id,
+                    'product' => $row['product']->name,
+                    'quantity' => $sale->quantity,
+                    'revenue' => (float) $sale->revenue,
+                    'profit' => (float) $sale->profit,
+                ];
+            }
+
+            return [
+                'sales' => $sales,
+                'total_revenue' => round($totalRevenue, 2),
+                'total_profit' => round($totalProfit, 2),
+                'alerts' => $this->lowStockAlerts(),
+            ];
+        });
+
+        return ApiResponse::success('Batch penjualan tercatat.', $results, 201);
+    }
+
     private function resolveProduct(StoreSaleRequest $request): ?Product
     {
         if ($request->filled('product_id')) {
@@ -104,16 +181,32 @@ class SaleController extends Controller
     }
 
     /**
-     * @return list<string>
+     * @param  array<string, mixed>  $item
      */
-    private function suggestProducts(string $search): array
+    private function resolveProductByInput(array $item): ?Product
     {
-        return Product::query()
-            ->whereRaw('LOWER(name) LIKE ?', ['%'.mb_strtolower($search).'%'])
-            ->orderBy('name')
-            ->limit(3)
-            ->pluck('name')
-            ->all();
+        if (! empty($item['product_id'])) {
+            return Product::find((int) $item['product_id']);
+        }
+
+        $name = trim((string) ($item['product'] ?? ''));
+
+        return Product::whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->first();
+    }
+
+    /**
+     * @return array{available_items: list<string>, dashboard_url: string}
+     */
+    private function productNotFoundExtra(): array
+    {
+        return [
+            'available_items' => Product::query()
+                ->orderBy('name')
+                ->limit(50)
+                ->pluck('name')
+                ->all(),
+            'dashboard_url' => rtrim(config('app.url'), '/').'/products',
+        ];
     }
 
     /**

@@ -26,6 +26,8 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 - Bot NL parsing: `ai_parser.py` adaptasi logic keuangan-bot → output Laravel API (beli/jual/stok NL).
 - Bot API read endpoints: `GET /api/transactions`, `GET /api/sales`, `GET /api/products`.
 - Bot Wol-ee path: `/profit`, `/history`, `/partners` via API untuk user terdaftar; legacy path tetap untuk user lain.
+- Bot batch entry: AI intent `sale_batch`/`purchase_batch`, konfirmasi inline keyboard, endpoint `POST /api/sales/batch` dan `POST /api/transactions/batch`.
+- Bot item not found: daftar item tersedia + link dashboard (tanpa fuzzy mapping).
 - Sprint 2 API: Partner CRUD, Invoice tracking (create, pay, outstanding), aging report
   (`/api/partners`, `/api/invoices`, `/api/reports/aging`).
 - Seeder sample partner & invoice untuk tenant `kafe-contoh`.
@@ -35,6 +37,10 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
   yang mengirim peringatan stok menipis/kritis ke Telegram setelah penjualan.
 - Middleware `SecurityHeaders` untuk security headers di semua response web.
 - `SECURITY.md`: checklist keamanan & prosedur audit dependency.
+
+### Fixed
+
+- Tombol salin token di Settings > Bot Integration (fallback mobile + feedback "Disalin!").
 
 ### Changed
 

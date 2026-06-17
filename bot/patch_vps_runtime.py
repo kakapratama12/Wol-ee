@@ -150,3 +150,84 @@ print("bot.py saved")
 
 (ROOT / "logs").mkdir(exist_ok=True)
 print("done")
+
+
+# 4) WOL_EE_APP_URL
+if config_path.exists():
+    text = config_path.read_text()
+    if "WOL_EE_APP_URL" not in text:
+        text = text.replace(
+            '    WOL_EE_API_TOKEN: str = os.getenv("WOL_EE_API_TOKEN", "")\n',
+            '    WOL_EE_API_TOKEN: str = os.getenv("WOL_EE_API_TOKEN", "")\n'
+            '    WOL_EE_APP_URL: str = os.getenv("WOL_EE_APP_URL", "")\n',
+        )
+        config_path.write_text(text)
+        print("WOL_EE_APP_URL added to config.py")
+
+if env_path.exists():
+    env = env_path.read_text()
+    if "WOL_EE_APP_URL=" not in env:
+        env += "\nWOL_EE_APP_URL=https://your-domain.com\n"
+        env_path.write_text(env)
+        print(".env WOL_EE_APP_URL added")
+
+# 5) BotResponse + callback query support
+bot = bot_path.read_text()
+
+if "from bot_response import BotResponse" not in bot:
+    bot = bot.replace(
+        "from telegram.ext import Application",
+        "from bot_response import BotResponse\nfrom telegram.ext import Application",
+    )
+
+if "handle_callback_query" not in bot:
+    bot = bot.replace(
+        "from wol_ee_bridge import try_handle, handle_wolee_message, is_wolee_user\n",
+        "from wol_ee_bridge import try_handle, handle_wolee_message, handle_callback_query, is_wolee_user\n",
+    )
+
+helper = """
+async def _send_wolee_reply(message_or_query, reply):
+    if isinstance(reply, BotResponse):
+        await message_or_query.reply_text(
+            reply.text,
+            parse_mode=reply.parse_mode,
+            reply_markup=reply.reply_markup,
+        )
+    else:
+        await message_or_query.reply_text(reply or "Gagal memproses.", parse_mode="HTML")
+
+
+async def wolee_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    if not query or not query.data or not query.data.startswith("wolee:batch:"):
+        return
+    await query.answer()
+    user_id = update.effective_user.id
+    if not is_wolee_user(user_id):
+        await query.edit_message_text("Sesi tidak valid.")
+        return
+    reply = handle_callback_query(user_id, query.data)
+    await query.edit_message_text(
+        reply.text if isinstance(reply, BotResponse) else (reply or "Selesai."),
+        parse_mode=reply.parse_mode if isinstance(reply, BotResponse) else "HTML",
+    )
+
+"""
+
+if "async def wolee_callback" not in bot:
+    # insert helper before first async def handler if possible
+    marker = "async def start(update: Update"
+    if marker in bot:
+        bot = bot.replace(marker, helper + marker)
+        print("wolee callback helper added")
+
+if 'CallbackQueryHandler(wolee_callback' not in bot:
+    bot = bot.replace(
+        "app.run_polling",
+        "    app.add_handler(CallbackQueryHandler(wolee_callback, pattern=r'^wolee:batch:'))\n\n    app.run_polling",
+    )
+    print("CallbackQueryHandler registered")
+
+bot_path.write_text(bot)
+print("bot.py callback patch saved")

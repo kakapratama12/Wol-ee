@@ -96,8 +96,14 @@ class WolEeClient:
     def post_transaction(self, data: dict[str, Any]) -> dict[str, Any]:
         return self._request("POST", "/transactions", json=data)
 
+    def post_transactions_batch(self, data: dict[str, Any]) -> dict[str, Any]:
+        return self._request("POST", "/transactions/batch", json=data)
+
     def post_sale(self, data: dict[str, Any]) -> dict[str, Any]:
         return self._request("POST", "/sales", json=data)
+
+    def post_sales_batch(self, data: dict[str, Any]) -> dict[str, Any]:
+        return self._request("POST", "/sales/batch", json=data)
 
     def get_stock(self, ingredient: str | None = None) -> dict[str, Any]:
         params = {"ingredient": ingredient} if ingredient else None

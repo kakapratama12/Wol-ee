@@ -8,3 +8,6 @@ API_TIMEOUT = 15
 
 # Path penyimpanan lokal bot
 BOT_DATA_DIR = "./data"
+
+# URL dashboard (tanpa /api) untuk link tambah produk/bahan/partner
+WOL_EE_APP_URL = "https://your-domain.com"

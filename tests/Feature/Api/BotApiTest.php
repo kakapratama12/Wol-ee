@@ -93,7 +93,56 @@ it('mengembalikan 422 dengan error_code jika produk tidak ditemukan', function (
 
     $response->assertStatus(422)
         ->assertJsonPath('success', false)
-        ->assertJsonPath('error_code', 'PRODUCT_NOT_FOUND');
+        ->assertJsonPath('error_code', 'PRODUCT_NOT_FOUND')
+        ->assertJsonStructure(['available_items', 'dashboard_url']);
+});
+
+it('mencatat batch penjualan via API secara atomic', function () {
+    $tepung = Ingredient::create([
+        'tenant_id' => $this->auth['tenant']->id,
+        'name' => 'Tepung',
+        'unit_type' => 'gramasi',
+        'base_unit' => 'g',
+        'unit_price' => 20,
+        'current_stock' => 5000,
+        'minimum_stock' => 1000,
+    ]);
+    $matcha = Product::create([
+        'tenant_id' => $this->auth['tenant']->id,
+        'name' => 'Matcha Latte',
+        'unit' => 'cup',
+        'selling_price' => 25000,
+    ]);
+    $croissant = Product::create([
+        'tenant_id' => $this->auth['tenant']->id,
+        'name' => 'Croissant',
+        'unit' => 'pcs',
+        'selling_price' => 35000,
+    ]);
+    RecipeItem::create([
+        'tenant_id' => $this->auth['tenant']->id,
+        'product_id' => $matcha->id,
+        'ingredient_id' => $tepung->id,
+        'quantity' => 50,
+    ]);
+    RecipeItem::create([
+        'tenant_id' => $this->auth['tenant']->id,
+        'product_id' => $croissant->id,
+        'ingredient_id' => $tepung->id,
+        'quantity' => 80,
+    ]);
+
+    $response = $this->postJson('/api/sales/batch', [
+        'items' => [
+            ['product' => 'Matcha Latte', 'quantity' => 2],
+            ['product' => 'Croissant', 'quantity' => 1],
+        ],
+    ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.total_revenue', 85000)
+        ->assertJsonCount(2, 'data.sales');
 });
 
 it('menampilkan daftar stok', function () {

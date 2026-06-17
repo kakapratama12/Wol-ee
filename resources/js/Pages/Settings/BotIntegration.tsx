@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
-import { Bot, Copy, RefreshCw } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Bot, Check, Copy, RefreshCw } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -13,6 +14,8 @@ interface Props {
 }
 
 export default function BotIntegration({ hasToken, tenantName, plainToken }: Props) {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [copied, setCopied] = useState(false);
     const generate = () => {
         if (hasToken && !confirm('Token lama akan diganti. Bot harus dikonfigurasi ulang. Lanjutkan?')) {
             return;
@@ -22,7 +25,20 @@ export default function BotIntegration({ hasToken, tenantName, plainToken }: Pro
 
     const copyToken = async () => {
         if (!plainToken) return;
-        await navigator.clipboard.writeText(plainToken);
+        try {
+            await navigator.clipboard.writeText(plainToken);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 3000);
+        } catch {
+            const input = inputRef.current;
+            if (input) {
+                input.select();
+                input.setSelectionRange(0, plainToken.length);
+                document.execCommand('copy');
+                setCopied(true);
+                setTimeout(() => setCopied(false), 3000);
+            }
+        }
     };
 
     return (
@@ -56,14 +72,17 @@ export default function BotIntegration({ hasToken, tenantName, plainToken }: Pro
                             <div className="space-y-2">
                                 <Label>Token baru (salin sekarang)</Label>
                                 <div className="flex gap-2">
-                                    <Input readOnly value={plainToken} className="font-mono text-sm" />
-                                    <Button type="button" variant="outline" onClick={copyToken}>
-                                        <Copy className="h-4 w-4" />
+                                    <Input ref={inputRef} readOnly value={plainToken} className="font-mono text-sm" />
+                                    <Button type="button" variant="outline" onClick={copyToken} aria-label={copied ? 'Disalin' : 'Salin token'}>
+                                        {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
                                     </Button>
                                 </div>
                                 <p className="text-xs text-amber-600">
                                     Token hanya ditampilkan sekali setelah generate.
                                 </p>
+                                {copied && (
+                                    <p className="text-xs text-green-600">Disalin!</p>
+                                )}
                             </div>
                         )}
 
