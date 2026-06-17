@@ -18,17 +18,6 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 - Sidebar navigasi dikategorikan (Transaksi, Inventory, Laporan, Partner, Settings) dengan section collapsible.
 - Halaman web **Aging Report** (`/reports/aging`) — tersembunyi jika tenant belum punya invoice.
 - Kolom `weighted_avg_price` pada bahan baku; COGS memakai rata-rata tertimbang, snapshot penjualan tetap akurat.
-
-### Changed
-
-- `InventoryService::recordPurchase()` memperbarui weighted average (bukan hanya harga beli terakhir).
-- `CogsService` memakai `weighted_avg_price` untuk perhitungan COGS live & snapshot penjualan.
-- Dokumentasi produk (`docs/PRD`, `docs/Roles-Sequence-Diagram`, `docs/Development-Context`)
-  diperbarui: prioritas fitur (Partner, Aging, Invoice tracking P1), MVP scope
-  diselaraskan dengan implementasi v0.1.0, stack Inertia/React, status deploy.
-
-### Added
-
 - Dashboard Partner & Invoice: list, detail, aging summary, dan form pembayaran.
 - Sprint 4: auth token per tenant (`{tenant_id}:{secret}`), middleware `BotTokenAuth`,
   endpoint `POST /api/bot/validate-token`, response format standar API bot.
@@ -37,7 +26,6 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 - Bot NL parsing: `ai_parser.py` adaptasi logic keuangan-bot → output Laravel API (beli/jual/stok NL).
 - Bot API read endpoints: `GET /api/transactions`, `GET /api/sales`, `GET /api/products`.
 - Bot Wol-ee path: `/profit`, `/history`, `/partners` via API untuk user terdaftar; legacy path tetap untuk user lain.
-
 - Sprint 2 API: Partner CRUD, Invoice tracking (create, pay, outstanding), aging report
   (`/api/partners`, `/api/invoices`, `/api/reports/aging`).
 - Seeder sample partner & invoice untuk tenant `kafe-contoh`.
@@ -47,6 +35,14 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
   yang mengirim peringatan stok menipis/kritis ke Telegram setelah penjualan.
 - Middleware `SecurityHeaders` untuk security headers di semua response web.
 - `SECURITY.md`: checklist keamanan & prosedur audit dependency.
+
+### Changed
+
+- `InventoryService::recordPurchase()` memperbarui weighted average (bukan hanya harga beli terakhir).
+- `CogsService` memakai `weighted_avg_price` untuk perhitungan COGS live & snapshot penjualan.
+- Dokumentasi produk (`docs/PRD`, `docs/Roles-Sequence-Diagram`, `docs/Development-Context`)
+  diperbarui: prioritas fitur (Partner, Aging, Invoice tracking P1), MVP scope
+  diselaraskan dengan implementasi v0.1.0, stack Inertia/React, status deploy.
 
 ### Security
 
