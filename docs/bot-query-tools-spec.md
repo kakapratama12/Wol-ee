@@ -51,7 +51,7 @@ Pesan masuk (user Wol-ee terdaftar)
 | `business_insight` | PnL + top/bottom + alerts | "strategi kedepannya", "saran dong" | ❌ |
 | `explain_capabilities` | bot-only | "bisa nanya apa", "kamu bisa apa" | ❌ |
 | `record_expense` | `POST /api/expenses` | "bayar listrik bulan ini 1.5jt", "bayar gaji 15jt" | ✅ |
-| `record_*` | existing | beli/jual/batch | ✅ |
+| `record_*` | existing | beli/jual/batch; preview wajib sebelum mutasi | ✅ |
 
 **Perbaikan:** `/summary` dan "ringkasan" → PnL **bulan ini** (bukan hari ini).
 
@@ -71,6 +71,7 @@ Pesan masuk (user Wol-ee terdaftar)
 - Hanya path yang memanggil LLM (`parse_wolee_inventory`, dll.) yang `consume`
 - Query router & keyword sync **tidak** consume
 - AI action planner hanya menghasilkan intent + slot. Eksekusi tetap lewat validasi handler dan API Laravel.
+- Semua mutasi dari natural language (`sale`, `purchase`, `expense`) wajib preview + konfirmasi. Jika user menyebut `total` penjualan, backend memakai total itu sebagai revenue aktual.
 
 ### 4.2 API
 

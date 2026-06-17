@@ -63,9 +63,10 @@ OPENROUTER_API_KEY=...
 | Input | Aksi |
 |-------|------|
 | `/start 1:token` | Daftar tenant |
-| `Beli tepung Rp 200 ribu` | NL → POST /api/transactions |
-| `Jual matcha latte 10` | NL → POST /api/sales |
-| `bayar listrik bulan ini 1.5jt` | NL → POST /api/expenses |
+| `Beli tepung Rp 200 ribu` | NL → preview → POST /api/transactions |
+| `Jual matcha latte 10` | NL → preview → POST /api/sales |
+| `kopi susu 50 total 10jt` | NL → preview harga aktual → POST /api/sales |
+| `bayar listrik bulan ini 1.5jt` | NL → preview → POST /api/expenses |
 | `bayar mbok Ijah buat beli telur 2kg` | NL → tanya nominal dulu |
 | Copas batch multi-item | NL batch + konfirmasi |
 | `stok tepung` | GET /api/stock |

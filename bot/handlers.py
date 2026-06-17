@@ -344,7 +344,7 @@ class BotHandlers:
             payload = to_api_purchase_payload(parsed, ingredients)
             if not payload:
                 return "❌ Data pembelian tidak lengkap. Sebutkan bahan dan nominal."
-            return self._post_purchase(client, user_id, payload, ingredients)
+            return self._build_action_preview(user_id, "purchase", payload, ingredients=ingredients)
         if intent == "sale":
             clarification = self._clarification_for_action(user_id, parsed, original_text)
             if clarification:
@@ -352,7 +352,7 @@ class BotHandlers:
             payload = to_api_sale_payload(parsed)
             if not payload:
                 return "❌ Data penjualan tidak lengkap. Sebutkan produk dan jumlah."
-            return self._post_sale(client, user_id, payload, products)
+            return self._build_action_preview(user_id, "sale", payload, products=products)
         if intent == "expense":
             clarification = self._clarification_for_action(user_id, parsed, original_text)
             if clarification:
@@ -360,7 +360,7 @@ class BotHandlers:
             payload = to_api_expense_payload(parsed)
             if not payload:
                 return "❌ Data biaya tidak lengkap. Contoh: bayar listrik bulan ini 1.5jt"
-            return self._post_expense(client, user_id, payload)
+            return self._build_action_preview(user_id, "expense", payload)
 
         return (
             "❌ Aku belum bisa memahami perintah itu.\n\n"
@@ -379,11 +379,11 @@ class BotHandlers:
         if not original_text:
             return
 
-        if parsed.get("intent") in {"purchase", "expense"} and not (parsed.get("amount") or parsed.get("total")):
+        if parsed.get("intent") in {"sale", "purchase", "expense"} and not (parsed.get("amount") or parsed.get("total")):
             amount = parse_money_amount(original_text)
             if amount:
                 parsed["amount"] = amount
-                if parsed.get("intent") == "purchase":
+                if parsed.get("intent") in {"sale", "purchase"}:
                     parsed["total"] = amount
 
         if parsed.get("intent") == "expense" and (not parsed.get("period_month") or not parsed.get("period_year")):
@@ -469,6 +469,102 @@ class BotHandlers:
             "Ada data",
         )
         return reply.startswith(clarification_starts)
+
+    def _build_action_preview(
+        self,
+        user_id: int,
+        kind: str,
+        payload: dict,
+        ingredients: list[dict] | None = None,
+        products: list[dict] | None = None,
+    ) -> str | BotResponse:
+        if kind == "sale":
+            product = self._catalog_product(payload.get("product", ""), products or [])
+            if not product:
+                return format_item_not_found("product", payload.get("product", ""), [p.get("name", "") for p in (products or [])])
+
+            quantity = int(payload["quantity"])
+            catalog_price = float(product.get("selling_price") or 0)
+            total = payload.get("total")
+            unit_price = float(total) / quantity if total else catalog_price
+            revenue = unit_price * quantity
+            warning = ""
+            if total and catalog_price > 0:
+                diff_ratio = abs(unit_price - catalog_price) / catalog_price
+                if diff_ratio >= 0.2:
+                    warning = (
+                        f"\n⚠️ Harga aktual {format_amount(unit_price)}/item beda dari "
+                        f"harga katalog {format_amount(catalog_price)}/item."
+                    )
+
+            text = (
+                "🧾 <b>Preview Penjualan</b>\n\n"
+                f"Produk: <b>{product['name']}</b>\n"
+                f"Jumlah: <b>{quantity}</b>\n"
+                f"Harga: <b>{format_amount(unit_price)}</b>/item\n"
+                f"Total omset: <b>{format_amount(revenue)}</b>"
+                f"{warning}\n\n"
+                "Catat penjualan ini?"
+            )
+            payload["product"] = product["name"]
+            payload["unit_price"] = unit_price
+            if total:
+                payload["total"] = int(float(total))
+
+        elif kind == "purchase":
+            ingredient_name = payload.get("ingredient", "")
+            ingredient = self._catalog_ingredient(ingredient_name, ingredients or [])
+            if not ingredient:
+                return format_item_not_found(
+                    "ingredient",
+                    ingredient_name,
+                    [(i.get("ingredient") or i.get("name", "")) for i in (ingredients or [])],
+                )
+            unit = ingredient.get("unit") or ingredient.get("base_unit", "")
+            text = (
+                "🧾 <b>Preview Pembelian</b>\n\n"
+                f"Bahan: <b>{ingredient.get('ingredient') or ingredient.get('name')}</b>\n"
+                f"Jumlah: <b>{payload['quantity']:g} {unit}</b>\n"
+                f"Total: <b>{format_amount(payload['total'])}</b>\n\n"
+                "Catat pembelian ini?"
+            )
+            payload["ingredient"] = ingredient.get("ingredient") or ingredient.get("name")
+
+        else:
+            text = (
+                "🧾 <b>Preview Biaya</b>\n\n"
+                f"Kategori: <b>{payload['category']}</b>\n"
+                f"Nominal: <b>{format_amount(payload['amount'])}</b>\n"
+                f"Periode: <b>{payload['period_month']:02d}/{payload['period_year']}</b>\n\n"
+                "Catat biaya ini?"
+            )
+
+        self.pending.delete_for_user(user_id)
+        pending_id = self.pending.save(user_id, kind, payload)
+        return BotResponse(
+            text=text,
+            reply_markup={
+                "inline_keyboard": [
+                    [{"text": "✅ Catat", "callback_data": f"wolee:batch:confirm:{pending_id}"}],
+                    [{"text": "❌ Batal", "callback_data": f"wolee:batch:cancel:{pending_id}"}],
+                ]
+            },
+        )
+
+    def _catalog_product(self, name: str, products: list[dict]) -> dict | None:
+        lowered = name.strip().lower()
+        for product in products:
+            if product.get("name", "").strip().lower() == lowered:
+                return product
+        return None
+
+    def _catalog_ingredient(self, name: str, ingredients: list[dict]) -> dict | None:
+        lowered = name.strip().lower()
+        for ingredient in ingredients:
+            candidate = (ingredient.get("ingredient") or ingredient.get("name") or "").strip().lower()
+            if candidate == lowered:
+                return ingredient
+        return None
 
     def _build_batch_preview(
         self,
@@ -578,6 +674,38 @@ class BotHandlers:
         note = payload.get("note")
 
         try:
+            if kind == "sale":
+                result = client.post_sale(payload)
+                data = result["data"]
+                self.pending.delete(pending_id, user_id)
+                self.storage.touch(user_id)
+                return (
+                    f"✅ {result['message']}\n"
+                    f"Revenue: {format_amount(data['revenue'])} | "
+                    f"Profit: {format_amount(data['profit'])}"
+                )
+
+            if kind == "purchase":
+                result = client.post_transaction(payload)
+                data = result["data"]
+                self.pending.delete(pending_id, user_id)
+                self.storage.touch(user_id)
+                return (
+                    f"✅ {result['message']}\n"
+                    f"Stok {data['ingredient']}: {data['new_stock']} ({data['stock_status']})"
+                )
+
+            if kind == "expense":
+                result = client.post_expense(payload)
+                data = result["data"]
+                self.pending.delete(pending_id, user_id)
+                self.storage.touch(user_id)
+                return (
+                    f"✅ {result['message']}\n"
+                    f"Biaya {data['category']}: {format_amount(data['amount'])}\n"
+                    f"Periode: {data['period_month']:02d}/{data['period_year']}"
+                )
+
             if kind == "sale_batch":
                 items = [
                     {

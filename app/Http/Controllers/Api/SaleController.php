@@ -65,11 +65,14 @@ class SaleController extends Controller
         }
 
         $quantity = $request->integer('quantity');
+        $unitPrice = $request->filled('total')
+            ? round((float) $request->float('total') / max($quantity, 1), 2)
+            : ($request->filled('unit_price') ? (float) $request->float('unit_price') : null);
 
         $sale = $this->sales->record(
             product: $product,
             quantity: $quantity,
-            unitPrice: $request->filled('unit_price') ? (float) $request->float('unit_price') : null,
+            unitPrice: $unitPrice,
             source: 'bot',
             userId: $request->user()?->id,
             note: $request->input('note'),
@@ -80,6 +83,8 @@ class SaleController extends Controller
             'id' => $sale->id,
             'product' => $product->name,
             'quantity' => $sale->quantity,
+            'unit_price' => (float) $sale->unit_price,
+            'catalog_unit_price' => (float) $product->selling_price,
             'revenue' => (float) $sale->revenue,
             'cogs' => (float) $sale->cogs,
             'profit' => (float) $sale->profit,

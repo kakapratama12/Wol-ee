@@ -20,6 +20,7 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 - Dashboard overview: chart Revenue vs Expense 6 bulan terakhir dan daftar pembelian terbaru.
 - Bot feedback collection: fallback mengarahkan `feedback ...`, API `POST /api/bot/feedback`, dan tabel `bot_feedbacks` untuk kurasi roadmap early adopter.
 - Bot action planner: pencatatan penjualan, pembelian, dan biaya memakai AI intent + slot validation; bot bertanya klarifikasi saat data belum lengkap.
+- Bot confirmation flow: natural language sale/purchase/expense tampil sebagai preview dulu, lalu baru dicatat setelah user menekan konfirmasi.
 - Bot query tools (demo owner): `GET /api/reports/pnl`, `/stock-alerts`, `/margin-alerts`, `/top-products`, `/bottom-products`; query router NL tanpa LLM (profit bulan ini, top/bottom products, strategi, stok/margin alert, meta "bisa nanya apa").
 - Kuota AI bot: 25/hari (free/Groq), 150/hari (pro/business/DeepSeek); `GET /api/bot/usage`, `POST /api/bot/ai-usage`.
 - Sidebar navigasi dikategorikan (Transaksi, Inventory, Laporan, Partner, Settings) dengan section collapsible.
@@ -54,6 +55,7 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 ### Changed
 
+- `POST /api/sales` mendukung `total` dari bot; backend menghitung harga aktual per item dari total tersebut.
 - `/summary` dan "ringkasan" di bot → laporan P&L bulan ini (bukan hari ini).
 - Tier LLM bot mengikuti `tenants.plan` Wol-ee (bukan legacy `User.plan` keuangan-bot).
 - Penghapusan pembelian ditolak jika stok bahan sudah terpakai (pesan error jelas).

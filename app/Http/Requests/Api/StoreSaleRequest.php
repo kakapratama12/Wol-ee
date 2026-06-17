@@ -21,6 +21,7 @@ class StoreSaleRequest extends FormRequest
             'product' => ['nullable', 'string', 'max:255'],
             'quantity' => ['required', 'integer', 'gt:0'],
             'unit_price' => ['nullable', 'numeric', 'gte:0'],
+            'total' => ['nullable', 'numeric', 'gt:0'],
             'note' => ['nullable', 'string', 'max:255'],
             'occurred_at' => ['nullable', 'date'],
         ];

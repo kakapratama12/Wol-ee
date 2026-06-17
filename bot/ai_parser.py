@@ -529,6 +529,9 @@ def to_api_sale_payload(parsed: dict) -> dict | None:
     if not product or not quantity:
         return None
     payload: dict[str, Any] = {"product": product, "quantity": int(quantity)}
+    total = parsed.get("total") or parsed.get("amount")
+    if total:
+        payload["total"] = int(total)
     if parsed.get("note"):
         payload["note"] = parsed["note"]
     return payload

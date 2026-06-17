@@ -57,7 +57,7 @@ Sertakan header `Authorization: Bearer <token>` pada tiap request.
 | Method | Endpoint              | Fungsi |
 |--------|-----------------------|--------|
 | POST   | `/api/transactions`   | Catat pembelian bahan (`ingredient`/`ingredient_id`, `quantity`, `total` atau `unit_price`) |
-| POST   | `/api/sales`          | Catat penjualan (`product`/`product_id`, `quantity`) -> COGS, profit, alert stok |
+| POST   | `/api/sales`          | Catat penjualan (`product`/`product_id`, `quantity`, opsional `total`/`unit_price`) -> COGS, profit, alert stok |
 | POST   | `/api/expenses`       | Catat biaya operasional (`category`, `amount`, `period_month`, `period_year`) |
 | GET    | `/api/stock`          | Daftar stok + status (aman/menipis/kritis) |
 | GET    | `/api/reports/today`  | Ringkasan omset/profit hari ini |

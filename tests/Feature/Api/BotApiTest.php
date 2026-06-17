@@ -97,6 +97,35 @@ it('mengembalikan 422 dengan error_code jika produk tidak ditemukan', function (
         ->assertJsonStructure(['available_items', 'dashboard_url']);
 });
 
+it('mencatat penjualan dengan total aktual dari bot', function () {
+    $product = Product::create([
+        'tenant_id' => $this->auth['tenant']->id,
+        'name' => 'Kopi Susu',
+        'unit' => 'cup',
+        'selling_price' => 22000,
+    ]);
+
+    $response = $this->postJson('/api/sales', [
+        'product' => 'Kopi Susu',
+        'quantity' => 50,
+        'total' => 10000000,
+    ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('data.product', 'Kopi Susu')
+        ->assertJsonPath('data.quantity', 50)
+        ->assertJsonPath('data.unit_price', 200000)
+        ->assertJsonPath('data.catalog_unit_price', 22000)
+        ->assertJsonPath('data.revenue', 10000000);
+
+    $this->assertDatabaseHas('sales', [
+        'product_id' => $product->id,
+        'quantity' => 50,
+        'unit_price' => 200000,
+        'revenue' => 10000000,
+    ]);
+});
+
 it('mencatat batch penjualan via API secara atomic', function () {
     $tepung = Ingredient::create([
         'tenant_id' => $this->auth['tenant']->id,
