@@ -114,6 +114,19 @@
 - [x] Source tagging (bot vs dashboard via `source` column)
 - [ ] Edit data bot via dashboard — **partial** (belum semua field)
 
+### 4.4 Bot Query Tools (demo owner) — [x] DONE
+- [x] `GET /api/reports/pnl`, `/margin-alerts`, `/stock-alerts`
+- [x] Query router bot (NL laporan tanpa LLM): profit bulan ini, omset hari ini, stok/margin alert
+- [x] `explain_capabilities` — meta "bisa nanya apa"
+- [x] Fix `/summary` → PnL bulan ini (bukan hari ini)
+- Spec: [docs/bot-query-tools-spec.md](docs/bot-query-tools-spec.md)
+
+### 4.5 Bot AI Quota — [x] DONE
+- [x] Tabel `bot_ai_usages` + `BotUsageService`
+- [x] `GET /api/bot/usage`, `POST /api/bot/ai-usage` (consume)
+- [x] Free: 25 AI/hari (Groq); Pro/Business: 150/hari (DeepSeek)
+- [x] Tier LLM dari `tenants.plan`, bukan legacy keuangan-bot `User.plan`
+
 **Sprint 4 Done Criteria:**
 - [x] Bot auth per-tenant token
 - [x] Bot bisa input transaksi & penjualan (API ready)

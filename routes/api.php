@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\BotAuthController;
+use App\Http\Controllers\Api\BotUsageController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\PartnerController;
 use App\Http\Controllers\Api\ProductController;
@@ -14,6 +15,9 @@ Route::post('/bot/validate-token', [BotAuthController::class, 'validateToken'])
     ->middleware('throttle:bot');
 
 Route::middleware(['bot.token', 'throttle:bot'])->group(function () {
+    Route::get('/bot/usage', [BotUsageController::class, 'show']);
+    Route::post('/bot/ai-usage', [BotUsageController::class, 'consume']);
+
     Route::get('/transactions', [TransactionController::class, 'index']);
     Route::post('/transactions', [TransactionController::class, 'store']);
     Route::post('/transactions/batch', [TransactionController::class, 'storeBatch']);
@@ -23,6 +27,9 @@ Route::middleware(['bot.token', 'throttle:bot'])->group(function () {
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/stock', [StockController::class, 'index']);
     Route::get('/reports/today', [ReportController::class, 'today']);
+    Route::get('/reports/pnl', [ReportController::class, 'pnl']);
+    Route::get('/reports/stock-alerts', [ReportController::class, 'stockAlerts']);
+    Route::get('/reports/margin-alerts', [ReportController::class, 'marginAlerts']);
     Route::get('/reports/aging', [ReportController::class, 'aging']);
 
     Route::get('/partners', [PartnerController::class, 'index']);

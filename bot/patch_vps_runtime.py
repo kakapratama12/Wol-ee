@@ -15,7 +15,7 @@ if config_path.exists():
         text = text.replace(
             "    # Database\n",
             "    # Wol-ee Laravel API\n"
-            '    WOL_EE_API_URL: str = os.getenv("WOL_EE_API_URL", "http://127.0.0.1/api")\n'
+            '    WOL_EE_API_URL: str = os.getenv("WOL_EE_API_URL", "https://wolee.my.id/api")\n'
             '    WOL_EE_API_TOKEN: str = os.getenv("WOL_EE_API_TOKEN", "")\n\n'
             "    # Database\n",
         )
@@ -27,7 +27,7 @@ env_path = ROOT / ".env"
 if env_path.exists():
     env = env_path.read_text()
     for key, default in {
-        "WOL_EE_API_URL": "http://127.0.0.1/api",
+        "WOL_EE_API_URL": "https://wolee.my.id/api",
     }.items():
         if f"{key}=" not in env:
             env += f"\n{key}={default}\n"

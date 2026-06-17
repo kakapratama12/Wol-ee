@@ -15,6 +15,8 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 ### Added
 
+- Bot query tools (demo owner): `GET /api/reports/pnl`, `/stock-alerts`, `/margin-alerts`; query router NL tanpa LLM (profit bulan ini, stok/margin alert, meta "bisa nanya apa").
+- Kuota AI bot: 25/hari (free/Groq), 150/hari (pro/business/DeepSeek); `GET /api/bot/usage`, `POST /api/bot/ai-usage`.
 - Sidebar navigasi dikategorikan (Transaksi, Inventory, Laporan, Partner, Settings) dengan section collapsible.
 - Halaman web **Aging Report** (`/reports/aging`) — tersembunyi jika tenant belum punya invoice.
 - Kolom `weighted_avg_price` pada bahan baku; COGS memakai rata-rata tertimbang, snapshot penjualan tetap akurat.
@@ -46,6 +48,8 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 ### Changed
 
+- `/summary` dan "ringkasan" di bot → laporan P&L bulan ini (bukan hari ini).
+- Tier LLM bot mengikuti `tenants.plan` Wol-ee (bukan legacy `User.plan` keuangan-bot).
 - Penghapusan pembelian ditolak jika stok bahan sudah terpakai (pesan error jelas).
 - `InventoryService::recordPurchase()` memperbarui weighted average (bukan hanya harga beli terakhir).
 - `CogsService` memakai `weighted_avg_price` untuk perhitungan COGS live & snapshot penjualan.

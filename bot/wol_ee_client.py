@@ -112,6 +112,21 @@ class WolEeClient:
     def get_report_today(self) -> dict[str, Any]:
         return self._request("GET", "/reports/today")
 
+    def get_report_pnl(self, month: int, year: int) -> dict[str, Any]:
+        return self._request("GET", "/reports/pnl", params={"month": month, "year": year})
+
+    def get_stock_alerts(self) -> dict[str, Any]:
+        return self._request("GET", "/reports/stock-alerts")
+
+    def get_margin_alerts(self) -> dict[str, Any]:
+        return self._request("GET", "/reports/margin-alerts")
+
+    def get_ai_usage(self, telegram_user_id: int) -> dict[str, Any]:
+        return self._request("GET", "/bot/usage", params={"telegram_user_id": telegram_user_id})
+
+    def consume_ai_quota(self, telegram_user_id: int) -> dict[str, Any]:
+        return self._request("POST", "/bot/ai-usage", json={"telegram_user_id": telegram_user_id})
+
     def get_aging(self) -> dict[str, Any]:
         return self._request("GET", "/reports/aging")
 

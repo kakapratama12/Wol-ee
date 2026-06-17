@@ -60,8 +60,15 @@ Sertakan header `Authorization: Bearer <token>` pada tiap request.
 | POST   | `/api/sales`          | Catat penjualan (`product`/`product_id`, `quantity`) -> COGS, profit, alert stok |
 | GET    | `/api/stock`          | Daftar stok + status (aman/menipis/kritis) |
 | GET    | `/api/reports/today`  | Ringkasan omset/profit hari ini |
+| GET    | `/api/reports/pnl`    | P&L bulanan (`?month=&year=`) |
+| GET    | `/api/reports/stock-alerts` | Bahan menipis/kritis saja |
+| GET    | `/api/reports/margin-alerts` | Produk dengan margin turun |
+| GET    | `/api/bot/usage`      | Sisa kuota AI harian (`?telegram_user_id=`) |
+| POST   | `/api/bot/ai-usage`   | Konsumsi 1 kuota AI (body: `telegram_user_id`) |
 
-`quantity` dikirim dalam *base unit* bahan (mis. gram, ml). Rate limit 60 req/menit.
+`quantity` dikirim dalam *base unit* bahan (mis. gram, ml). Rate limit 60 req/menit per tenant.
+
+**Kuota AI bot:** plan `free` = 25 panggilan LLM/hari (Groq); `pro`/`business` = 150/hari (DeepSeek). Query laporan tanpa LLM tidak mengurangi kuota. Lihat [docs/bot-query-tools-spec.md](docs/bot-query-tools-spec.md).
 
 Contoh:
 

@@ -26,6 +26,7 @@ from bot_storage import BotUserStorage
 from not_found import format_item_not_found, get_app_url
 from offline_queue import OfflineQueue
 from pending_batch import PendingBatchStorage
+from query_router import classify_query, parse_period
 from wol_ee_client import WolEeApiError, WolEeClient
 
 logger = logging.getLogger(__name__)
@@ -57,15 +58,20 @@ class BotHandlers:
         try:
             payload = WolEeClient.validate_token(self.api_url, token)
             tenant = payload["data"]["tenant"]
-            self.storage.register(user_id, tenant["id"], token)
+            self.storage.register(
+                user_id,
+                tenant["id"],
+                token,
+                tenant_plan=tenant.get("plan", "free"),
+            )
             return (
                 f"Berhasil terdaftar ke {tenant['name']}!\n\n"
                 "Kamu bisa ketik bahasa natural, contoh:\n"
                 "• Beli tepung Rp 200 ribu\n"
                 "• Jual matcha latte 10\n"
-                "• Copas laporan penjualan multi-item\n"
-                "• /profit — profit hari ini\n"
-                "• /history — riwayat transaksi"
+                "• profit bulan ini — laporan keuangan\n"
+                "• stok menipis — pantau bahan\n"
+                "• Ketik \"bisa nanya apa\" untuk lihat semua fitur"
             )
         except WolEeApiError:
             return "Token tidak valid. Minta Owner generate token di dashboard > Bot Integration."
@@ -124,10 +130,44 @@ class BotHandlers:
         result = resolve_sale_batch(items, products)
         return self._build_batch_preview(user_id, "sale_batch", result, payload.get("note"), None, ingredients, products)
 
+    def handle_query(self, user_id: int, text: str, kind: str) -> str:
+        if kind == "capabilities":
+            return self.handle_capabilities(user_id)
+        if kind == "stock_alerts":
+            return self.handle_stock_alerts(user_id)
+        if kind == "margin_alerts":
+            return self.handle_margin_alerts(user_id)
+        if kind == "report_today":
+            return self.handle_report_today(user_id)
+        if kind == "report_pnl":
+            month, year = parse_period(text)
+            return self.handle_report_pnl(user_id, month, year)
+        return self.handle_capabilities(user_id)
+
+    def _ensure_ai_quota(self, client: WolEeClient, user_id: int) -> str | None:
+        try:
+            client.consume_ai_quota(user_id)
+            return None
+        except WolEeApiError as exc:
+            if exc.error_code == "AI_QUOTA_EXCEEDED":
+                return (
+                    "⚠️ Kuota AI hari ini habis.\n"
+                    "Reset besok jam 00:00 WIB.\n"
+                    "Upgrade ke Pro untuk kuota lebih besar & respons lebih akurat."
+                )
+            logger.warning("Gagal cek kuota AI: %s", exc)
+            return None
+
     async def handle_natural_language(self, user_id: int, text: str, is_pro: bool = False) -> str | BotResponse:
         client = self._client_for(user_id)
         if client is None:
             return "Belum terdaftar. Ketik /start <token> dulu."
+
+        quota_msg = self._ensure_ai_quota(client, user_id)
+        if quota_msg:
+            return quota_msg
+
+        is_pro = self.storage.uses_premium_llm(user_id)
 
         try:
             ingredients, products = await asyncio.to_thread(self._catalog, client)
@@ -453,6 +493,103 @@ class BotHandlers:
             )
         except WolEeApiError:
             return "❌ Gagal mengambil laporan aging."
+
+    def handle_report_pnl(self, user_id: int, month: int, year: int) -> str:
+        client = self._client_for(user_id)
+        if client is None:
+            return "Belum terdaftar. Ketik /start <token> dulu."
+
+        try:
+            data = client.get_report_pnl(month, year)["data"]
+            self.storage.touch(user_id)
+            label = data.get("period_label", f"{month}/{year}")
+            expenses = data.get("expenses") or []
+            expense_lines = ""
+            if expenses:
+                top = expenses[:3]
+                expense_lines = "\n".join(
+                    f"  • {row['category']}: {format_amount(row['amount'])}" for row in top
+                )
+                expense_lines = f"\n<b>Biaya utama:</b>\n{expense_lines}\n"
+
+            return (
+                f"📊 <b>Laporan {label}</b>\n"
+                f"<i>(dari data toko)</i>\n\n"
+                f"💰 Omset: <b>{format_amount(data['revenue'])}</b>\n"
+                f"📉 COGS: <b>{format_amount(data['cogs'])}</b>\n"
+                f"📈 Laba kotor: <b>{format_amount(data['gross_profit'])}</b> "
+                f"({data['gross_margin']}%)\n"
+                f"💸 Biaya operasional: <b>{format_amount(data['total_expenses'])}</b>"
+                f"{expense_lines}\n"
+                f"✅ <b>Laba bersih: {format_amount(data['net_profit'])}</b> "
+                f"({data['net_margin']}%)"
+            )
+        except WolEeApiError:
+            return "❌ Gagal mengambil laporan bulanan."
+
+    def handle_stock_alerts(self, user_id: int) -> str:
+        client = self._client_for(user_id)
+        if client is None:
+            return "Belum terdaftar. Ketik /start <token> dulu."
+
+        try:
+            data = client.get_stock_alerts()["data"]
+            self.storage.touch(user_id)
+            alerts = data.get("alerts") or []
+            safe = data.get("safe_count", 0)
+            if not alerts:
+                return f"✅ Semua stok aman ({safe} bahan)."
+
+            lines = [f"⚠️ <b>{len(alerts)} bahan perlu perhatian:</b>\n"]
+            for item in alerts:
+                emoji = "🔴" if item.get("status") == "kritis" else "🟡"
+                lines.append(
+                    f"{emoji} {item['ingredient']}: {item['current_stock']} {item['unit']} "
+                    f"(min {item['minimum_stock']}) — {item['status']}"
+                )
+            lines.append(f"\n{safe} bahan lain aman.")
+            return "\n".join(lines)
+        except WolEeApiError:
+            return "❌ Gagal mengambil alert stok."
+
+    def handle_margin_alerts(self, user_id: int) -> str:
+        client = self._client_for(user_id)
+        if client is None:
+            return "Belum terdaftar. Ketik /start <token> dulu."
+
+        try:
+            data = client.get_margin_alerts()["data"]
+            self.storage.touch(user_id)
+            alerts = data.get("alerts") or []
+            if not alerts:
+                return "✅ Tidak ada produk dengan margin turun signifikan bulan ini."
+
+            lines = ["📉 <b>Margin turun:</b>\n"]
+            for row in alerts[:8]:
+                lines.append(
+                    f"• {row['product']}: {row['previous_margin']}% → "
+                    f"{row['current_margin']}% (↓{row['margin_drop']}%)"
+                )
+            return "\n".join(lines)
+        except WolEeApiError:
+            return "❌ Gagal mengambil alert margin."
+
+    def handle_capabilities(self, user_id: int) -> str:
+        self.storage.touch(user_id)
+        return (
+            "🤖 <b>Wol-ee bisa bantu:</b>\n\n"
+            "<b>📊 Laporan</b> (gratis, tanpa kuota AI)\n"
+            "• profit bulan ini / ringkasan\n"
+            "• omset hari ini\n\n"
+            "<b>⚠️ Pantau</b> (gratis)\n"
+            "• stok menipis / kritis\n"
+            "• margin turun\n\n"
+            "<b>✏️ Catat transaksi</b> (pakai kuota AI)\n"
+            "• beli tepung Rp 200 ribu\n"
+            "• jual matcha 10\n"
+            "• copas laporan multi-item\n\n"
+            "Tanya langsung pakai bahasa bebas."
+        )
 
     def handle_report_today(self, user_id: int) -> str:
         client = self._client_for(user_id)

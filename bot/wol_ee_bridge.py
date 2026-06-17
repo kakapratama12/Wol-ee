@@ -10,6 +10,7 @@ from config import config
 from handlers import BotHandlers
 from offline_queue import OfflineQueue
 from pending_batch import PendingBatchStorage
+from query_router import classify_query
 
 _data = Path(__file__).parent / "data"
 _storage = BotUserStorage(_data / "bot_users.db")
@@ -39,8 +40,11 @@ def try_handle(user_id: int, text: str) -> str | BotResponse | None:
     if not is_wolee_user(user_id):
         return None
 
-    if clean in {"summary", "profit", "ringkasan"} or "profit hari ini" in normalized:
+    if clean in {"profit", "ringkasan hari ini"} or "profit hari ini" in normalized or "omset hari ini" in normalized:
         return _handlers.handle_report_today(user_id)
+
+    if clean in {"summary", "ringkasan"}:
+        return _handlers.handle_report_pnl(user_id, *_current_month_year())
 
     if clean in {"history", "riwayat"}:
         return _handlers.handle_history(user_id)
@@ -61,20 +65,16 @@ def try_handle(user_id: int, text: str) -> str | BotResponse | None:
         return _handlers.handle_aging(user_id)
 
     if normalized in {"bantuan", "/bantuan", "help wolee"}:
-        return (
-            "Perintah Wol-ee:\n"
-            "• Beli tepung Rp 200 ribu — catat pembelian (NL)\n"
-            "• Jual matcha latte 10 — catat penjualan\n"
-            "• Copas laporan multi-item (matcha 10, croissant 5)\n"
-            "• stok [bahan] — cek stok\n"
-            "• /profit — laporan hari ini\n"
-            "• /history — riwayat transaksi\n"
-            "• /partners — daftar partner\n"
-            "• aging — laporan piutang\n"
-            "/start <token> — daftar tenant"
-        )
+        return _handlers.handle_capabilities(user_id)
 
     return None
+
+
+def _current_month_year() -> tuple[int, int]:
+    from datetime import datetime
+
+    now = datetime.now()
+    return now.month, now.year
 
 
 async def handle_wolee_message(user_id: int, text: str, is_pro: bool = False) -> str | BotResponse | None:
@@ -85,6 +85,10 @@ async def handle_wolee_message(user_id: int, text: str, is_pro: bool = False) ->
     pending_reply = _handlers.handle_pending_reply(user_id, text)
     if pending_reply is not None:
         return pending_reply
+
+    query_kind = classify_query(text)
+    if query_kind is not None:
+        return _handlers.handle_query(user_id, text, query_kind)
 
     sync_reply = try_handle(user_id, text)
     if sync_reply is not None:

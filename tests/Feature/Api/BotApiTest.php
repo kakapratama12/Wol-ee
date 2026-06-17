@@ -251,3 +251,115 @@ it('menampilkan daftar produk untuk konteks bot', function () {
         ->assertJsonPath('data.0.name', 'Matcha Latte');
 });
 
+it('mengembalikan laporan pnl bulanan via API', function () {
+    $tenantId = $this->auth['tenant']->id;
+    $product = Product::create([
+        'tenant_id' => $tenantId,
+        'name' => 'Kopi',
+        'unit' => 'cup',
+        'selling_price' => 20000,
+    ]);
+    $ingredient = Ingredient::create([
+        'tenant_id' => $tenantId,
+        'name' => 'Biji Kopi',
+        'unit_type' => 'gramasi',
+        'base_unit' => 'g',
+        'unit_price' => 1,
+        'current_stock' => 1000,
+        'minimum_stock' => 100,
+    ]);
+    RecipeItem::create([
+        'tenant_id' => $tenantId,
+        'product_id' => $product->id,
+        'ingredient_id' => $ingredient->id,
+        'quantity' => 10,
+    ]);
+
+    $this->postJson('/api/sales', ['product' => 'Kopi', 'quantity' => 2])->assertCreated();
+
+    \App\Models\Expense::create([
+        'tenant_id' => $tenantId,
+        'category' => 'Listrik',
+        'description' => 'PLN',
+        'amount' => 500000,
+        'period_month' => now()->month,
+        'period_year' => now()->year,
+    ]);
+
+    $response = $this->getJson('/api/reports/pnl?month='.now()->month.'&year='.now()->year);
+
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.revenue', 40000)
+        ->assertJsonPath('data.total_expenses', 500000);
+});
+
+it('mengembalikan alert stok menipis via API', function () {
+    Ingredient::create([
+        'tenant_id' => $this->auth['tenant']->id,
+        'name' => 'Susu',
+        'unit_type' => 'gramasi',
+        'base_unit' => 'ml',
+        'unit_price' => 20,
+        'current_stock' => 100,
+        'minimum_stock' => 500,
+    ]);
+    Ingredient::create([
+        'tenant_id' => $this->auth['tenant']->id,
+        'name' => 'Gula',
+        'unit_type' => 'gramasi',
+        'base_unit' => 'g',
+        'unit_price' => 15,
+        'current_stock' => 5000,
+        'minimum_stock' => 1000,
+    ]);
+
+    $response = $this->getJson('/api/reports/stock-alerts');
+
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.alert_count', 1)
+        ->assertJsonPath('data.safe_count', 1)
+        ->assertJsonPath('data.alerts.0.ingredient', 'Susu');
+});
+
+it('mengembalikan alert margin via API', function () {
+    $response = $this->getJson('/api/reports/margin-alerts');
+
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonStructure(['data' => ['alerts', 'alert_count']]);
+});
+
+it('melacak dan membatasi kuota ai harian per user telegram', function () {
+    $telegramUserId = 99887766;
+
+    $this->getJson('/api/bot/usage?telegram_user_id='.$telegramUserId)
+        ->assertOk()
+        ->assertJsonPath('data.limit', 25)
+        ->assertJsonPath('data.remaining', 25)
+        ->assertJsonPath('data.plan', 'free');
+
+    for ($i = 0; $i < 25; $i++) {
+        $this->postJson('/api/bot/ai-usage', ['telegram_user_id' => $telegramUserId])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+    }
+
+    $this->postJson('/api/bot/ai-usage', ['telegram_user_id' => $telegramUserId])
+        ->assertStatus(429)
+        ->assertJsonPath('error_code', 'AI_QUOTA_EXCEEDED');
+
+    $this->getJson('/api/bot/usage?telegram_user_id='.$telegramUserId)
+        ->assertJsonPath('data.remaining', 0)
+        ->assertJsonPath('data.used', 25);
+});
+
+it('memberi kuota ai lebih besar untuk tenant pro', function () {
+    $this->auth['tenant']->update(['plan' => Tenant::PLAN_PRO]);
+
+    $this->getJson('/api/bot/usage?telegram_user_id=112233')
+        ->assertJsonPath('data.limit', 150)
+        ->assertJsonPath('data.uses_premium_llm', true);
+});
+

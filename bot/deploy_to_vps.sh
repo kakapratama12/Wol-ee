@@ -12,6 +12,7 @@ FILES=(
   wol_ee_bridge.py
   wol_ee_client.py
   bot_storage.py
+  query_router.py
   offline_queue.py
   patch_vps_runtime.py
   requirements.txt
