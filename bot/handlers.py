@@ -9,7 +9,9 @@ from typing import Callable
 
 from ai_parser import (
     format_amount,
-    parse_regex_expense,
+    parse_money_amount,
+    parse_period_text,
+    parse_quantity_unit,
     parse_wolee_inventory,
     to_api_expense_payload,
     to_api_purchase_payload,
@@ -91,7 +93,13 @@ class BotHandlers:
 
     def handle_pending_reply(self, user_id: int, text: str) -> str | BotResponse | None:
         active = self.pending.get_active_for_user(user_id)
-        if not active or active["kind"] != "awaiting_qty":
+        if not active:
+            return None
+
+        if active["kind"] == "awaiting_slot":
+            return self._handle_pending_slot_reply(user_id, text, active)
+
+        if active["kind"] != "awaiting_qty":
             return None
 
         qty_match = re.search(r"(\d+)", text.strip())
@@ -131,6 +139,62 @@ class BotHandlers:
 
         result = resolve_sale_batch(items, products)
         return self._build_batch_preview(user_id, "sale_batch", result, payload.get("note"), None, ingredients, products)
+
+    def _handle_pending_slot_reply(self, user_id: int, text: str, active: dict) -> str | BotResponse:
+        client = self._client_for(user_id)
+        if client is None:
+            return "Belum terdaftar. Ketik /start <token> dulu."
+
+        payload = active["payload"]
+        parsed = payload.get("parsed", {})
+        slot = payload.get("missing_slot")
+        value_error = self._merge_slot_answer(parsed, slot, text)
+        if value_error:
+            return value_error
+
+        try:
+            ingredients, products = self._catalog(client)
+        except WolEeApiError:
+            return "❌ Gagal mengambil katalog dari API."
+
+        reply = self._execute_action_plan(user_id, client, parsed, ingredients, products)
+        if not self._needs_clarification(reply):
+            self.pending.delete(active["pending_id"], user_id)
+        return reply
+
+    def _merge_slot_answer(self, parsed: dict, slot: str | None, text: str) -> str | None:
+        if slot == "amount":
+            amount = parse_money_amount(text)
+            if not amount:
+                return "Nominalnya belum kebaca. Contoh: 60rb atau Rp 60.000"
+            parsed["amount"] = amount
+            parsed["total"] = amount
+            return None
+
+        if slot in {"quantity", "quantity_unit"}:
+            quantity, unit = parse_quantity_unit(text)
+            if quantity is None:
+                return "Jumlahnya belum kebaca. Contoh: 2kg atau 10 pcs"
+            parsed["quantity"] = quantity
+            if unit:
+                parsed["quantity_unit"] = unit
+            return None
+
+        if slot in {"product", "ingredient", "category"}:
+            value = text.strip()
+            if len(value) < 2:
+                return "Jawabannya belum jelas. Coba tulis lebih spesifik."
+            parsed[slot] = value
+            return None
+
+        if slot in {"period_month", "period_year"}:
+            period = parse_period_text(text)
+            if not period:
+                return "Periodenya belum kebaca. Contoh: bulan ini atau Juni 2026."
+            parsed["period_month"], parsed["period_year"] = period
+            return None
+
+        return "Aku belum bisa melengkapi data itu. Kirim ulang perintah lengkap ya."
 
     def handle_query(self, user_id: int, text: str, kind: str) -> str:
         if kind == "capabilities":
@@ -219,13 +283,6 @@ class BotHandlers:
         if client is None:
             return "Belum terdaftar. Ketik /start <token> dulu."
 
-        expense = parse_regex_expense(text)
-        if expense:
-            payload = to_api_expense_payload(expense)
-            if not payload:
-                return "❌ Data biaya tidak lengkap. Contoh: bayar listrik bulan ini 1.5jt"
-            return self._post_expense(client, user_id, payload)
-
         quota_msg = self._ensure_ai_quota(client, user_id)
         if quota_msg:
             return quota_msg
@@ -246,6 +303,18 @@ class BotHandlers:
         if "error" in parsed:
             return f"❌ {parsed['error']}"
 
+        return self._execute_action_plan(user_id, client, parsed, ingredients, products, original_text=text)
+
+    def _execute_action_plan(
+        self,
+        user_id: int,
+        client: WolEeClient,
+        parsed: dict,
+        ingredients: list[dict],
+        products: list[dict],
+        original_text: str | None = None,
+    ) -> str | BotResponse:
+        self._apply_deterministic_slot_hints(parsed, original_text)
         intent = parsed.get("intent", "unknown")
 
         if intent == "stock":
@@ -269,16 +338,25 @@ class BotHandlers:
             result = resolve_sale_batch(parsed.get("items", []), products)
             return self._build_batch_preview(user_id, "sale_batch", result, parsed.get("note"), None, ingredients, products)
         if intent == "purchase":
+            clarification = self._clarification_for_action(user_id, parsed, original_text)
+            if clarification:
+                return clarification
             payload = to_api_purchase_payload(parsed, ingredients)
             if not payload:
                 return "❌ Data pembelian tidak lengkap. Sebutkan bahan dan nominal."
             return self._post_purchase(client, user_id, payload, ingredients)
         if intent == "sale":
+            clarification = self._clarification_for_action(user_id, parsed, original_text)
+            if clarification:
+                return clarification
             payload = to_api_sale_payload(parsed)
             if not payload:
                 return "❌ Data penjualan tidak lengkap. Sebutkan produk dan jumlah."
             return self._post_sale(client, user_id, payload, products)
         if intent == "expense":
+            clarification = self._clarification_for_action(user_id, parsed, original_text)
+            if clarification:
+                return clarification
             payload = to_api_expense_payload(parsed)
             if not payload:
                 return "❌ Data biaya tidak lengkap. Contoh: bayar listrik bulan ini 1.5jt"
@@ -296,6 +374,101 @@ class BotHandlers:
             "feedback <perintah/pertanyaan yang kamu harapkan>\n"
             "Contoh: feedback bandingin profit bulan ini vs bulan lalu"
         )
+
+    def _apply_deterministic_slot_hints(self, parsed: dict, original_text: str | None) -> None:
+        if not original_text:
+            return
+
+        if parsed.get("intent") in {"purchase", "expense"} and not (parsed.get("amount") or parsed.get("total")):
+            amount = parse_money_amount(original_text)
+            if amount:
+                parsed["amount"] = amount
+                if parsed.get("intent") == "purchase":
+                    parsed["total"] = amount
+
+        if parsed.get("intent") == "expense" and (not parsed.get("period_month") or not parsed.get("period_year")):
+            period = parse_period_text(original_text)
+            if period:
+                parsed["period_month"], parsed["period_year"] = period
+
+        if parsed.get("intent") == "purchase" and (not parsed.get("quantity") or not parsed.get("quantity_unit")):
+            quantity, unit = parse_quantity_unit(original_text)
+            if quantity is not None and not parsed.get("quantity"):
+                parsed["quantity"] = quantity
+            if unit and not parsed.get("quantity_unit"):
+                parsed["quantity_unit"] = unit
+
+    def _clarification_for_action(self, user_id: int, parsed: dict, original_text: str | None = None) -> str | None:
+        missing = self._missing_required_slot(parsed)
+        if not missing:
+            return None
+
+        self.pending.delete_for_user(user_id)
+        self.pending.save(user_id, "awaiting_slot", {
+            "parsed": parsed,
+            "missing_slot": missing,
+            "original_text": original_text,
+        })
+        return self._clarification_question(parsed, missing)
+
+    def _missing_required_slot(self, parsed: dict) -> str | None:
+        intent = parsed.get("intent")
+        required = {
+            "sale": ["product", "quantity"],
+            "purchase": ["ingredient", "quantity", "quantity_unit", "total"],
+            "expense": ["category", "amount", "period_month", "period_year"],
+        }.get(intent, [])
+        aliases = {"total": "amount"}
+        for slot in required:
+            value = parsed.get(slot)
+            if slot == "total" and not value:
+                value = parsed.get("amount")
+            if value in {None, "", 0}:
+                return aliases.get(slot, slot)
+        return None
+
+    def _clarification_question(self, parsed: dict, slot: str) -> str:
+        intent = parsed.get("intent")
+        if slot == "amount":
+            if intent == "purchase":
+                ingredient = parsed.get("ingredient") or "bahan itu"
+                qty = parsed.get("quantity")
+                unit = parsed.get("quantity_unit") or ""
+                partner = parsed.get("partner_name")
+                partner_text = f" dari {partner}" if partner else ""
+                qty_text = f" {qty:g}{unit}" if isinstance(qty, (int, float)) else ""
+                return f"Total beli {ingredient}{qty_text}{partner_text} berapa rupiah?"
+            return "Nominal biayanya berapa rupiah? Contoh: 1.5jt atau Rp 1500000"
+        if slot == "quantity":
+            item = parsed.get("product") or parsed.get("ingredient") or "item itu"
+            return f"Jumlah {item} berapa?"
+        if slot == "quantity_unit":
+            item = parsed.get("ingredient") or "bahan itu"
+            return f"Satuan {item} apa? Contoh: kg, g, ml, butir, pcs."
+        if slot == "product":
+            return "Produk apa yang terjual?"
+        if slot == "ingredient":
+            return "Bahan apa yang dibeli?"
+        if slot == "category":
+            return "Biaya ini kategorinya apa? Contoh: Listrik, Gaji, Sewa."
+        if slot in {"period_month", "period_year"}:
+            return "Biaya ini untuk bulan apa? Contoh: bulan ini atau Juni 2026."
+        return "Ada data yang kurang. Bisa lengkapi detailnya?"
+
+    def _needs_clarification(self, reply: str | BotResponse) -> bool:
+        if isinstance(reply, BotResponse):
+            return False
+        clarification_starts = (
+            "Total beli ",
+            "Nominal biayanya",
+            "Jumlah ",
+            "Satuan ",
+            "Produk apa",
+            "Bahan apa",
+            "Biaya ini",
+            "Ada data",
+        )
+        return reply.startswith(clarification_starts)
 
     def _build_batch_preview(
         self,

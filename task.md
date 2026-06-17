@@ -106,6 +106,7 @@
 
 ### 4.2 Bot Logic
 - [x] NL parsing rules — modul `bot/handlers.py`
+- [x] AI action planner intent + slot validation untuk sale/purchase/expense
 - [x] Incomplete data handling (format hint + offline queue saat timeout)
 - [x] Response format (JSON via `bot/wol_ee_client.py`)
 

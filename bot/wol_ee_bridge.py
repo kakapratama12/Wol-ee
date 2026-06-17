@@ -55,12 +55,6 @@ def try_handle(user_id: int, text: str) -> str | BotResponse | None:
     if clean in {"partners", "partner", "daftar partner"}:
         return _handlers.handle_partners(user_id)
 
-    if clean.startswith("beli "):
-        return _handlers.handle_pembelian(user_id, text)
-
-    if clean.startswith("jual "):
-        return _handlers.handle_penjualan(user_id, text)
-
     if clean.startswith("stok") or clean == "cek stok":
         return _handlers.handle_stok(user_id, text)
 

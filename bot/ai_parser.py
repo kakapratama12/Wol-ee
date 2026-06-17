@@ -37,8 +37,8 @@ Output JSON:
 HANYA return JSON, tanpa penjelasan tambahan.
 """
 
-WOLEE_INVENTORY_PROMPT = """Kamu adalah asisten inventory untuk kafe/bakery UMKM Indonesia (Wol-ee).
-Parse input user menjadi transaksi inventory.
+WOLEE_ACTION_PROMPT = """Kamu adalah action planner untuk bot Wol-ee, asisten bisnis F&B Indonesia.
+Tugasmu: deteksi intent user dan ekstrak slot yang diperlukan. Kamu TIDAK mengeksekusi aksi.
 
 Katalog bahan baku tenant:
 {ingredients}
@@ -47,31 +47,44 @@ Katalog produk jadi tenant:
 {products}
 
 Intent yang didukung:
-- purchase: beli SATU bahan baku (contoh: "Beli tepung 2kg Rp 36 ribu")
-- sale: jual SATU produk (contoh: "Jual matcha latte 10")
-- sale_batch: laporan penjualan multi-item / copas dari WA (contoh: "laporan hari ini: matcha 10, croissant 5" atau multi-baris)
-- purchase_batch: pembelian multi-bahan (contoh: "beli: tepung 10kg 100000, gula 5kg 50000" atau "beli dari CV Tepung: ...")
-- stock: cek stok (contoh: "stok tepung")
+- record_purchase: beli SATU bahan baku (contoh: "Beli tepung 2kg Rp 36 ribu")
+- record_sale: jual SATU produk (contoh: "Jual matcha latte 10")
+- record_expense: catat biaya operasional (contoh: "bayar listrik bulan ini 1.5jt")
+- check_stock: cek stok (contoh: "stok tepung")
+- sale_batch: laporan penjualan multi-item / copas dari WA (contoh: "matcha 10, croissant 5")
+- purchase_batch: pembelian multi-bahan (contoh: "beli: tepung 10kg 100000, gula 5kg 50000")
 - unknown: tidak bisa diparse
 
 ATURAN PENTING:
 - JANGAN map/menebak nama ke katalog. Kirim nama persis seperti user tulis.
-- amount/total dalam Rupiah integer (200 ribu = 200000, 50rb = 50000)
-- quantity_unit: kg, g, ml, l, butir, pcs, cup, atau null
+- amount adalah uang Rupiah integer (200 ribu = 200000, 1.5jt = 1500000).
+- quantity adalah jumlah barang; quantity_unit: kg, g, ml, l, butir, pcs, cup, atau null.
+- JANGAN menganggap quantity sebagai uang. "2kg" adalah quantity 2 unit kg, BUKAN amount 2000.
+- Jika user bilang "bayar X buat beli telur 2kg" maka intent record_purchase, bukan record_expense, karena ada pembelian bahan.
+- Untuk record_expense, amount wajib berupa uang eksplisit: Rp, ribu/rb/k, juta/jt, atau angka Rupiah jelas.
+- Untuk "bulan ini", isi period_month dan period_year bulan/tahun sekarang: {current_month}/{current_year}.
 - Untuk sale_batch/purchase_batch: ekstrak SEMUA baris item ke array items
 - Pahami konteks laporan (mis. "nih dari barista", "laporan hari ini") → intent sale_batch
 - partner_name: isi jika user menyebut supplier (mis. "beli dari CV Tepung")
 
 Output JSON untuk single item:
 {{
-    "intent": "purchase" | "sale" | "stock" | "unknown",
-    "ingredient": "nama bahan atau null",
-    "product": "nama produk atau null",
-    "quantity": angka atau null,
-    "quantity_unit": "kg" | "g" | "ml" | "l" | "butir" | "pcs" | "cup" | null,
-    "total": angka Rupiah untuk purchase atau null,
-    "partner_name": "nama partner atau null",
-    "note": "deskripsi singkat atau null"
+    "intent": "record_purchase" | "record_sale" | "record_expense" | "check_stock" | "unknown",
+    "confidence": "high" | "medium" | "low",
+    "slots": {{
+        "product": null,
+        "ingredient": null,
+        "quantity": null,
+        "quantity_unit": null,
+        "amount": null,
+        "category": null,
+        "period_month": null,
+        "period_year": null,
+        "partner_name": null,
+        "note": null
+    }},
+    "missing_slots": [],
+    "ambiguities": []
 }}
 
 Output JSON untuk batch:
@@ -86,6 +99,8 @@ Output JSON untuk batch:
 
 HANYA return JSON, tanpa penjelasan tambahan.
 """
+
+WOLEE_INVENTORY_PROMPT = WOLEE_ACTION_PROMPT
 
 UNIT_TO_BASE: dict[str, dict[str, float]] = {
     "g": {"kg": 1000, "g": 1, "gram": 1},
@@ -286,18 +301,21 @@ def convert_to_base_quantity(quantity: float, unit: str | None, base_unit: str) 
 
 def parse_regex_inventory(text: str) -> dict | None:
     purchase = re.search(
-        r"beli\s+(.+?)\s+(\d+(?:[.,]\d+)?)\s*(kg|g|ml|l|butir|pcs)?\s+(?:rp\s*)?(\d+)",
+        r"^beli\s+(.+?)\s+(\d+(?:[.,]\d+)?)\s*(kg|g|ml|l|butir|pcs)\s+(.+)$",
         text,
         re.IGNORECASE,
     )
     if purchase:
-        ingredient, qty, unit, total = purchase.groups()
+        ingredient, qty, unit, amount_text = purchase.groups()
+        parsed_amount = _parse_rupiah_amount(amount_text)
+        if not parsed_amount:
+            return None
         return {
             "intent": "purchase",
             "ingredient": ingredient.strip(),
             "quantity": float(qty.replace(",", ".")),
             "quantity_unit": unit,
-            "total": int(total),
+            "total": parsed_amount[0],
         }
 
     sale = re.search(r"jual\s+(.+?)\s+(\d+)\s*$", text, re.IGNORECASE)
@@ -316,15 +334,21 @@ def parse_regex_inventory(text: str) -> dict | None:
 
 
 def _parse_rupiah_amount(text: str) -> tuple[int, str] | None:
-    match = re.search(
-        r"(?:rp\s*)?(\d+(?:[.,]\d+)?)\s*(jt|juta|rb|ribu|k)?",
-        text,
-        re.IGNORECASE,
-    )
+    match = re.search(r"rp\s*(\d+(?:[.,]\d+)?)\s*(jt|juta|rb|ribu|k)?\b", text, re.IGNORECASE)
+    if not match:
+        match = re.search(r"(\d+(?:[.,]\d+)?)\s*(jt|juta|rb|ribu|k)\b", text, re.IGNORECASE)
+    if not match:
+        match = re.search(
+            r"\b(\d{4,})\b(?!\s*(?:kg|g|ml|l|liter|butir|pcs|cup)\b)",
+            text,
+            re.IGNORECASE,
+        )
     if not match:
         return None
 
-    raw_amount, suffix = match.groups()
+    groups = match.groups()
+    raw_amount = groups[0]
+    suffix = groups[1] if len(groups) > 1 else None
     amount = float(raw_amount.replace(",", "."))
     suffix = (suffix or "").lower()
     if suffix in {"jt", "juta"}:
@@ -335,58 +359,39 @@ def _parse_rupiah_amount(text: str) -> tuple[int, str] | None:
     return int(amount), match.group(0)
 
 
-def _parse_expense_period(text: str) -> tuple[int, int]:
-    normalized = text.lower()
+def parse_money_amount(text: str) -> int | None:
+    parsed = _parse_rupiah_amount(text.strip().lower())
+    return parsed[0] if parsed else None
+
+
+def parse_quantity_unit(text: str) -> tuple[float | None, str | None]:
+    match = re.search(r"(\d+(?:[.,]\d+)?)\s*(kg|g|ml|l|liter|butir|pcs|cup)?\b", text.strip().lower())
+    if not match:
+        return None, None
+    quantity = float(match.group(1).replace(",", "."))
+    unit = match.group(2)
+    if unit == "liter":
+        unit = "l"
+    return quantity, unit
+
+
+def parse_period_text(text: str) -> tuple[int, int] | None:
+    normalized = text.strip().lower()
     now = datetime.now()
-    for name, month in MONTH_NAMES.items():
-        if name in normalized:
-            year_match = re.search(r"(20\d{2})", normalized)
-            return month, int(year_match.group(1)) if year_match else now.year
+    if "bulan ini" in normalized or normalized in {"sekarang", "current"}:
+        return now.month, now.year
     if "bulan lalu" in normalized:
         if now.month == 1:
             return 12, now.year - 1
         return now.month - 1, now.year
-    return now.month, now.year
-
-
-def parse_regex_expense(text: str) -> dict | None:
-    normalized = text.strip().lower()
-    if not re.search(r"\b(bayar|biaya|expense|pengeluaran)\b", normalized):
-        return None
-
-    parsed_amount = _parse_rupiah_amount(normalized)
-    if not parsed_amount:
-        return None
-
-    amount, amount_text = parsed_amount
-    category = normalized
-    category = re.sub(r"\b(bayar|biaya|expense|pengeluaran|untuk)\b", " ", category)
-    category = category.replace(amount_text.lower(), " ")
-    category = re.sub(r"\bbulan\s+(ini|lalu)\b", " ", category)
-    category = re.sub(r"\b(20\d{2})\b", " ", category)
-    for month_name in MONTH_NAMES:
-        category = re.sub(rf"\b{month_name}\b", " ", category)
-    category = re.sub(r"\s+", " ", category).strip(" ,-")
-
-    if not category:
-        category = "operasional"
-    if "gaji" in category:
-        category = "gaji"
-    elif "listrik" in category:
-        category = "listrik"
-    elif "sewa" in category:
-        category = "sewa"
-
-    month, year = _parse_expense_period(normalized)
-    return {
-        "intent": "expense",
-        "category": category.title(),
-        "description": text.strip(),
-        "amount": amount,
-        "period_month": month,
-        "period_year": year,
-        "_provider": "regex",
-    }
+    for name, month in MONTH_NAMES.items():
+        if name in normalized:
+            year_match = re.search(r"(20\d{2})", normalized)
+            return month, int(year_match.group(1)) if year_match else now.year
+    match = re.search(r"\b(0?[1-9]|1[0-2])[/\-.](20\d{2})\b", normalized)
+    if match:
+        return int(match.group(1)), int(match.group(2))
+    return None
 
 
 async def parse_wolee_inventory(
@@ -400,9 +405,12 @@ async def parse_wolee_inventory(
         regex_result["_provider"] = "regex"
         return regex_result
 
+    now = datetime.now()
     prompt = WOLEE_INVENTORY_PROMPT.format(
         ingredients=_format_catalog_ingredients(ingredients),
         products=_format_catalog_products(products),
+        current_month=now.month,
+        current_year=now.year,
     )
     result = await _call_llm(user_input, prompt, is_pro=is_pro)
 
@@ -421,6 +429,7 @@ async def parse_wolee_inventory(
             "usage": result.get("usage"),
         }
 
+    parsed = _normalize_action_plan(parsed)
     parsed["_provider"] = result.get("provider", "unknown")
     parsed["_ai_request"] = {
         "provider": result.get("provider", "unknown"),
@@ -444,12 +453,41 @@ async def parse_wolee_inventory(
                 return {"error": "Tidak ada item yang terbaca. Contoh: matcha 10, croissant 5"}
         return parsed
 
-    if intent == "purchase" and not parsed.get("total"):
-        return {"error": "Nominal belum ketemu. Contoh: \"Beli tepung Rp 200 ribu\""}
-    if intent == "sale" and not parsed.get("quantity"):
-        return {"error": "Jumlah penjualan belum ketemu. Contoh: \"Jual matcha latte 10\""}
-
     return parsed
+
+
+def _normalize_action_plan(parsed: dict) -> dict:
+    slots = parsed.get("slots") if isinstance(parsed.get("slots"), dict) else {}
+    intent = parsed.get("intent", "unknown")
+    intent_map = {
+        "record_purchase": "purchase",
+        "record_sale": "sale",
+        "record_expense": "expense",
+        "check_stock": "stock",
+    }
+    normalized_intent = intent_map.get(intent, intent)
+    if normalized_intent in {"sale_batch", "purchase_batch"}:
+        return parsed
+
+    normalized = {
+        "intent": normalized_intent,
+        "confidence": parsed.get("confidence", "medium"),
+        "missing_slots": parsed.get("missing_slots") or [],
+        "ambiguities": parsed.get("ambiguities") or [],
+        "product": slots.get("product") or parsed.get("product"),
+        "ingredient": slots.get("ingredient") or parsed.get("ingredient"),
+        "quantity": slots.get("quantity") if slots.get("quantity") is not None else parsed.get("quantity"),
+        "quantity_unit": slots.get("quantity_unit") or parsed.get("quantity_unit"),
+        "total": slots.get("amount") if slots.get("amount") is not None else parsed.get("total"),
+        "amount": slots.get("amount") if slots.get("amount") is not None else parsed.get("amount"),
+        "category": slots.get("category") or parsed.get("category"),
+        "period_month": slots.get("period_month") or parsed.get("period_month"),
+        "period_year": slots.get("period_year") or parsed.get("period_year"),
+        "partner_name": slots.get("partner_name") or parsed.get("partner_name"),
+        "note": slots.get("note") or parsed.get("note"),
+        "slots": slots,
+    }
+    return normalized
 
 
 def to_api_purchase_payload(parsed: dict, stock_catalog: list[dict]) -> dict | None:

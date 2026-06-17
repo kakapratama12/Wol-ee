@@ -19,7 +19,7 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 - Super Admin AI Usage analytics: event log `bot_ai_requests`, peak request/minute, provider limits, error rate, latency/token metadata, dan breakdown per provider/plan/tenant.
 - Dashboard overview: chart Revenue vs Expense 6 bulan terakhir dan daftar pembelian terbaru.
 - Bot feedback collection: fallback mengarahkan `feedback ...`, API `POST /api/bot/feedback`, dan tabel `bot_feedbacks` untuk kurasi roadmap early adopter.
-- Bot expense entry: `POST /api/expenses` dan parser lokal untuk “bayar listrik/gaji bulan ini 1.5jt” tanpa konsumsi kuota AI.
+- Bot action planner: pencatatan penjualan, pembelian, dan biaya memakai AI intent + slot validation; bot bertanya klarifikasi saat data belum lengkap.
 - Bot query tools (demo owner): `GET /api/reports/pnl`, `/stock-alerts`, `/margin-alerts`, `/top-products`, `/bottom-products`; query router NL tanpa LLM (profit bulan ini, top/bottom products, strategi, stok/margin alert, meta "bisa nanya apa").
 - Kuota AI bot: 25/hari (free/Groq), 150/hari (pro/business/DeepSeek); `GET /api/bot/usage`, `POST /api/bot/ai-usage`.
 - Sidebar navigasi dikategorikan (Transaksi, Inventory, Laporan, Partner, Settings) dengan section collapsible.
@@ -49,7 +49,7 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 ### Fixed
 
-- Query router bot tidak lagi menganggap semua kalimat berisi “bulan ini” sebagai P&L, sehingga input biaya seperti “bayar listrik bulan ini 1.5jt” diproses sebagai expense.
+- Query router bot tidak lagi menganggap semua kalimat berisi “bulan ini” sebagai P&L, dan quantity seperti `2kg` tidak lagi dibaca sebagai nominal biaya.
 - Tombol salin token di Settings > Bot Integration (fallback mobile + feedback "Disalin!").
 
 ### Changed

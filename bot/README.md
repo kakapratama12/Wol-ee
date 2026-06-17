@@ -8,8 +8,8 @@ Modul Python di-copy ke server bot (`/home/ubuntu/keuangan-bot/`). **Tidak mengg
 bot.py (shell: Telegram, rate limit, backup — tidak diubah)
   ├─ User terdaftar Wol-ee → wol_ee_bridge
   │     ├─ query_router (laporan/pantau — TANPA LLM, tanpa kuota AI)
-  │     ├─ keyword sync (beli, jual, stok, history, …)
-  │     └─ ai_parser (NL transaksi — pakai LLM, kena kuota AI)
+  │     ├─ keyword sync (stok, history, partners, aging)
+  │     └─ ai_parser (intent + slot action planner — pakai LLM, kena kuota AI)
   └─ User lain → flow legacy + local DB (tidak berubah)
 ```
 
@@ -18,10 +18,10 @@ bot.py (shell: Telegram, rate limit, backup — tidak diubah)
 | File | Fungsi |
 |------|--------|
 | `query_router.py` | Klasifikasi pertanyaan laporan/pantau tanpa LLM |
-| `ai_parser.py` | NL parsing transaksi + cek/konsumsi kuota AI |
+| `ai_parser.py` | AI action planner: intent + slot untuk transaksi/biaya |
 | `wol_ee_client.py` | HTTP client ke Laravel API |
-| `handlers.py` | Handler transaksi, laporan, alert, history |
-| `wol_ee_bridge.py` | Routing: QUERY → sync → NL ACTION |
+| `handlers.py` | Handler transaksi, laporan, alert, history, slot validation |
+| `wol_ee_bridge.py` | Routing: pending → QUERY → sync → AI ACTION |
 | `bot_storage.py` | Registrasi staff + `tenant_plan` |
 | `offline_queue.py` | Antrian saat API timeout |
 | `patch_vps_runtime.py` | Patch minimal `bot.py` di VPS |
@@ -65,6 +65,8 @@ OPENROUTER_API_KEY=...
 | `/start 1:token` | Daftar tenant |
 | `Beli tepung Rp 200 ribu` | NL → POST /api/transactions |
 | `Jual matcha latte 10` | NL → POST /api/sales |
+| `bayar listrik bulan ini 1.5jt` | NL → POST /api/expenses |
+| `bayar mbok Ijah buat beli telur 2kg` | NL → tanya nominal dulu |
 | Copas batch multi-item | NL batch + konfirmasi |
 | `stok tepung` | GET /api/stock |
 | `/history` | Riwayat transaksi |

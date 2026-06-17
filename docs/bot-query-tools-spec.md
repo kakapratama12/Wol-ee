@@ -23,15 +23,15 @@ Bot Wol-ee untuk **owner** harus bisa:
 ```
 Pesan masuk (user Wol-ee terdaftar)
     │
-    ├─ Pending batch reply? → handle pending
+    ├─ Pending clarification / batch reply? → handle pending
     │
     ├─ QUERY router (tanpa LLM) ─────────────────────────┐
     │     report_pnl / report_today / stock_alerts /     │
     │     margin_alerts / capabilities                     │
     │                                                    ▼
-    ├─ Keyword sync (beli, jual, stok, history, …)      API + format
+    ├─ Keyword sync (stok, history, partners, aging)    API + format
     │
-    └─ ACTION (NL inventory) → cek kuota AI → Groq/DeepSeek → parser
+    └─ ACTION planner → cek kuota AI → Groq/DeepSeek → intent + slots
 ```
 
 **Prinsip:** Query laporan **tidak** mengurangi kuota AI harian.
@@ -50,7 +50,7 @@ Pesan masuk (user Wol-ee terdaftar)
 | `get_bottom_products` | `GET /api/reports/bottom-products?month=&year=` | "barang paling ga laku", "produk sepi" | ❌ |
 | `business_insight` | PnL + top/bottom + alerts | "strategi kedepannya", "saran dong" | ❌ |
 | `explain_capabilities` | bot-only | "bisa nanya apa", "kamu bisa apa" | ❌ |
-| `record_expense` | `POST /api/expenses` | "bayar listrik bulan ini 1.5jt", "bayar gaji 15jt" | ❌ |
+| `record_expense` | `POST /api/expenses` | "bayar listrik bulan ini 1.5jt", "bayar gaji 15jt" | ✅ |
 | `record_*` | existing | beli/jual/batch | ✅ |
 
 **Perbaikan:** `/summary` dan "ringkasan" → PnL **bulan ini** (bukan hari ini).
@@ -70,6 +70,7 @@ Pesan masuk (user Wol-ee terdaftar)
 - Reset: **00:00 WIB** (timezone `Asia/Jakarta`)
 - Hanya path yang memanggil LLM (`parse_wolee_inventory`, dll.) yang `consume`
 - Query router & keyword sync **tidak** consume
+- AI action planner hanya menghasilkan intent + slot. Eksekusi tetap lewat validasi handler dan API Laravel.
 
 ### 4.2 API
 
@@ -120,7 +121,7 @@ Upgrade ke Pro untuk kuota lebih besar & respons lebih akurat.
 | `wol_ee_client.py` | Client endpoint baru |
 | `wol_ee_bridge.py` | QUERY sebelum ACTION |
 | `bot_storage.py` | Kolom `tenant_plan` |
-| `ai_parser.py` | Metadata provider/model/status/latency/token dari `_call_llm` |
+| `ai_parser.py` | Action planner intent + slot, metadata provider/model/status/latency/token dari `_call_llm` |
 
 ---
 
