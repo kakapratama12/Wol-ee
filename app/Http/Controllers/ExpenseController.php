@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreExpenseRequest;
+use App\Http\Requests\UpdateExpenseRequest;
 use App\Models\Expense;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,6 +29,8 @@ class ExpenseController extends Controller
                 'category' => $e->category,
                 'description' => $e->description,
                 'amount' => (float) $e->amount,
+                'period_month' => $e->period_month,
+                'period_year' => $e->period_year,
             ]);
 
         return Inertia::render('Expenses/Index', [
@@ -43,6 +46,13 @@ class ExpenseController extends Controller
         Expense::create($request->validated());
 
         return back()->with('success', 'Biaya ditambahkan.');
+    }
+
+    public function update(UpdateExpenseRequest $request, Expense $expense): RedirectResponse
+    {
+        $expense->update($request->validated());
+
+        return back()->with('success', 'Biaya diperbarui.');
     }
 
     public function destroy(Expense $expense): RedirectResponse

@@ -28,6 +28,8 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 - Bot Wol-ee path: `/profit`, `/history`, `/partners` via API untuk user terdaftar; legacy path tetap untuk user lain.
 - Bot batch entry: AI intent `sale_batch`/`purchase_batch`, konfirmasi inline keyboard, endpoint `POST /api/sales/batch` dan `POST /api/transactions/batch`.
 - Bot item not found: daftar item tersedia + link dashboard (tanpa fuzzy mapping).
+- Edit dan hapus penjualan & pembelian di dashboard (koreksi stok otomatis).
+- Edit biaya operasional di dashboard.
 - Sprint 2 API: Partner CRUD, Invoice tracking (create, pay, outstanding), aging report
   (`/api/partners`, `/api/invoices`, `/api/reports/aging`).
 - Seeder sample partner & invoice untuk tenant `kafe-contoh`.
@@ -44,6 +46,7 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 ### Changed
 
+- Penghapusan pembelian ditolak jika stok bahan sudah terpakai (pesan error jelas).
 - `InventoryService::recordPurchase()` memperbarui weighted average (bukan hanya harga beli terakhir).
 - `CogsService` memakai `weighted_avg_price` untuk perhitungan COGS live & snapshot penjualan.
 - Dokumentasi produk (`docs/PRD`, `docs/Roles-Sequence-Diagram`, `docs/Development-Context`)

@@ -1,5 +1,8 @@
-import { Head, useForm } from '@inertiajs/react';
+import { useState } from 'react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { Pencil, Trash2 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
+import Modal from '@/Components/ui/modal';
 import Pagination from '@/Components/Pagination';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -12,6 +15,7 @@ import type { Paginated } from '@/types';
 
 interface Transaction {
     id: number;
+    ingredient_id: number;
     ingredient: string | null;
     base_unit: string | null;
     quantity: number;
@@ -33,14 +37,57 @@ interface Props {
     ingredients: IngredientOption[];
 }
 
+function toDatetimeLocal(iso: string | null): string {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function TransactionsIndex({ transactions, ingredients }: Props) {
     const form = useForm({ ingredient_id: '', quantity: '', total: '', note: '' });
+    const editForm = useForm({
+        ingredient_id: '',
+        quantity: '',
+        total: '',
+        note: '',
+        occurred_at: '',
+    });
+    const [editing, setEditing] = useState<Transaction | null>(null);
 
     const selected = ingredients.find((i) => String(i.id) === form.data.ingredient_id);
+    const editSelected = ingredients.find((i) => String(i.id) === editForm.data.ingredient_id);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         form.post('/transactions', { onSuccess: () => form.reset() });
+    };
+
+    const openEdit = (transaction: Transaction) => {
+        setEditing(transaction);
+        editForm.setData({
+            ingredient_id: String(transaction.ingredient_id),
+            quantity: String(transaction.quantity),
+            total: String(transaction.total),
+            note: transaction.note ?? '',
+            occurred_at: toDatetimeLocal(transaction.occurred_at),
+        });
+        editForm.clearErrors();
+    };
+
+    const submitEdit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editing) return;
+        editForm.put(`/transactions/${editing.id}`, {
+            preserveScroll: true,
+            onSuccess: () => setEditing(null),
+        });
+    };
+
+    const remove = (transaction: Transaction) => {
+        if (confirm(`Hapus pembelian ${transaction.ingredient}? Stok akan dikurangi.`)) {
+            router.delete(`/transactions/${transaction.id}`, { preserveScroll: true });
+        }
     };
 
     return (
@@ -97,12 +144,13 @@ export default function TransactionsIndex({ transactions, ingredients }: Props) 
                                     <TableHead>Jumlah</TableHead>
                                     <TableHead>Total</TableHead>
                                     <TableHead>Sumber</TableHead>
+                                    <TableHead></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {transactions.data.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                                        <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
                                             Belum ada pembelian.
                                         </TableCell>
                                     </TableRow>
@@ -116,6 +164,16 @@ export default function TransactionsIndex({ transactions, ingredients }: Props) 
                                         </TableCell>
                                         <TableCell>{formatRupiah(t.total)}</TableCell>
                                         <TableCell className="uppercase text-xs text-muted-foreground">{t.source}</TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex justify-end gap-1">
+                                                <Button variant="ghost" size="icon" onClick={() => openEdit(t)}>
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                <Button variant="ghost" size="icon" onClick={() => remove(t)}>
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -124,6 +182,49 @@ export default function TransactionsIndex({ transactions, ingredients }: Props) 
                     </CardContent>
                 </Card>
             </div>
+
+            <Modal open={editing !== null} onClose={() => setEditing(null)} title="Edit Pembelian">
+                <form onSubmit={submitEdit} className="space-y-4">
+                    <div>
+                        <Label>Bahan</Label>
+                        <Select value={editForm.data.ingredient_id} onChange={(e) => editForm.setData('ingredient_id', e.target.value)}>
+                            <option value="">- Pilih bahan -</option>
+                            {ingredients.map((i) => (
+                                <option key={i.id} value={i.id}>
+                                    {i.name}
+                                </option>
+                            ))}
+                        </Select>
+                        {editForm.errors.ingredient_id && <p className="mt-1 text-xs text-destructive">{editForm.errors.ingredient_id}</p>}
+                    </div>
+                    <div>
+                        <Label>Jumlah {editSelected ? `(${editSelected.base_unit})` : ''}</Label>
+                        <Input type="number" step="0.0001" value={editForm.data.quantity} onChange={(e) => editForm.setData('quantity', e.target.value)} />
+                        {editForm.errors.quantity && <p className="mt-1 text-xs text-destructive">{editForm.errors.quantity}</p>}
+                    </div>
+                    <div>
+                        <Label>Total harga (Rp)</Label>
+                        <Input type="number" step="1" value={editForm.data.total} onChange={(e) => editForm.setData('total', e.target.value)} />
+                        {editForm.errors.total && <p className="mt-1 text-xs text-destructive">{editForm.errors.total}</p>}
+                    </div>
+                    <div>
+                        <Label>Tanggal</Label>
+                        <Input type="datetime-local" value={editForm.data.occurred_at} onChange={(e) => editForm.setData('occurred_at', e.target.value)} />
+                    </div>
+                    <div>
+                        <Label>Catatan</Label>
+                        <Input value={editForm.data.note} onChange={(e) => editForm.setData('note', e.target.value)} />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={() => setEditing(null)}>
+                            Batal
+                        </Button>
+                        <Button type="submit" disabled={editForm.processing}>
+                            Simpan
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
         </AppLayout>
     );
 }

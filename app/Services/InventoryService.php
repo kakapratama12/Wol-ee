@@ -4,11 +4,13 @@ namespace App\Services;
 
 use App\Models\Ingredient;
 use App\Models\PriceHistory;
+use App\Models\Sale;
 use App\Models\StockMovement;
 use App\Models\Transaction;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class InventoryService
 {
@@ -91,6 +93,7 @@ class InventoryService
     ): StockMovement {
         $occurredAt = $occurredAt ?? Carbon::now();
 
+        $ingredient->refresh();
         $ingredient->current_stock = (float) $ingredient->current_stock - $quantity;
         $ingredient->save();
 
@@ -125,5 +128,106 @@ class InventoryService
                 'occurred_at' => Carbon::now(),
             ]);
         });
+    }
+
+    /**
+     * Batalkan efek pembelian pada stok (tanpa menghapus row transaksi).
+     */
+    public function reversePurchase(Transaction $transaction): void
+    {
+        $ingredient = $transaction->ingredient ?? Ingredient::find($transaction->ingredient_id);
+
+        if (! $ingredient) {
+            throw new InvalidArgumentException('Bahan pembelian tidak ditemukan.');
+        }
+
+        $ingredient->refresh();
+        $quantity = (float) $transaction->quantity;
+
+        if ((float) $ingredient->current_stock < $quantity) {
+            throw new InvalidArgumentException(
+                'Stok tidak cukup untuk membatalkan pembelian ini. Sebagian bahan sudah terpakai.'
+            );
+        }
+
+        $ingredient->current_stock = (float) $ingredient->current_stock - $quantity;
+        $ingredient->save();
+
+        StockMovement::create([
+            'ingredient_id' => $ingredient->id,
+            'type' => StockMovement::TYPE_REVERSAL,
+            'quantity' => -1 * $quantity,
+            'stock_after' => $ingredient->current_stock,
+            'source_type' => Transaction::class,
+            'source_id' => $transaction->id,
+            'note' => "Reversal pembelian #{$transaction->id}",
+            'occurred_at' => Carbon::now(),
+        ]);
+
+        StockMovement::query()
+            ->where('source_type', Transaction::class)
+            ->where('source_id', $transaction->id)
+            ->where('type', StockMovement::TYPE_PURCHASE)
+            ->delete();
+    }
+
+    /**
+     * Kembalikan stok bahan yang berkurang akibat penjualan.
+     */
+    public function reverseSaleUsage(Sale $sale): void
+    {
+        $movements = StockMovement::query()
+            ->where('source_type', Sale::class)
+            ->where('source_id', $sale->id)
+            ->where('type', StockMovement::TYPE_USAGE)
+            ->get();
+
+        foreach ($movements as $movement) {
+            $ingredient = $movement->ingredient;
+
+            if (! $ingredient) {
+                $movement->delete();
+
+                continue;
+            }
+
+            $ingredient->refresh();
+            $ingredient->current_stock = (float) $ingredient->current_stock + abs((float) $movement->quantity);
+            $ingredient->save();
+            $movement->delete();
+        }
+    }
+
+    /**
+     * Hitung ulang weighted average dari semua pembelian tersisa.
+     */
+    public function recalculateWeightedAverage(Ingredient $ingredient): void
+    {
+        $transactions = Transaction::query()
+            ->where('ingredient_id', $ingredient->id)
+            ->orderBy('occurred_at')
+            ->orderBy('id')
+            ->get();
+
+        if ($transactions->isEmpty()) {
+            return;
+        }
+
+        $stock = 0.0;
+        $weightedAvg = 0.0;
+        $lastUnitPrice = (float) $ingredient->unit_price;
+
+        foreach ($transactions as $transaction) {
+            $qty = (float) $transaction->quantity;
+            $unitPrice = (float) $transaction->unit_price;
+            $totalValue = ($stock * $weightedAvg) + ($qty * $unitPrice);
+            $stock += $qty;
+            $weightedAvg = $stock > 0 ? round($totalValue / $stock, 4) : $unitPrice;
+            $lastUnitPrice = $unitPrice;
+        }
+
+        $ingredient->weighted_avg_price = $weightedAvg;
+        $ingredient->unit_price = $lastUnitPrice;
+        $ingredient->save();
     }
 }
