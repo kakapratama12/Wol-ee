@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'owner' => \App\Http\Middleware\EnsureUserIsOwner::class,
+            'super_admin' => \App\Http\Middleware\EnsureUserIsSuperAdmin::class,
             'bot.token' => \App\Http\Middleware\BotTokenAuth::class,
         ]);
     })

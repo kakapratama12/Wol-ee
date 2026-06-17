@@ -7,6 +7,7 @@ import {
     FileSpreadsheet,
     Users,
     Settings,
+    Shield,
     LogOut,
     Menu,
     X,
@@ -20,12 +21,14 @@ interface NavSingle {
     href: string;
     icon: ReactNode;
     ownerOnly?: boolean;
+    superAdminOnly?: boolean;
 }
 
 interface NavLink {
     label: string;
     href: string;
     ownerOnly?: boolean;
+    superAdminOnly?: boolean;
     hideIfNoInvoices?: boolean;
 }
 
@@ -33,6 +36,7 @@ interface NavGroup {
     label: string;
     icon: ReactNode;
     ownerOnly?: boolean;
+    superAdminOnly?: boolean;
     children: NavLink[];
 }
 
@@ -80,6 +84,17 @@ const navigation: (NavSingle | NavGroup)[] = [
         ownerOnly: true,
         children: [{ label: 'Bot Integration', href: '/settings/bot' }],
     },
+    {
+        label: 'Platform',
+        icon: <Shield className="h-4 w-4" />,
+        superAdminOnly: true,
+        children: [
+            { label: 'Overview', href: '/platform' },
+            { label: 'Tenants', href: '/platform/tenants' },
+            { label: 'Feedback', href: '/platform/feedback' },
+            { label: 'AI Usage', href: '/platform/ai-usage' },
+        ],
+    },
 ];
 
 function isNavGroup(item: NavSingle | NavGroup): item is NavGroup {
@@ -98,6 +113,7 @@ export default function AppLayout({ title, children }: PropsWithChildren<{ title
     const { props, url } = usePage<PageProps>();
     const user = props.auth.user;
     const isOwner = user.role === 'owner';
+    const isSuperAdmin = user.role === 'super_admin';
     const hasInvoices = props.hasInvoices ?? false;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -120,13 +136,18 @@ export default function AppLayout({ title, children }: PropsWithChildren<{ title
             .map((item) => {
                 if (!isNavGroup(item)) {
                     if ('ownerOnly' in item && item.ownerOnly && !isOwner) return null;
+                    if ('superAdminOnly' in item && item.superAdminOnly && !isSuperAdmin) return null;
+                    if (isSuperAdmin && !item.superAdminOnly) return null;
                     return item;
                 }
 
                 if (item.ownerOnly && !isOwner) return null;
+                if (item.superAdminOnly && !isSuperAdmin) return null;
+                if (isSuperAdmin && !item.superAdminOnly) return null;
 
                 const children = item.children.filter((child) => {
                     if (child.ownerOnly && !isOwner) return false;
+                    if (child.superAdminOnly && !isSuperAdmin) return false;
                     if (child.hideIfNoInvoices && !hasInvoices) return false;
                     return true;
                 });
@@ -136,7 +157,7 @@ export default function AppLayout({ title, children }: PropsWithChildren<{ title
                 return { ...item, children };
             })
             .filter(Boolean) as (NavSingle | NavGroup)[];
-    }, [isOwner, hasInvoices]);
+    }, [isOwner, isSuperAdmin, hasInvoices]);
 
     useEffect(() => {
         const initial: Record<string, boolean> = {};

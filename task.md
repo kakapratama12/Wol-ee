@@ -139,10 +139,18 @@
 
 > Spec draft di bawah — **jangan implement** sampai tim approve.
 
+### 5A. Super Admin Ops Panel — [x] DONE
+- [x] Role `super_admin` + middleware akses platform
+- [x] Bootstrap super admin via `php artisan wol-ee:create-super-admin`
+- [x] `/platform` overview operasional
+- [x] `/platform/tenants` tenant overview
+- [x] `/platform/feedback` feedback inbox + update status/note
+- [x] `/platform/ai-usage` usage summary dari `bot_ai_usages`
+
 ### 5.1 Tenant Management
-- [ ] Role: `super_admin` (terpisah dari owner/admin)
+- [x] Role: `super_admin` (terpisah dari owner/admin)
 - [ ] Login: panel terpisah di `/platform/login`
-- [ ] List semua tenant
+- [x] List semua tenant
 - [ ] Create / suspend / soft-delete tenant (`status`: active | suspended | deleted; data retained)
 
 ### 5.2 Billing
@@ -152,9 +160,11 @@
 ### 5.3 Monitoring
 - [ ] Laravel activity log
 - [ ] Bot API call count (`api_calls` table)
-- [ ] AI usage analytics: token/LLM usage, request per minute, quota consumption per tenant dan aggregate
-- [ ] Filter monitoring per tenant, plan (`free`/`pro`/`business`), provider (Groq/DeepSeek), dan periode
-- [ ] Feedback inbox: review `bot_feedbacks`, status `new/reviewed/planned/shipped/rejected`, tag/kategori kebutuhan
+- [x] AI usage analytics basic: quota consumption per tenant dan aggregate
+- [x] Filter monitoring basic per tenant/plan/periode (`bot_ai_usages`)
+- [x] Feedback inbox: review `bot_feedbacks`, status `new/reviewed/planned/shipped/rejected`
+- [ ] Token/LLM usage detail, provider metrics, dan request per minute
+- [ ] Feedback tag/kategori kebutuhan
 - [ ] Active users & error logs stats
 
 ### 5.4 Support

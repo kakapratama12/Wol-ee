@@ -11,6 +11,7 @@ use App\Http\Controllers\MarginController;
 use App\Http\Controllers\PnlController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Platform\PlatformController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TransactionController;
@@ -81,6 +82,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/invoices/{invoice}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
     });
 });
+
+Route::middleware(['auth', 'verified', 'super_admin'])
+    ->prefix('platform')
+    ->name('platform.')
+    ->group(function () {
+        Route::get('/', [PlatformController::class, 'overview'])->name('overview');
+        Route::get('/tenants', [PlatformController::class, 'tenants'])->name('tenants');
+        Route::get('/feedback', [PlatformController::class, 'feedback'])->name('feedback');
+        Route::put('/feedback/{feedback}', [PlatformController::class, 'updateFeedback'])->name('feedback.update');
+        Route::get('/ai-usage', [PlatformController::class, 'aiUsage'])->name('ai-usage');
+    });
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
