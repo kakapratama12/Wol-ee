@@ -55,7 +55,7 @@ def parse_period(text: str) -> tuple[int, int]:
 def classify_query(text: str) -> str | None:
     """
     Return query kind or None if not a read-only query.
-    Kinds: capabilities, stock_alerts, margin_alerts, report_today, report_pnl
+    Kinds: capabilities, stock_alerts, margin_alerts, top_products, report_today, report_pnl
     """
     normalized = text.strip().lower().lstrip("/")
     if not normalized or _looks_like_transaction(text):
@@ -96,6 +96,18 @@ def classify_query(text: str) -> str | None:
     if any(h in normalized for h in margin_hints):
         return "margin_alerts"
 
+    top_product_hints = (
+        "paling laku",
+        "barang laku",
+        "produk laku",
+        "best seller",
+        "bestseller",
+        "terlaris",
+        "paling banyak dijual",
+    )
+    if any(h in normalized for h in top_product_hints):
+        return "top_products"
+
     today_hints = (
         "profit hari ini",
         "omset hari ini",
@@ -122,6 +134,11 @@ def classify_query(text: str) -> str | None:
         "summary",
         "pnl",
         "laba bersih",
+        "kenapa rugi",
+        "kok bisa rugi",
+        "knp rugi",
+        "knp kok bisa rugi",
+        "kenapa bisa rugi",
     )
     if any(h in normalized for h in pnl_hints) or any(m in normalized for m in MONTH_MAP):
         if "hari ini" not in normalized:

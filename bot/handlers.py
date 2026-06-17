@@ -137,6 +137,9 @@ class BotHandlers:
             return self.handle_stock_alerts(user_id)
         if kind == "margin_alerts":
             return self.handle_margin_alerts(user_id)
+        if kind == "top_products":
+            month, year = parse_period(text)
+            return self.handle_top_products(user_id, month, year)
         if kind == "report_today":
             return self.handle_report_today(user_id)
         if kind == "report_pnl":
@@ -512,6 +515,17 @@ class BotHandlers:
                 )
                 expense_lines = f"\n<b>Biaya utama:</b>\n{expense_lines}\n"
 
+            loss_note = ""
+            if data["net_profit"] < 0:
+                loss_gap = abs(data["net_profit"])
+                biggest = expenses[0]["category"] if expenses else "biaya operasional"
+                loss_note = (
+                    "\n\n⚠️ <b>Kenapa rugi?</b>\n"
+                    f"Laba kotor {format_amount(data['gross_profit'])} belum nutup "
+                    f"biaya operasional {format_amount(data['total_expenses'])}. "
+                    f"Selisihnya {format_amount(loss_gap)}. Biaya terbesar: {biggest}."
+                )
+
             return (
                 f"📊 <b>Laporan {label}</b>\n"
                 f"<i>(dari data toko)</i>\n\n"
@@ -523,6 +537,7 @@ class BotHandlers:
                 f"{expense_lines}\n"
                 f"✅ <b>Laba bersih: {format_amount(data['net_profit'])}</b> "
                 f"({data['net_margin']}%)"
+                f"{loss_note}"
             )
         except WolEeApiError:
             return "❌ Gagal mengambil laporan bulanan."
@@ -574,13 +589,37 @@ class BotHandlers:
         except WolEeApiError:
             return "❌ Gagal mengambil alert margin."
 
+    def handle_top_products(self, user_id: int, month: int, year: int) -> str:
+        client = self._client_for(user_id)
+        if client is None:
+            return "Belum terdaftar. Ketik /start <token> dulu."
+
+        try:
+            data = client.get_top_products(month, year)["data"]
+            self.storage.touch(user_id)
+            items = data.get("items") or []
+            label = data.get("period_label", f"{month}/{year}")
+            if not items:
+                return f"Belum ada penjualan di {label}."
+
+            lines = [f"🏆 <b>Produk paling laku — {label}</b>\n"]
+            for idx, item in enumerate(items[:5], start=1):
+                lines.append(
+                    f"{idx}. {item['product']} — {item['quantity']} terjual, "
+                    f"omset {format_amount(item['revenue'])}, profit {format_amount(item['profit'])}"
+                )
+            return "\n".join(lines)
+        except WolEeApiError:
+            return "❌ Gagal mengambil produk paling laku."
+
     def handle_capabilities(self, user_id: int) -> str:
         self.storage.touch(user_id)
         return (
             "🤖 <b>Wol-ee bisa bantu:</b>\n\n"
             "<b>📊 Laporan</b> (gratis, tanpa kuota AI)\n"
             "• profit bulan ini / ringkasan\n"
-            "• omset hari ini\n\n"
+            "• omset hari ini\n"
+            "• barang paling laku\n\n"
             "<b>⚠️ Pantau</b> (gratis)\n"
             "• stok menipis / kritis\n"
             "• margin turun\n\n"

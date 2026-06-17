@@ -176,11 +176,13 @@ def _extract_json(content: str) -> dict | None:
 
 
 def format_amount(amount: float) -> str:
-    if amount >= 1_000_000:
-        return f"Rp {amount / 1_000_000:.1f}jt"
-    if amount >= 1_000:
-        return f"Rp {amount / 1_000:.0f}rb"
-    return f"Rp {amount:.0f}"
+    sign = "-" if amount < 0 else ""
+    value = abs(amount)
+    if value >= 1_000_000:
+        return f"{sign}Rp {value / 1_000_000:.1f}jt"
+    if value >= 1_000:
+        return f"{sign}Rp {value / 1_000:.0f}rb"
+    return f"{sign}Rp {value:.0f}"
 
 
 def _format_catalog_ingredients(items: list[dict]) -> str:

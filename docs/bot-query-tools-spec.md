@@ -46,6 +46,7 @@ Pesan masuk (user Wol-ee terdaftar)
 | `get_report_today` | `GET /api/reports/today` | "omset hari ini", "hari ini gimana" | ❌ |
 | `get_stock_alerts` | `GET /api/reports/stock-alerts` | "stok menipis", "ada yang kritis" | ❌ |
 | `get_margin_alerts` | `GET /api/reports/margin-alerts` | "margin turun", "produk boncos" | ❌ |
+| `get_top_products` | `GET /api/reports/top-products?month=&year=` | "barang paling laku", "produk terlaris" | ❌ |
 | `explain_capabilities` | bot-only | "bisa nanya apa", "kamu bisa apa" | ❌ |
 | `record_*` | existing | beli/jual/batch | ✅ |
 

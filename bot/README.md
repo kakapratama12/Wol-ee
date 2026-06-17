@@ -53,6 +53,7 @@ OPENROUTER_API_KEY=...
 | `omset hari ini` / `/profit` | GET /api/reports/today |
 | `stok menipis` / `stok kritis` | GET /api/reports/stock-alerts |
 | `margin turun` | GET /api/reports/margin-alerts |
+| `barang paling laku` | GET /api/reports/top-products |
 | `bisa nanya apa` / `bantuan` | Daftar kemampuan bot |
 
 ### Transaksi (pakai kuota AI untuk NL kompleks)

@@ -15,7 +15,7 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 ### Added
 
-- Bot query tools (demo owner): `GET /api/reports/pnl`, `/stock-alerts`, `/margin-alerts`; query router NL tanpa LLM (profit bulan ini, stok/margin alert, meta "bisa nanya apa").
+- Bot query tools (demo owner): `GET /api/reports/pnl`, `/stock-alerts`, `/margin-alerts`, `/top-products`; query router NL tanpa LLM (profit bulan ini, stok/margin alert, meta "bisa nanya apa").
 - Kuota AI bot: 25/hari (free/Groq), 150/hari (pro/business/DeepSeek); `GET /api/bot/usage`, `POST /api/bot/ai-usage`.
 - Sidebar navigasi dikategorikan (Transaksi, Inventory, Laporan, Partner, Settings) dengan section collapsible.
 - Halaman web **Aging Report** (`/reports/aging`) — tersembunyi jika tenant belum punya invoice.

@@ -103,6 +103,47 @@ class ReportController extends Controller
         ]);
     }
 
+    public function topProducts(Request $request): JsonResponse
+    {
+        $now = Carbon::now();
+        $month = $request->integer('month', $now->month);
+        $year = $request->integer('year', $now->year);
+        $limit = min(max($request->integer('limit', 5), 1), 10);
+
+        if ($month < 1 || $month > 12) {
+            return ApiResponse::error('Bulan tidak valid.', 'VALIDATION_ERROR', 422);
+        }
+
+        if ($year < 2000 || $year > 2100) {
+            return ApiResponse::error('Tahun tidak valid.', 'VALIDATION_ERROR', 422);
+        }
+
+        $items = Sale::query()
+            ->with('product:id,name')
+            ->selectRaw('product_id, SUM(quantity) as total_quantity, SUM(revenue) as revenue, SUM(profit) as profit, COUNT(*) as transactions')
+            ->whereYear('occurred_at', $year)
+            ->whereMonth('occurred_at', $month)
+            ->groupBy('product_id')
+            ->orderByDesc('total_quantity')
+            ->limit($limit)
+            ->get()
+            ->map(fn (Sale $sale) => [
+                'product_id' => $sale->product_id,
+                'product' => $sale->product?->name ?? 'Produk dihapus',
+                'quantity' => (int) $sale->total_quantity,
+                'revenue' => round((float) $sale->revenue, 2),
+                'profit' => round((float) $sale->profit, 2),
+                'transactions' => (int) $sale->transactions,
+            ])
+            ->values()
+            ->all();
+
+        return ApiResponse::success('Produk paling laku.', [
+            'period_label' => Carbon::create($year, $month, 1)->locale('id')->translatedFormat('F Y'),
+            'items' => $items,
+        ]);
+    }
+
     public function aging(): JsonResponse
     {
         return ApiResponse::success('Laporan aging.', $this->aging->report());
