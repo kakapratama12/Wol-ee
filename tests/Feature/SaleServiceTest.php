@@ -9,6 +9,7 @@ use App\Services\SaleService;
 
 function setupProduct(): Product
 {
+    authenticateTestTenant();
     $tepung = Ingredient::create([
         'name' => 'Tepung',
         'unit_type' => 'gramasi',

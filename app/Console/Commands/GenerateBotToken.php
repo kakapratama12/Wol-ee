@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
@@ -9,7 +10,7 @@ use Illuminate\Support\Str;
 
 class GenerateBotToken extends Command
 {
-    protected $signature = 'wolee:bot-token {email=bot@wol-ee.local} {--name=Telegram Bot}';
+    protected $signature = 'wolee:bot-token {email=bot@wol-ee.local} {--name=Telegram Bot} {--tenant=}';
 
     protected $description = 'Buat/ambil user bot dan terbitkan Sanctum token untuk integrasi bot Telegram';
 
@@ -17,8 +18,12 @@ class GenerateBotToken extends Command
     {
         $email = $this->argument('email');
 
+        $tenant = $this->option('tenant')
+            ? Tenant::findOrFail($this->option('tenant'))
+            : Tenant::query()->firstOrFail();
+
         $user = User::firstOrCreate(
-            ['email' => $email],
+            ['email' => $email, 'tenant_id' => $tenant->id],
             [
                 'name' => $this->option('name'),
                 'password' => Hash::make(Str::random(32)),

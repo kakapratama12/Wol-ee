@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Event;
 
 function makeProductWithStock(float $stock, float $minimum, float $usagePerUnit = 100): Product
 {
+    authenticateTestTenant();
     $ingredient = Ingredient::create([
         'name' => 'Tepung',
         'unit_type' => 'gramasi',

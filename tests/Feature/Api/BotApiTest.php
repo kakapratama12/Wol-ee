@@ -3,11 +3,13 @@
 use App\Models\Ingredient;
 use App\Models\Product;
 use App\Models\RecipeItem;
+use App\Models\Tenant;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function () {
-    Sanctum::actingAs(User::factory()->create(['role' => 'admin']));
+    $tenant = Tenant::factory()->create();
+    Sanctum::actingAs(User::factory()->create(['role' => 'admin', 'tenant_id' => $tenant->id]));
 });
 
 it('menolak akses tanpa token', function () {

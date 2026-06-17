@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,4 +49,20 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Autentikasi user dengan tenant untuk test yang membuat data scoped.
+ */
+function authenticateTestTenant(string $role = 'owner'): User
+{
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'role' => $role,
+        'email_verified_at' => now(),
+    ]);
+    test()->actingAs($user);
+
+    return $user;
 }

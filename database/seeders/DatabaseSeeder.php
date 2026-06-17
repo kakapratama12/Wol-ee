@@ -7,6 +7,7 @@ use App\Models\Ingredient;
 use App\Models\PriceHistory;
 use App\Models\Product;
 use App\Models\RecipeItem;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\InventoryService;
 use App\Services\SaleService;
@@ -18,23 +19,36 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->seedUsers();
-        $ingredients = $this->seedIngredients();
-        $this->seedPriceHistory($ingredients);
-        $products = $this->seedProducts($ingredients);
-        $this->seedActivity($ingredients, $products);
-        $this->seedExpenses();
+        $tenant = $this->seedTenant();
+        $this->seedUsers($tenant);
+        $ingredients = $this->seedIngredients($tenant);
+        $this->seedPriceHistory($tenant, $ingredients);
+        $products = $this->seedProducts($tenant, $ingredients);
+        $this->seedActivity($tenant, $ingredients, $products);
+        $this->seedExpenses($tenant);
     }
 
-    private function seedUsers(): void
+    private function seedTenant(): Tenant
+    {
+        return Tenant::updateOrCreate(
+            ['slug' => 'kafe-contoh'],
+            [
+                'name' => 'Kafe Contoh',
+                'plan' => Tenant::PLAN_FREE,
+                'status' => Tenant::STATUS_ACTIVE,
+            ],
+        );
+    }
+
+    private function seedUsers(Tenant $tenant): void
     {
         User::updateOrCreate(
-            ['email' => 'owner@wol-ee.local'],
+            ['email' => 'owner@wol-ee.local', 'tenant_id' => $tenant->id],
             ['name' => 'Owner Wol-ee', 'password' => Hash::make('password'), 'role' => User::ROLE_OWNER],
         );
 
         User::updateOrCreate(
-            ['email' => 'admin@wol-ee.local'],
+            ['email' => 'admin@wol-ee.local', 'tenant_id' => $tenant->id],
             ['name' => 'Admin Staff', 'password' => Hash::make('password'), 'role' => User::ROLE_ADMIN],
         );
     }
@@ -42,7 +56,7 @@ class DatabaseSeeder extends Seeder
     /**
      * @return array<string, Ingredient>
      */
-    private function seedIngredients(): array
+    private function seedIngredients(Tenant $tenant): array
     {
         // [name, unit_type, base_unit, unit_price (per base_unit), current_stock, minimum_stock]
         $rows = [
@@ -58,8 +72,8 @@ class DatabaseSeeder extends Seeder
 
         $ingredients = [];
         foreach ($rows as [$name, $type, $unit, $price, $stock, $min]) {
-            $ingredients[$name] = Ingredient::updateOrCreate(
-                ['name' => $name],
+            $ingredients[$name] = Ingredient::withoutGlobalScope('tenant')->updateOrCreate(
+                ['name' => $name, 'tenant_id' => $tenant->id],
                 [
                     'unit_type' => $type,
                     'base_unit' => $unit,
@@ -74,12 +88,9 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * Riwayat harga: harga lebih murah ~2 bulan lalu agar Margin Protection
-     * punya data penurunan margin untuk didemokan.
-     *
      * @param  array<string, Ingredient>  $ingredients
      */
-    private function seedPriceHistory(array $ingredients): void
+    private function seedPriceHistory(Tenant $tenant, array $ingredients): void
     {
         $past = [
             'Tepung' => 16,
@@ -88,12 +99,20 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($ingredients as $name => $ingredient) {
-            PriceHistory::updateOrCreate(
-                ['ingredient_id' => $ingredient->id, 'recorded_at' => Carbon::now()->subMonths(2)->toDateString()],
+            PriceHistory::withoutGlobalScope('tenant')->updateOrCreate(
+                [
+                    'ingredient_id' => $ingredient->id,
+                    'recorded_at' => Carbon::now()->subMonths(2)->toDateString(),
+                    'tenant_id' => $tenant->id,
+                ],
                 ['unit_price' => $past[$name] ?? $ingredient->unit_price],
             );
-            PriceHistory::updateOrCreate(
-                ['ingredient_id' => $ingredient->id, 'recorded_at' => Carbon::today()->toDateString()],
+            PriceHistory::withoutGlobalScope('tenant')->updateOrCreate(
+                [
+                    'ingredient_id' => $ingredient->id,
+                    'recorded_at' => Carbon::today()->toDateString(),
+                    'tenant_id' => $tenant->id,
+                ],
                 ['unit_price' => $ingredient->unit_price],
             );
         }
@@ -103,7 +122,7 @@ class DatabaseSeeder extends Seeder
      * @param  array<string, Ingredient>  $ingredients
      * @return array<string, Product>
      */
-    private function seedProducts(array $ingredients): array
+    private function seedProducts(Tenant $tenant, array $ingredients): array
     {
         // name => [unit, selling_price, recipe => [ingredientName => qty(base_unit)]]
         $definitions = [
@@ -115,17 +134,18 @@ class DatabaseSeeder extends Seeder
 
         $products = [];
         foreach ($definitions as $name => [$unit, $price, $recipe]) {
-            $product = Product::updateOrCreate(
-                ['name' => $name],
+            $product = Product::withoutGlobalScope('tenant')->updateOrCreate(
+                ['name' => $name, 'tenant_id' => $tenant->id],
                 ['unit' => $unit, 'selling_price' => $price, 'is_active' => true],
             );
 
             $product->recipeItems()->delete();
             foreach ($recipe as $ingredientName => $qty) {
-                RecipeItem::create([
+                RecipeItem::withoutGlobalScope('tenant')->create([
                     'product_id' => $product->id,
                     'ingredient_id' => $ingredients[$ingredientName]->id,
                     'quantity' => $qty,
+                    'tenant_id' => $tenant->id,
                 ]);
             }
 
@@ -136,14 +156,13 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * Beberapa pembelian & penjualan bulan ini lewat service agar stok,
-     * COGS, dan laporan konsisten.
-     *
      * @param  array<string, Ingredient>  $ingredients
      * @param  array<string, Product>  $products
      */
-    private function seedActivity(array $ingredients, array $products): void
+    private function seedActivity(Tenant $tenant, array $ingredients, array $products): void
     {
+        $owner = User::where('email', 'owner@wol-ee.local')->where('tenant_id', $tenant->id)->first();
+        auth()->login($owner);
         $inventory = app(InventoryService::class);
         $sales = app(SaleService::class);
 
@@ -169,7 +188,7 @@ class DatabaseSeeder extends Seeder
         }
     }
 
-    private function seedExpenses(): void
+    private function seedExpenses(Tenant $tenant): void
     {
         $now = Carbon::now();
         $rows = [
@@ -180,8 +199,13 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($rows as [$category, $desc, $amount]) {
-            Expense::updateOrCreate(
-                ['category' => $category, 'period_month' => $now->month, 'period_year' => $now->year],
+            Expense::withoutGlobalScope('tenant')->updateOrCreate(
+                [
+                    'category' => $category,
+                    'period_month' => $now->month,
+                    'period_year' => $now->year,
+                    'tenant_id' => $tenant->id,
+                ],
                 ['description' => $desc, 'amount' => $amount],
             );
         }
