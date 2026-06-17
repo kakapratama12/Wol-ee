@@ -50,7 +50,7 @@ class PnlExport
         $write('Total Expenses', (float) $report['total_expenses'], true, true);
         $row++;
 
-        $write('Laba Bersih', (float) $report['net_profit'], true);
+        $write('Laba (Rugi) bersih', (float) $report['net_profit'], true);
 
         $sheet->getColumnDimension('A')->setWidth(28);
         $sheet->getColumnDimension('B')->setWidth(20);

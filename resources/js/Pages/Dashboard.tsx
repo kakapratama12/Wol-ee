@@ -58,9 +58,9 @@ export default function Dashboard({ month, metrics, lowStock, recentSales }: Pro
                     icon={<TrendingUp className="h-5 w-5" />}
                 />
                 <StatCard
-                    label="Laba Bersih"
+                    label="Laba (Rugi) bersih"
                     value={formatRupiah(metrics.net_profit)}
-                    accent="default"
+                    accent={metrics.net_profit < 0 ? 'danger' : 'success'}
                     icon={<Percent className="h-5 w-5" />}
                 />
             </div>
