@@ -21,6 +21,7 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 ### Added
 
+- Dashboard Partner & Invoice: list, detail, aging summary, dan form pembayaran.
 - Sprint 4: auth token per tenant (`{tenant_id}:{secret}`), middleware `BotTokenAuth`,
   endpoint `POST /api/bot/validate-token`, response format standar API bot.
 - Dashboard Settings > Bot Integration (generate/copy token).

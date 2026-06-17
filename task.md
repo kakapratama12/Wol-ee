@@ -38,26 +38,26 @@
 ### 2.1 Partner Management
 - [x] Partners table (id, tenant_id, name, type[customer/supplier], contact, phone, email, address)
 - [x] Partner model + migration
-- [x] PartnerController: CRUD (API)
-- [ ] Dashboard: Partner list page
-- [ ] Dashboard: Partner detail page (history transaksi)
+- [x] PartnerController: CRUD (API + web)
+- [x] Dashboard: Partner list page
+- [x] Dashboard: Partner detail page (aging + outstanding invoices)
 
 ### 2.2 Partner Aging
 - [x] Aging calculation logic (0-30, 31-60, 61-90, 90+ days)
-- [ ] Dashboard: Aging report page
+- [x] Dashboard: Aging report page (di partner detail)
 - [x] Bot endpoint: GET /api/reports/aging (+ GET /api/partners/{id}/aging)
 
 ### 2.3 Invoice Tracking
 - [x] Invoices table (id, tenant_id, partner_id, amount, due_date, status[paid/outstanding/partial], paid_at)
 - [x] Invoice model + migration
-- [x] InvoiceController: CRUD (API)
-- [ ] Dashboard: Invoice list page
-- [ ] Dashboard: Mark invoice as paid (dashboard UI)
+- [x] InvoiceController: CRUD (API + web)
+- [x] Dashboard: Invoice list page
+- [x] Dashboard: Mark invoice as paid (dashboard UI)
 
 **Sprint 2 Done Criteria:**
-- [x] Bisa CRUD partner (API)
-- [ ] Aging report tampil di dashboard
-- [x] Bisa create & track invoice (API)
+- [x] Bisa CRUD partner (API + dashboard)
+- [x] Aging report tampil di dashboard
+- [x] Bisa create & track invoice (API + dashboard)
 
 ---
 
