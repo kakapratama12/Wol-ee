@@ -81,6 +81,7 @@ docs/                   # PRD, sequence diagram, dev context
 ./vendor/bin/sail artisan migrate  # migrasi
 ./vendor/bin/sail artisan db:seed  # data contoh
 npm run dev                        # vite (frontend)
+./vendor/bin/sail artisan queue:work  # worker (proses job async, mis. alert stok)
 ./vendor/bin/sail test             # jalankan test (Pest)
 ```
 
@@ -91,3 +92,75 @@ npm run dev                        # vite (frontend)
 3. Inertia page (kalau ada UI), pakai shadcn + formatRupiah.
 4. Test untuk logika kritis.
 5. Tidak ada linter error; uang tidak pakai float; mutasi data atomic.
+6. CHANGELOG di-update bila perubahan user-facing (lihat §8).
+
+## 8. Engineering Workflow
+
+Aturan ini yang dipakai agent untuk memutuskan **kapan** commit, checkpoint,
+update changelog, dan tulis ADR — tanpa perlu ditanya tiap kali.
+
+### 8.1 Branch & commit
+
+- Kerja fitur/fix di **feature branch** (`feat/...`, `fix/...`, `chore/...`),
+  merge ke `main` lewat **PR**. `main` selalu hijau (test lulus).
+- **Conventional Commits**: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`,
+  `chore:`, `ci:`, `security:`. Scope opsional, mis. `feat(inventory): ...`.
+- **Satu commit = satu unit logis** yang utuh. Bukan dump besar, bukan WIP receh.
+- Tulis *kenapa* di body commit bila tidak jelas dari judul.
+
+### 8.2 Checkpoint (kapan commit/aman)
+
+Buat checkpoint (commit di state stabil, idealnya test hijau):
+
+- **Sebelum** perubahan besar/berisiko (refactor luas, ganti dependency, migrasi).
+- **Sesudah** menyelesaikan satu unit logis dan test relevan lulus.
+- Sebelum berpindah konteks ke tugas lain yang tidak berkaitan.
+
+Jangan checkpoint di tengah keadaan yang gagal kompilasi/test merah (kecuali
+sengaja menyimpan WIP di branch sendiri dengan label jelas).
+
+### 8.3 CHANGELOG (kapan update)
+
+Update bagian `[Unreleased]` di `CHANGELOG.md` **jika** perubahan terlihat/
+berdampak ke pengguna atau operator:
+
+- **Update untuk**: fitur baru (`Added`), perbaikan bug (`Fixed`), perubahan
+  perilaku (`Changed`), breaking change, isu keamanan (`Security`),
+  deprecation (`Deprecated`), penghapusan (`Removed`).
+- **TIDAK perlu** untuk: refactor internal, test, tooling/CI, format kode,
+  komentar/dokumen internal yang tidak mengubah perilaku.
+- Saat rilis: pindahkan `[Unreleased]` → versi ber-tag (lihat §8.5).
+
+### 8.4 ADR (kapan tulis)
+
+Tulis ADR baru di `docs/adr/` (lihat indeks `docs/adr/README.md`) **jika**:
+
+- Memilih di antara alternatif dengan **trade-off nyata** (DB, auth, queue
+  driver, struktur arsitektur, dependency besar), atau
+- Keputusan **mahal/sulit dibalik** di kemudian hari.
+
+**Jangan** tulis ADR untuk hal sepele (penamaan, formatting, pilihan yang
+gampang diganti). Keputusan yang menggantikan ADR lama: tandai yang lama
+`Superseded by ADR-XXXX`.
+
+### 8.5 Versioning & rilis
+
+- **SemVer** (`MAJOR.MINOR.PATCH`). MVP awal = `v0.1.0`.
+- Rilis = pindahkan changelog `[Unreleased]` ke versi, lalu **tag** git
+  (`vX.Y.Z`) di `main`. Bump: `PATCH` untuk fix, `MINOR` untuk fitur
+  backward-compatible, `MAJOR` untuk breaking.
+
+### 8.6 Security baseline (selalu)
+
+- Secrets tidak pernah di-commit; `.env.example` lengkap & up-to-date.
+- Validasi via Form Request; otorisasi via Policy/middleware (owner/admin).
+- API bot: Sanctum token + rate limit. Security headers via middleware.
+- Jalankan audit dependency saat menambah/menaikkan paket
+  (`composer audit`, `npm audit`). Lihat `SECURITY.md`.
+
+### 8.7 Async / queue (kapan dipakai)
+
+Pindahkan ke queue (event + listener `ShouldQueue`) bila pekerjaan: lambat,
+memanggil layanan eksternal (Telegram, email), atau tidak boleh menggagalkan
+request inti (mis. notifikasi stok). Request inti tetap sinkron & atomic.
+Lihat ADR-0005.

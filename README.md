@@ -89,3 +89,16 @@ php artisan config:cache && php artisan route:cache && php artisan view:cache
 - Pastikan `storage/` & `bootstrap/cache/` writable.
 - DB di-share dengan bot Telegram; bot menulis lewat API (bukan query langsung).
 - Generate token bot di server produksi dan simpan di konfigurasi bot.
+
+### Queue worker
+
+Efek samping non-kritikal (mis. peringatan stok ke Telegram) dijalankan via queue
+(driver `database`, lihat [ADR-0005](docs/adr/0005-async-queue-for-side-effects.md)).
+
+- **Dev**: `./vendor/bin/sail artisan queue:work`
+- **Produksi**: jalankan worker sebagai service Supervisor. Contoh config ada di
+  [`docs/deploy/supervisor-wolee-worker.conf`](docs/deploy/supervisor-wolee-worker.conf).
+  Setelah deploy ulang, restart worker: `php artisan queue:restart`.
+
+Set `WOLEE_TELEGRAM_BOT_TOKEN` & `WOLEE_TELEGRAM_ALERT_CHAT_ID` di `.env` untuk
+mengaktifkan notifikasi; bila kosong, peringatan hanya ditulis ke log.

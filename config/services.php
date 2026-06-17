@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'telegram' => [
+        'bot_token' => env('WOLEE_TELEGRAM_BOT_TOKEN'),
+        'alert_chat_id' => env('WOLEE_TELEGRAM_ALERT_CHAT_ID'),
+    ],
+
 ];

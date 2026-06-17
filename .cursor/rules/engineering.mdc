@@ -1,0 +1,35 @@
+---
+description: Engineering workflow for Wol-ee (commits, changelog, ADR, checkpoints, security)
+alwaysApply: true
+---
+
+# Engineering Workflow Rules
+
+Ringkasan operasional. Detail & justifikasi di `AGENTS.md` §8.
+
+## Branch & commit
+- Feature branch (`feat/`, `fix/`, `chore/`) → PR ke `main`. `main` harus hijau.
+- Conventional Commits: `feat|fix|refactor|docs|test|chore|ci|security`.
+- Satu commit = satu unit logis utuh. Tulis *kenapa* di body bila tidak jelas.
+
+## Checkpoint
+- Commit di state stabil: SEBELUM perubahan berisiko, SESUDAH unit logis selesai
+  dengan test relevan hijau. Jangan checkpoint saat test merah/gagal kompilasi.
+
+## CHANGELOG (`CHANGELOG.md`, bagian `[Unreleased]`)
+- WAJIB update bila perubahan user-facing: `Added`, `Fixed`, `Changed`,
+  `Removed`, `Deprecated`, `Security`, atau breaking change.
+- TIDAK perlu untuk refactor/test/tooling internal yang tak ubah perilaku.
+
+## ADR (`docs/adr/NNNN-judul.md`)
+- Tulis ADR untuk keputusan arsitektural dengan trade-off nyata atau yang mahal
+  dibalik (DB, auth, queue, dependency besar). JANGAN untuk hal sepele.
+- Update indeks di `docs/adr/README.md`.
+
+## Security
+- Jangan commit secret; jaga `.env.example`. Validasi via Form Request,
+  otorisasi via Policy/middleware. `composer audit` / `npm audit` saat ubah deps.
+
+## Async
+- Kerja lambat / panggil layanan eksternal / efek samping non-kritikal → queue
+  (event + listener `ShouldQueue`). Request inti tetap sinkron & atomic.

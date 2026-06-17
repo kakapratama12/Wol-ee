@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\SaleRecorded;
 use App\Models\Product;
 use App\Models\Sale;
 use Carbon\CarbonInterface;
@@ -28,7 +29,7 @@ class SaleService
         ?string $note = null,
         ?CarbonInterface $occurredAt = null,
     ): Sale {
-        return DB::transaction(function () use ($product, $quantity, $unitPrice, $source, $userId, $note, $occurredAt) {
+        $sale = DB::transaction(function () use ($product, $quantity, $unitPrice, $source, $userId, $note, $occurredAt) {
             $product->loadMissing('recipeItems.ingredient');
 
             $occurredAt = $occurredAt ?? Carbon::now();
@@ -71,6 +72,12 @@ class SaleService
 
             return $sale;
         });
+
+        // Efek samping non-kritikal (peringatan stok) ditangani listener queued
+        // setelah transaksi commit, agar tidak memperlambat pencatatan penjualan.
+        SaleRecorded::dispatch($sale);
+
+        return $sale;
     }
 
     /**
