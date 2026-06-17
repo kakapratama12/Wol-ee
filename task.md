@@ -1,6 +1,6 @@
 # Wol-ee Sprint Plan
 
-> **Source of truth** — Update status setelah selesai development.
+> **Source of truth** — branch `develop` di GitHub. Update status setelah selesai development.
 > Status: `[ ]` = belum, `[x]` = done, `[-]` = skip/ditunda
 
 ---

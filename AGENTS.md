@@ -99,14 +99,35 @@ npm run dev                        # vite (frontend)
 Aturan ini yang dipakai agent untuk memutuskan **kapan** commit, checkpoint,
 update changelog, dan tulis ADR — tanpa perlu ditanya tiap kali.
 
+### 8.0 Sinkron dari GitHub (WAJIB sebelum mulai kerja)
+
+Dokumen yang di-update **tim lewat GitHub** (terutama `task.md`, `docs/PRD-*`,
+`CHANGELOG.md`) — **jangan andalkan salinan lokal/Cursor saja**.
+
+Alur agent setiap sesi:
+
+1. `git fetch origin`
+2. `git checkout develop && git pull origin develop` (branch integrasi tim)
+3. Baru baca `task.md` dan dokumen planning lainnya
+
+**Source of truth = remote GitHub, branch `develop`.** Lokal bisa ketinggalan
+kalau tim push lebih dulu.
+
 ### 8.1 Branch & commit
 
-- Kerja fitur/fix di **feature branch** (`feat/...`, `fix/...`, `chore/...`),
-  merge ke `main` lewat **PR**. `main` selalu hijau (test lulus).
+Model branch (Git Flow ringan):
+
+| Branch | Peran |
+|--------|--------|
+| **`develop`** | Integrasi harian tim. PR feature masuk ke sini. `task.md` & sprint plan hidup di sini. |
+| **`main`** | Production-ready. Isi = yang ter-deploy (VPS). Merge dari `develop` saat rilis. |
+| **`feat/…`, `fix/…`, `chore/…`** | Feature branch pendek. PR target = **`develop`** (bukan langsung `main`). |
+
 - **Conventional Commits**: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`,
   `chore:`, `ci:`, `security:`. Scope opsional, mis. `feat(inventory): ...`.
 - **Satu commit = satu unit logis** yang utuh. Bukan dump besar, bukan WIP receh.
 - Tulis *kenapa* di body commit bila tidak jelas dari judul.
+- Hotfix produksi: `fix/…` dari `main` → PR ke `main` → cherry-pick/back-merge ke `develop`.
 
 ### 8.2 Checkpoint (kapan commit/aman)
 

@@ -8,7 +8,8 @@ alwaysApply: true
 Ringkasan operasional. Detail & justifikasi di `AGENTS.md` §8.
 
 ## Branch & commit
-- Feature branch (`feat/`, `fix/`, `chore/`) → PR ke `main`. `main` harus hijau.
+- **`develop`** = integrasi tim; **`main`** = production (ter-deploy). PR feature → `develop`.
+- Sebelum kerja: `git fetch` + `git pull origin develop`; baca `task.md` dari remote.
 - Conventional Commits: `feat|fix|refactor|docs|test|chore|ci|security`.
 - Satu commit = satu unit logis utuh. Tulis *kenapa* di body bila tidak jelas.
 
