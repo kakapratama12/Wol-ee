@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Support\ApiResponse;
 use App\Models\Sale;
 use App\Services\AgingService;
 use Illuminate\Http\JsonResponse;
@@ -23,7 +24,7 @@ class ReportController extends Controller
         $profit = round($revenue - $cogs, 2);
         $count = $sales->clone()->count();
 
-        return response()->json([
+        return ApiResponse::success('Laporan hari ini.', [
             'date' => $today->toDateString(),
             'revenue' => $revenue,
             'cogs' => $cogs,
@@ -35,6 +36,6 @@ class ReportController extends Controller
 
     public function aging(): JsonResponse
     {
-        return response()->json($this->aging->report());
+        return ApiResponse::success('Laporan aging.', $this->aging->report());
     }
 }

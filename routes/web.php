@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BotIntegrationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\IngredientController;
@@ -52,6 +53,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/margin', [MarginController::class, 'index'])->name('margin.index');
         Route::post('/margin/what-if', [MarginController::class, 'whatIf'])->name('margin.whatif');
+
+        Route::get('/settings/bot', [BotIntegrationController::class, 'index'])->name('settings.bot');
+        Route::post('/settings/bot/token', [BotIntegrationController::class, 'generate'])->name('settings.bot.generate');
     });
 });
 

@@ -5,22 +5,27 @@ use App\Models\Product;
 use App\Models\RecipeItem;
 use App\Models\Tenant;
 use App\Models\User;
-use Laravel\Sanctum\Sanctum;
+use App\Services\BotTokenService;
+use Illuminate\Support\Facades\Hash;
 
 beforeEach(function () {
-    $tenant = Tenant::factory()->create();
-    Sanctum::actingAs(User::factory()->create(['role' => 'admin', 'tenant_id' => $tenant->id]));
+    $this->auth = authenticateBotTenant('admin');
+    $this->withHeader('Authorization', 'Bearer '.$this->auth['token']);
 });
 
 it('menolak akses tanpa token', function () {
-    // Buat request baru tanpa Sanctum::actingAs di guard api
-    $this->app['auth']->forgetGuards();
+    $this->withHeader('Authorization', '');
+
     $response = $this->getJson('/api/stock');
-    $response->assertUnauthorized();
-})->skip('actingAs global; auth dicek lewat test lain');
+
+    $response->assertUnauthorized()
+        ->assertJsonPath('success', false)
+        ->assertJsonPath('error_code', 'UNAUTHORIZED');
+});
 
 it('mencatat pembelian via API dan menambah stok', function () {
     $ingredient = Ingredient::create([
+        'tenant_id' => $this->auth['tenant']->id,
         'name' => 'Tepung',
         'unit_type' => 'gramasi',
         'base_unit' => 'g',
@@ -36,14 +41,16 @@ it('mencatat pembelian via API dan menambah stok', function () {
     ]);
 
     $response->assertCreated()
-        ->assertJsonPath('new_stock', 5000)
-        ->assertJsonPath('transaction.unit_price', 20);
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.new_stock', 5000)
+        ->assertJsonPath('data.unit_price', 20);
 
     expect((float) $ingredient->fresh()->current_stock)->toBe(5000.0);
 });
 
 it('mencatat penjualan via API dengan COGS dan alert', function () {
     $tepung = Ingredient::create([
+        'tenant_id' => $this->auth['tenant']->id,
         'name' => 'Tepung',
         'unit_type' => 'gramasi',
         'base_unit' => 'g',
@@ -52,11 +59,17 @@ it('mencatat penjualan via API dengan COGS dan alert', function () {
         'minimum_stock' => 1000,
     ]);
     $product = Product::create([
+        'tenant_id' => $this->auth['tenant']->id,
         'name' => 'Roti Goreng',
         'unit' => 'pcs',
         'selling_price' => 5000,
     ]);
-    RecipeItem::create(['product_id' => $product->id, 'ingredient_id' => $tepung->id, 'quantity' => 100]);
+    RecipeItem::create([
+        'tenant_id' => $this->auth['tenant']->id,
+        'product_id' => $product->id,
+        'ingredient_id' => $tepung->id,
+        'quantity' => 100,
+    ]);
 
     $response = $this->postJson('/api/sales', [
         'product' => 'Roti Goreng',
@@ -64,37 +77,68 @@ it('mencatat penjualan via API dengan COGS dan alert', function () {
     ]);
 
     $response->assertCreated()
-        ->assertJsonPath('sale.revenue', 5000)
-        ->assertJsonPath('sale.cogs', 2000)
-        ->assertJsonPath('sale.profit', 3000);
+        ->assertJsonPath('data.revenue', 5000)
+        ->assertJsonPath('data.cogs', 2000)
+        ->assertJsonPath('data.profit', 3000);
 
-    // stok jadi 950 < min 1000 => muncul di alerts
-    expect($response->json('alerts'))->toHaveCount(1)
-        ->and($response->json('alerts.0.ingredient'))->toBe('Tepung');
+    expect($response->json('data.alerts'))->toHaveCount(1)
+        ->and($response->json('data.alerts.0.ingredient'))->toBe('Tepung');
 });
 
-it('mengembalikan 422 jika produk tidak ditemukan', function () {
+it('mengembalikan 422 dengan error_code jika produk tidak ditemukan', function () {
     $response = $this->postJson('/api/sales', [
         'product' => 'Produk Hantu',
         'quantity' => 1,
     ]);
 
-    $response->assertStatus(422);
+    $response->assertStatus(422)
+        ->assertJsonPath('success', false)
+        ->assertJsonPath('error_code', 'PRODUCT_NOT_FOUND');
 });
 
 it('menampilkan daftar stok', function () {
     Ingredient::create([
+        'tenant_id' => $this->auth['tenant']->id,
         'name' => 'Susu',
         'unit_type' => 'gramasi',
         'base_unit' => 'ml',
         'unit_price' => 18,
-        'current_stock' => 3000, // antara 50% min (2500) dan min (5000) => menipis
+        'current_stock' => 3000,
         'minimum_stock' => 5000,
     ]);
 
     $response = $this->getJson('/api/stock');
 
     $response->assertOk()
-        ->assertJsonPath('data.0.ingredient', 'Susu')
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.0.ingredient', 'susu')
         ->assertJsonPath('data.0.status', 'menipis');
+});
+
+it('memvalidasi token bot via endpoint validate-token', function () {
+    $tenant = Tenant::factory()->create();
+    $secret = 'validate-secret-32chars-long!!!!!!';
+    $tenant->update(['bot_token' => Hash::make($secret)]);
+    $plain = $tenant->id.':'.$secret;
+
+    $valid = $this->postJson('/api/bot/validate-token', ['token' => $plain]);
+    $valid->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.tenant.name', $tenant->name);
+
+    $invalid = $this->postJson('/api/bot/validate-token', ['token' => '99:invalid']);
+    $invalid->assertUnauthorized()
+        ->assertJsonPath('message', 'Token tidak valid.');
+});
+
+it('menghasilkan token via artisan command', function () {
+    $tenant = Tenant::factory()->create();
+
+    $this->artisan('wol-ee:generate-bot-token', ['--tenant' => $tenant->id])
+        ->assertSuccessful();
+
+    expect($tenant->fresh()->bot_token)->not->toBeNull();
+
+    $service = app(BotTokenService::class);
+    expect($service->validate('invalid'))->toBeNull();
 });

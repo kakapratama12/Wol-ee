@@ -97,27 +97,17 @@
 - [x] POST /api/sales (penjualan)
 - [x] GET /api/stock (cek stok)
 - [x] GET /api/reports/today
-- [ ] GET /api/partners/aging (cek aging) — **API ready** (`GET /api/reports/aging`, `GET /api/partners/{id}/aging`)
-- [ ] Auth: **1 API token per tenant** (bukan per bot instance)
-  - Token disimpan di `tenants.api_token` (hashed)
-  - Bot kirim header: `Authorization: Bearer <token>`
-  - Resolve tenant dari token, bukan dari user Sanctum
-- [ ] Error format standar:
-  ```json
-  {
-    "success": false,
-    "message": "Validation failed",
-    "errors": {
-      "ingredient": ["Bahan tidak ditemukan"]
-    }
-  }
-  ```
-- [ ] Idempotency: **tidak perlu v1** (single user input, no race condition)
+- [x] GET /api/reports/aging (cek aging)
+- [x] Auth: **1 API token per tenant** (`{tenant_id}:{secret}`, hashed di `tenants.bot_token`)
+  - Middleware `BotTokenAuth` + `POST /api/bot/validate-token`
+  - Generate via Settings > Bot Integration atau `php artisan wol-ee:generate-bot-token`
+- [x] Error format standar (`success`, `message`, `error_code`, `errors`/`suggestions`)
+- [x] Idempotency: **tidak perlu v1** (single user input, no race condition)
 
 ### 4.2 Bot Logic
-- [ ] NL parsing rules (item, qty, unit, price) — di repo bot Python
-- [ ] Incomplete data handling (tanya clarification / save draft)
-- [ ] Response format (JSON untuk bot consume)
+- [x] NL parsing rules — modul `bot/handlers.py`
+- [x] Incomplete data handling (format hint + offline queue saat timeout)
+- [x] Response format (JSON via `bot/wol_ee_client.py`)
 
 ### 4.3 Bot → Dashboard Sync
 - [x] Data dari bot muncul di dashboard (setelah tenant scoping)
@@ -125,10 +115,10 @@
 - [ ] Edit data bot via dashboard — **partial** (belum semua field)
 
 **Sprint 4 Done Criteria:**
-- [ ] Bot auth per-tenant token
+- [x] Bot auth per-tenant token
 - [x] Bot bisa input transaksi & penjualan (API ready)
 - [x] Bot bisa cek stok
-- [ ] Data sync bot ↔ dashboard (perlu wire bot Python + tenant token)
+- [ ] Data sync bot ↔ dashboard (perlu deploy modul `bot/` ke server keuangan-bot)
 
 ---
 

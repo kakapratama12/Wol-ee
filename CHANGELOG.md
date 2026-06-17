@@ -21,6 +21,10 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 ### Added
 
+- Sprint 4: auth token per tenant (`{tenant_id}:{secret}`), middleware `BotTokenAuth`,
+  endpoint `POST /api/bot/validate-token`, response format standar API bot.
+- Dashboard Settings > Bot Integration (generate/copy token).
+- Modul Python bot (`bot/`) — API client, handlers NL, offline queue, deployment checklist.
 - Sprint 2 API: Partner CRUD, Invoice tracking (create, pay, outstanding), aging report
   (`/api/partners`, `/api/invoices`, `/api/reports/aging`).
 - Seeder sample partner & invoice untuk tenant `kafe-contoh`.

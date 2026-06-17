@@ -22,6 +22,11 @@ class Tenant extends Model
         'slug',
         'plan',
         'status',
+        'bot_token',
+    ];
+
+    protected $hidden = [
+        'bot_token',
     ];
 
     public function users(): HasMany

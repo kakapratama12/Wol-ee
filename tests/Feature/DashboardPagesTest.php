@@ -1,15 +1,28 @@
 <?php
 
+use App\Models\Tenant;
 use App\Models\User;
 
 function owner(): User
 {
-    return User::factory()->create(['role' => 'owner', 'email_verified_at' => now()]);
+    $tenant = Tenant::factory()->create();
+
+    return User::factory()->create([
+        'role' => 'owner',
+        'tenant_id' => $tenant->id,
+        'email_verified_at' => now(),
+    ]);
 }
 
 function staff(): User
 {
-    return User::factory()->create(['role' => 'admin', 'email_verified_at' => now()]);
+    $tenant = Tenant::factory()->create();
+
+    return User::factory()->create([
+        'role' => 'admin',
+        'tenant_id' => $tenant->id,
+        'email_verified_at' => now(),
+    ]);
 }
 
 it('mengarahkan tamu ke halaman login', function () {
@@ -19,7 +32,7 @@ it('mengarahkan tamu ke halaman login', function () {
 it('owner bisa mengakses semua halaman utama', function () {
     $this->actingAs(owner());
 
-    foreach (['/dashboard', '/inventory', '/transactions', '/sales', '/products', '/tax', '/pnl', '/expenses', '/margin'] as $url) {
+    foreach (['/dashboard', '/inventory', '/transactions', '/sales', '/products', '/tax', '/pnl', '/expenses', '/margin', '/settings/bot'] as $url) {
         $this->get($url)->assertOk();
     }
 });

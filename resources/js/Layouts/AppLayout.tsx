@@ -10,6 +10,7 @@ import {
     FileSpreadsheet,
     Wallet,
     TrendingDown,
+    Bot,
     LogOut,
     Menu,
     X,
@@ -34,6 +35,7 @@ const navItems: NavItem[] = [
     { label: 'Laporan P&L', href: '/pnl', icon: <FileSpreadsheet className="h-4 w-4" />, ownerOnly: true },
     { label: 'Biaya', href: '/expenses', icon: <Wallet className="h-4 w-4" />, ownerOnly: true },
     { label: 'Margin Protection', href: '/margin', icon: <TrendingDown className="h-4 w-4" />, ownerOnly: true },
+    { label: 'Bot Integration', href: '/settings/bot', icon: <Bot className="h-4 w-4" />, ownerOnly: true },
 ];
 
 export default function AppLayout({ title, children }: PropsWithChildren<{ title?: string }>) {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreSaleRequest;
+use App\Http\Support\ApiResponse;
 use App\Models\Ingredient;
 use App\Models\Product;
 use App\Services\SaleService;
@@ -15,16 +16,25 @@ class SaleController extends Controller
 
     public function store(StoreSaleRequest $request): JsonResponse
     {
+        $searchName = trim((string) $request->input('product', ''));
         $product = $this->resolveProduct($request);
 
         if (! $product) {
-            return response()->json([
-                'message' => 'Produk tidak ditemukan. Tambahkan dulu lewat dashboard.',
-            ], 422);
+            $extra = [];
+
+            if ($searchName !== '') {
+                $extra['suggestions'] = $this->suggestProducts($searchName);
+            }
+
+            return ApiResponse::error(
+                message: "Produk '{$searchName}' tidak ditemukan.",
+                errorCode: 'PRODUCT_NOT_FOUND',
+                status: 422,
+                extra: $extra,
+            );
         }
 
         $quantity = $request->integer('quantity');
-        $usage = $this->sales->usageBreakdown($product, $quantity);
 
         $sale = $this->sales->record(
             product: $product,
@@ -36,18 +46,14 @@ class SaleController extends Controller
             occurredAt: $request->date('occurred_at'),
         );
 
-        return response()->json([
-            'message' => 'Penjualan tercatat.',
-            'sale' => [
-                'id' => $sale->id,
-                'product' => $product->name,
-                'quantity' => $sale->quantity,
-                'revenue' => (float) $sale->revenue,
-                'cogs' => (float) $sale->cogs,
-                'profit' => (float) $sale->profit,
-                'margin' => (float) $sale->margin,
-            ],
-            'usage' => $usage,
+        return ApiResponse::success('Penjualan tercatat.', [
+            'id' => $sale->id,
+            'product' => $product->name,
+            'quantity' => $sale->quantity,
+            'revenue' => (float) $sale->revenue,
+            'cogs' => (float) $sale->cogs,
+            'profit' => (float) $sale->profit,
+            'margin' => (float) $sale->margin,
             'alerts' => $this->lowStockAlerts(),
         ], 201);
     }
@@ -64,6 +70,19 @@ class SaleController extends Controller
     }
 
     /**
+     * @return list<string>
+     */
+    private function suggestProducts(string $search): array
+    {
+        return Product::query()
+            ->whereRaw('LOWER(name) LIKE ?', ['%'.mb_strtolower($search).'%'])
+            ->orderBy('name')
+            ->limit(3)
+            ->pluck('name')
+            ->all();
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     private function lowStockAlerts(): array
@@ -73,8 +92,8 @@ class SaleController extends Controller
             ->get()
             ->map(fn (Ingredient $i) => [
                 'ingredient' => $i->name,
-                'current_stock' => (float) $i->current_stock,
-                'minimum_stock' => (float) $i->minimum_stock,
+                'current' => (float) $i->current_stock,
+                'minimum' => (float) $i->minimum_stock,
                 'base_unit' => $i->base_unit,
                 'status' => $i->stock_status,
             ])

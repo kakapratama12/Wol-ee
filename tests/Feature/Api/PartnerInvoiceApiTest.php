@@ -2,19 +2,13 @@
 
 use App\Models\Invoice;
 use App\Models\Partner;
-use App\Models\Tenant;
-use App\Models\User;
 use App\Services\AgingService;
 use App\Services\InvoiceService;
 use Illuminate\Support\Carbon;
-use Laravel\Sanctum\Sanctum;
 
 beforeEach(function () {
-    $tenant = Tenant::factory()->create();
-    Sanctum::actingAs(User::factory()->create([
-        'role' => 'owner',
-        'tenant_id' => $tenant->id,
-    ]));
+    $this->auth = authenticateBotTenant();
+    $this->withHeader('Authorization', 'Bearer '.$this->auth['token']);
 });
 
 it('membuat partner customer dan supplier', function () {
@@ -40,11 +34,13 @@ it('membuat partner customer dan supplier', function () {
 
 it('menolak hapus partner dengan invoice outstanding', function () {
     $partner = Partner::create([
+        'tenant_id' => $this->auth['tenant']->id,
         'name' => 'Kantor Pak Joko',
         'type' => 'customer',
     ]);
 
     Invoice::create([
+        'tenant_id' => $this->auth['tenant']->id,
         'partner_id' => $partner->id,
         'invoice_number' => 'INV-'.now()->format('Ym').'-001',
         'amount' => 1000000,
@@ -61,6 +57,7 @@ it('menolak hapus partner dengan invoice outstanding', function () {
 
 it('membuat invoice dengan nomor otomatis', function () {
     $partner = Partner::create([
+        'tenant_id' => $this->auth['tenant']->id,
         'name' => 'Kantor Pak Joko',
         'type' => 'customer',
     ]);
@@ -82,6 +79,7 @@ it('membuat invoice dengan nomor otomatis', function () {
 
 it('menolak invoice untuk partner supplier', function () {
     $partner = Partner::create([
+        'tenant_id' => $this->auth['tenant']->id,
         'name' => 'CV Tepung Sejahtera',
         'type' => 'supplier',
     ]);
@@ -97,11 +95,13 @@ it('menolak invoice untuk partner supplier', function () {
 
 it('mencatat pembayaran parsial dan lunas', function () {
     $partner = Partner::create([
+        'tenant_id' => $this->auth['tenant']->id,
         'name' => 'Kantor Pak Joko',
         'type' => 'customer',
     ]);
 
     $invoice = Invoice::create([
+        'tenant_id' => $this->auth['tenant']->id,
         'partner_id' => $partner->id,
         'invoice_number' => 'INV-'.now()->format('Ym').'-001',
         'amount' => 5000000,
@@ -130,11 +130,13 @@ it('mencatat pembayaran parsial dan lunas', function () {
 
 it('menolak pembayaran melebihi tagihan', function () {
     $partner = Partner::create([
+        'tenant_id' => $this->auth['tenant']->id,
         'name' => 'Kantor Pak Joko',
         'type' => 'customer',
     ]);
 
     $invoice = Invoice::create([
+        'tenant_id' => $this->auth['tenant']->id,
         'partner_id' => $partner->id,
         'invoice_number' => 'INV-'.now()->format('Ym').'-001',
         'amount' => 5000000,
@@ -153,11 +155,13 @@ it('menolak pembayaran melebihi tagihan', function () {
 
 it('menghitung aging per partner dan laporan global', function () {
     $partner = Partner::create([
+        'tenant_id' => $this->auth['tenant']->id,
         'name' => 'CV Maju Jaya',
         'type' => 'customer',
     ]);
 
     Invoice::create([
+        'tenant_id' => $this->auth['tenant']->id,
         'partner_id' => $partner->id,
         'invoice_number' => 'INV-'.now()->format('Ym').'-001',
         'amount' => 8000000,
@@ -167,6 +171,7 @@ it('menghitung aging per partner dan laporan global', function () {
     ]);
 
     Invoice::create([
+        'tenant_id' => $this->auth['tenant']->id,
         'partner_id' => $partner->id,
         'invoice_number' => 'INV-'.now()->format('Ym').'-002',
         'amount' => 5000000,
@@ -184,10 +189,11 @@ it('menghitung aging per partner dan laporan global', function () {
 
     $report = $this->getJson('/api/reports/aging');
     $report->assertOk()
-        ->assertJsonPath('summary.total_outstanding', 13000000)
-        ->assertJsonPath('summary.total_partners', 1)
-        ->assertJsonPath('by_aging.current', 8000000)
-        ->assertJsonPath('by_aging.1-2_months', 5000000);
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.summary.total_outstanding', 13000000)
+        ->assertJsonPath('data.summary.total_partners', 1)
+        ->assertJsonPath('data.by_aging.current', 8000000)
+        ->assertJsonPath('data.by_aging.1-2_months', 5000000);
 });
 
 it('mengelompokkan invoice belum jatuh tempo ke bucket current', function () {
