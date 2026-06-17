@@ -51,6 +51,29 @@ class WolEeClient:
 
         return payload
 
+    def _request_plain(self, method: str, path: str, **kwargs) -> dict[str, Any]:
+        url = f"{self.base_url}{path}"
+        try:
+            response = self.session.request(method, url, timeout=self.timeout, **kwargs)
+        except requests.Timeout as exc:
+            raise WolEeApiError("API timeout", "API_ERROR") from exc
+        except requests.RequestException as exc:
+            raise WolEeApiError("Koneksi API gagal", "API_ERROR") from exc
+
+        try:
+            payload = response.json()
+        except ValueError:
+            raise WolEeApiError("Respons API tidak valid", "API_ERROR")
+
+        if not response.ok:
+            raise WolEeApiError(
+                payload.get("message", "Permintaan gagal"),
+                payload.get("error_code", "API_ERROR"),
+                payload,
+            )
+
+        return payload
+
     @classmethod
     def validate_token(cls, base_url: str, token: str, timeout: int = 15) -> dict[str, Any]:
         url = f"{base_url.rstrip('/')}/bot/validate-token"
@@ -80,5 +103,28 @@ class WolEeClient:
         params = {"ingredient": ingredient} if ingredient else None
         return self._request("GET", "/stock", params=params)
 
+    def get_report_today(self) -> dict[str, Any]:
+        return self._request("GET", "/reports/today")
+
     def get_aging(self) -> dict[str, Any]:
         return self._request("GET", "/reports/aging")
+
+    def list_transactions(self, limit: int = 10, date: str | None = None) -> dict[str, Any]:
+        params: dict[str, Any] = {"limit": limit}
+        if date:
+            params["date"] = date
+        return self._request("GET", "/transactions", params=params)
+
+    def list_sales(self, limit: int = 10, date: str | None = None) -> dict[str, Any]:
+        params: dict[str, Any] = {"limit": limit}
+        if date:
+            params["date"] = date
+        return self._request("GET", "/sales", params=params)
+
+    def list_products(self) -> dict[str, Any]:
+        return self._request("GET", "/products")
+
+    def list_partners(self, partner_type: str | None = None) -> list[dict[str, Any]]:
+        params = {"type": partner_type} if partner_type else None
+        payload = self._request_plain("GET", "/partners", params=params)
+        return payload.get("data", [])

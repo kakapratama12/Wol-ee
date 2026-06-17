@@ -26,6 +26,10 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
   endpoint `POST /api/bot/validate-token`, response format standar API bot.
 - Dashboard Settings > Bot Integration (generate/copy token).
 - Modul Python bot (`bot/`) — API client, handlers NL, offline queue, deployment checklist.
+- Bot NL parsing: `ai_parser.py` adaptasi logic keuangan-bot → output Laravel API (beli/jual/stok NL).
+- Bot API read endpoints: `GET /api/transactions`, `GET /api/sales`, `GET /api/products`.
+- Bot Wol-ee path: `/profit`, `/history`, `/partners` via API untuk user terdaftar; legacy path tetap untuk user lain.
+
 - Sprint 2 API: Partner CRUD, Invoice tracking (create, pay, outstanding), aging report
   (`/api/partners`, `/api/invoices`, `/api/reports/aging`).
 - Seeder sample partner & invoice untuk tenant `kafe-contoh`.

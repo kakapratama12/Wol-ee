@@ -7,12 +7,46 @@ use App\Http\Requests\Api\StoreSaleRequest;
 use App\Http\Support\ApiResponse;
 use App\Models\Ingredient;
 use App\Models\Product;
+use App\Models\Sale;
 use App\Services\SaleService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class SaleController extends Controller
 {
     public function __construct(private readonly SaleService $sales) {}
+
+    public function index(Request $request): JsonResponse
+    {
+        $limit = min($request->integer('limit', 10), 50);
+
+        $query = Sale::query()
+            ->with('product:id,name')
+            ->latest('occurred_at');
+
+        if ($request->filled('date')) {
+            $query->whereDate('occurred_at', $request->date('date'));
+        }
+
+        $sales = $query
+            ->limit($limit)
+            ->get()
+            ->map(fn (Sale $sale) => [
+                'id' => $sale->id,
+                'product' => $sale->product?->name,
+                'quantity' => $sale->quantity,
+                'unit_price' => (float) $sale->unit_price,
+                'revenue' => (float) $sale->revenue,
+                'cogs' => (float) $sale->cogs,
+                'profit' => (float) $sale->profit,
+                'margin' => (float) $sale->margin,
+                'source' => $sale->source,
+                'note' => $sale->note,
+                'occurred_at' => $sale->occurred_at?->toIso8601String(),
+            ]);
+
+        return ApiResponse::success('Riwayat penjualan.', $sales->values()->all());
+    }
 
     public function store(StoreSaleRequest $request): JsonResponse
     {

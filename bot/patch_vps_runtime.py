@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Patch keuangan-bot runtime on VPS for Wol-ee integration."""
+"""Patch keuangan-bot runtime on VPS for Wol-ee NL + API integration."""
 
 from __future__ import annotations
 
@@ -7,83 +7,146 @@ from pathlib import Path
 
 ROOT = Path("/home/ubuntu/keuangan-bot")
 
-# 1) config.py
+# 1) config.py — Wol-ee API vars
 config_path = ROOT / "config.py"
-text = config_path.read_text()
-if "WOL_EE_API_URL" not in text:
-    text = text.replace(
-        "    # Database\n",
-        "    # Wol-ee Laravel API\n"
-        '    WOL_EE_API_URL: str = os.getenv("WOL_EE_API_URL", "http://127.0.0.1/api")\n'
-        '    WOL_EE_API_TOKEN: str = os.getenv("WOL_EE_API_TOKEN", "")\n\n'
-        "    # Database\n",
-    )
-    config_path.write_text(text)
-    print("config.py updated")
+if config_path.exists():
+    text = config_path.read_text()
+    if "WOL_EE_API_URL" not in text:
+        text = text.replace(
+            "    # Database\n",
+            "    # Wol-ee Laravel API\n"
+            '    WOL_EE_API_URL: str = os.getenv("WOL_EE_API_URL", "http://127.0.0.1/api")\n'
+            '    WOL_EE_API_TOKEN: str = os.getenv("WOL_EE_API_TOKEN", "")\n\n'
+            "    # Database\n",
+        )
+        config_path.write_text(text)
+        print("config.py updated")
 
-# 2) .env
+# 2) .env — no hardcoded secrets
 env_path = ROOT / ".env"
-env = env_path.read_text()
-for key, value in {
-    "WOL_EE_API_URL": "http://127.0.0.1/api",
-    "WOL_EE_API_TOKEN": "1:W2NjpaZMF5ZmvyMf3sFhQuIcmLWorFRD",
-}.items():
-    if f"{key}=" not in env:
-        env += f"\n{key}={value}\n"
-env_path.write_text(env)
-print(".env updated")
+if env_path.exists():
+    env = env_path.read_text()
+    for key, default in {
+        "WOL_EE_API_URL": "http://127.0.0.1/api",
+    }.items():
+        if f"{key}=" not in env:
+            env += f"\n{key}={default}\n"
+    env_path.write_text(env)
+    print(".env updated")
 
-# 3) bot.py
+# 3) bot.py patches
 bot_path = ROOT / "bot.py"
 bot = bot_path.read_text()
 
-if "from wol_ee_bridge import try_handle" not in bot:
+if "from wol_ee_bridge import try_handle, handle_wolee_message, is_wolee_user" not in bot:
     bot = bot.replace(
-        "from config import config, now_wib\n",
-        "from config import config, now_wib\nfrom wol_ee_bridge import try_handle\n",
+        "from wol_ee_bridge import try_handle\n",
+        "from wol_ee_bridge import try_handle, handle_wolee_message, is_wolee_user\n",
     )
 
-start_block = bot.split("async def start", 1)[1].split("async def help_command", 1)[0]
-if "context.args" not in start_block:
-    bot = bot.replace(
-        'async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):\n    """Handle /start command"""\n    user = update.effective_user\n    \n    # Create or get user',
-        'async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):\n    """Handle /start command"""\n    user = update.effective_user\n\n    if context.args:\n        reply = try_handle(user.id, "/start " + " ".join(context.args))\n        await update.message.reply_text(reply)\n        return\n    \n    # Create or get user',
-    )
+# handle_message: Wol-ee NL path for registered users
+old_handle = (
+    "    wol_ee_reply = try_handle(user_id, user_input)\n"
+    "    if wol_ee_reply is not None:\n"
+    "        await update.message.reply_text(wol_ee_reply)\n"
+    "        return\n"
+)
+new_handle = (
+    "    wol_ee_reply = try_handle(user_id, user_input)\n"
+    "    if wol_ee_reply is not None:\n"
+    "        await update.message.reply_text(wol_ee_reply, parse_mode=\"HTML\")\n"
+    "        return\n\n"
+    "    if is_wolee_user(user_id):\n"
+    "        await update.message.reply_text(\"🔄 Memproses...\")\n"
+    "        is_pro_user = False\n"
+    "        db_check = SessionLocal()\n"
+    "        try:\n"
+    "            db_user_check = db_check.query(User).filter(User.telegram_id == user_id).first()\n"
+    "            is_pro_user = bool(db_user_check and db_user_check.plan == \"pro\")\n"
+    "        finally:\n"
+    "            db_check.close()\n"
+    "        wol_ee_nl = await handle_wolee_message(user_id, user_input, is_pro=is_pro_user)\n"
+    "        await update.message.reply_text(wol_ee_nl or \"Gagal memproses.\", parse_mode=\"HTML\")\n"
+    "        return\n"
+)
+if old_handle in bot:
+    bot = bot.replace(old_handle, new_handle)
+    print("handle_message patched")
 
-if "wol_ee_reply = try_handle" not in bot:
-    bot = bot.replace(
-        "    user_input = update.message.text\n    \n    # === ABUSE MITIGATION ===",
-        "    user_input = update.message.text\n\n    wol_ee_reply = try_handle(user_id, user_input)\n    if wol_ee_reply is not None:\n        await update.message.reply_text(wol_ee_reply)\n        return\n    \n    # === ABUSE MITIGATION ===",
-    )
+# summary command
+summary_hook = (
+    'async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):\n'
+    '    """Handle /summary command - monthly summary"""\n'
+)
+summary_new = (
+    'async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):\n'
+    '    """Handle /summary command - monthly summary"""\n'
+    '    user_id = update.effective_user.id\n'
+    '    if is_wolee_user(user_id):\n'
+    '        reply = try_handle(user_id, "summary")\n'
+    '        await update.message.reply_text(reply, parse_mode="HTML")\n'
+    '        return\n'
+)
+if summary_hook in bot and "if is_wolee_user(user_id):" not in bot.split("async def summary")[1].split("async def profit")[0]:
+    bot = bot.replace(summary_hook, summary_new, 1)
+    print("summary patched")
 
-if "async def wol_ee_stok_command" not in bot:
-    insert = """
+# profit command
+profit_hook = (
+    'async def profit(update: Update, context: ContextTypes.DEFAULT_TYPE):\n'
+    '    """Handle /profit command"""\n'
+)
+profit_new = (
+    'async def profit(update: Update, context: ContextTypes.DEFAULT_TYPE):\n'
+    '    """Handle /profit command"""\n'
+    '    user_id = update.effective_user.id\n'
+    '    if is_wolee_user(user_id):\n'
+    '        reply = try_handle(user_id, "profit")\n'
+    '        await update.message.reply_text(reply, parse_mode="HTML")\n'
+    '        return\n'
+)
+if profit_hook in bot and "if is_wolee_user(user_id):" not in bot.split("async def profit")[1].split("async def history")[0]:
+    bot = bot.replace(profit_hook, profit_new, 1)
+    print("profit patched")
 
-async def wol_ee_stok_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    text = update.message.text or "stok"
-    reply = try_handle(user_id, text)
-    await update.message.reply_text(reply or "Gagal memproses perintah stok")
+# history command
+history_hook = (
+    'async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):\n'
+    '    """Handle /history command - last 10 transactions"""\n'
+)
+history_new = (
+    'async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):\n'
+    '    """Handle /history command - last 10 transactions"""\n'
+    '    user_id = update.effective_user.id\n'
+    '    if is_wolee_user(user_id):\n'
+    '        reply = try_handle(user_id, "history")\n'
+    '        await update.message.reply_text(reply, parse_mode="HTML")\n'
+    '        return\n'
+)
+if history_hook in bot and "if is_wolee_user(user_id):" not in bot.split("async def history")[1].split("async def wol_ee_stok")[0]:
+    bot = bot.replace(history_hook, history_new, 1)
+    print("history patched")
 
-
-async def wol_ee_aging_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    reply = try_handle(user_id, "aging")
-    await update.message.reply_text(reply or "Gagal memproses laporan aging")
-
-"""
-    bot = bot.replace("\ndef main():", insert + "\ndef main():")
-
-if 'CommandHandler("stok", wol_ee_stok_command)' not in bot:
-    bot = bot.replace(
-        '    application.add_handler(CommandHandler("addpartner", addpartner_command))\n',
-        '    application.add_handler(CommandHandler("addpartner", addpartner_command))\n'
-        '    application.add_handler(CommandHandler("stok", wol_ee_stok_command))\n'
-        '    application.add_handler(CommandHandler("aging", wol_ee_aging_command))\n',
-    )
+# partners command
+partners_hook = (
+    'async def partners_command(update: Update, context: ContextTypes.DEFAULT_TYPE):\n'
+    '    """Handle /partners command - list all partners"""\n'
+)
+partners_new = (
+    'async def partners_command(update: Update, context: ContextTypes.DEFAULT_TYPE):\n'
+    '    """Handle /partners command - list all partners"""\n'
+    '    user_id = update.effective_user.id\n'
+    '    if is_wolee_user(user_id):\n'
+    '        reply = try_handle(user_id, "partners")\n'
+    '        await update.message.reply_text(reply, parse_mode="HTML")\n'
+    '        return\n'
+)
+if partners_hook in bot and "if is_wolee_user(user_id):" not in bot.split("async def partners_command")[1].split("async def addpartner")[0]:
+    bot = bot.replace(partners_hook, partners_new, 1)
+    print("partners patched")
 
 bot_path.write_text(bot)
-print("bot.py patched")
+print("bot.py saved")
 
 (ROOT / "logs").mkdir(exist_ok=True)
-print("logs dir ready")
+print("done")

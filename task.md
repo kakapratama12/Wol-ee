@@ -118,7 +118,7 @@
 - [x] Bot auth per-tenant token
 - [x] Bot bisa input transaksi & penjualan (API ready)
 - [x] Bot bisa cek stok
-- [ ] Data sync bot ↔ dashboard (perlu deploy modul `bot/` ke server keuangan-bot)
+- [x] Data sync bot ↔ dashboard (modul `bot/` deployed ke keuangan-bot, NL via ai_parser)
 
 ---
 

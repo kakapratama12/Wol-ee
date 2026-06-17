@@ -6,12 +6,44 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreTransactionRequest;
 use App\Http\Support\ApiResponse;
 use App\Models\Ingredient;
+use App\Models\Transaction;
 use App\Services\InventoryService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {
     public function __construct(private readonly InventoryService $inventory) {}
+
+    public function index(Request $request): JsonResponse
+    {
+        $limit = min($request->integer('limit', 10), 50);
+
+        $query = Transaction::query()
+            ->with('ingredient:id,name,base_unit')
+            ->latest('occurred_at');
+
+        if ($request->filled('date')) {
+            $query->whereDate('occurred_at', $request->date('date'));
+        }
+
+        $transactions = $query
+            ->limit($limit)
+            ->get()
+            ->map(fn (Transaction $transaction) => [
+                'id' => $transaction->id,
+                'ingredient' => $transaction->ingredient?->name,
+                'base_unit' => $transaction->ingredient?->base_unit,
+                'quantity' => (float) $transaction->quantity,
+                'unit_price' => (float) $transaction->unit_price,
+                'total' => (float) $transaction->total,
+                'source' => $transaction->source,
+                'note' => $transaction->note,
+                'occurred_at' => $transaction->occurred_at?->toIso8601String(),
+            ]);
+
+        return ApiResponse::success('Riwayat pembelian.', $transactions->values()->all());
+    }
 
     public function store(StoreTransactionRequest $request): JsonResponse
     {

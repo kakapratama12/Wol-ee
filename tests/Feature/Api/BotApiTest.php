@@ -142,3 +142,63 @@ it('menghasilkan token via artisan command', function () {
     $service = app(BotTokenService::class);
     expect($service->validate('invalid'))->toBeNull();
 });
+
+it('menampilkan riwayat pembelian via API', function () {
+    $ingredient = Ingredient::create([
+        'tenant_id' => $this->auth['tenant']->id,
+        'name' => 'Gula',
+        'unit_type' => 'gramasi',
+        'base_unit' => 'g',
+        'unit_price' => 15,
+        'current_stock' => 1000,
+        'minimum_stock' => 500,
+    ]);
+
+    $this->postJson('/api/transactions', [
+        'ingredient' => 'gula',
+        'quantity' => 500,
+        'total' => 7500,
+    ])->assertCreated();
+
+    $response = $this->getJson('/api/transactions?limit=5');
+
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.0.ingredient', 'Gula');
+});
+
+it('menampilkan riwayat penjualan via API', function () {
+    $product = Product::create([
+        'tenant_id' => $this->auth['tenant']->id,
+        'name' => 'Es Teh',
+        'unit' => 'cup',
+        'selling_price' => 8000,
+    ]);
+
+    $this->postJson('/api/sales', [
+        'product' => 'Es Teh',
+        'quantity' => 2,
+    ])->assertCreated();
+
+    $response = $this->getJson('/api/sales?limit=5');
+
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.0.product', 'Es Teh');
+});
+
+it('menampilkan daftar produk untuk konteks bot', function () {
+    Product::create([
+        'tenant_id' => $this->auth['tenant']->id,
+        'name' => 'Matcha Latte',
+        'unit' => 'cup',
+        'selling_price' => 45000,
+    ]);
+
+    $response = $this->getJson('/api/products');
+
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.0.name', 'Matcha Latte');
+});
+
