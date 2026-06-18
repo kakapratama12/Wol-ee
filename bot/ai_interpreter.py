@@ -105,6 +105,27 @@ async def interpret_report(
         return _fallback_summary(data)
 
 
+def interpret_report_sync(
+    data: dict[str, Any],
+    question: str = "",
+    context: list[dict] | None = None,
+    is_pro: bool = False,
+) -> str | None:
+    """Sync wrapper for interpret_report — use from sync handlers."""
+    import asyncio
+    try:
+        loop = asyncio.new_event_loop()
+        try:
+            return loop.run_until_complete(
+                interpret_report(data, question, context, is_pro)
+            )
+        finally:
+            loop.close()
+    except Exception as e:
+        logger.error(f"Sync interpretation failed: {e}")
+        return None
+
+
 def _format_context(context: list[dict]) -> str:
     """Format conversation history for prompt injection."""
     lines = []
