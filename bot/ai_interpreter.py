@@ -92,12 +92,12 @@ async def interpret_report(
 
     try:
         if is_pro:
-            result = await call_openrouter(prompt, temperature=0.3, max_tokens=500)
+            result = await call_openrouter(question or "Jelaskan kondisi bisnis saya", prompt)
         else:
-            result = await call_groq(prompt, temperature=0.3, max_tokens=500)
+            result = await call_groq(question or "Jelaskan kondisi bisnis saya", prompt)
 
-        if result and result.get("text"):
-            return result["text"].strip()
+        if result and result.get("raw"):
+            return result["raw"].strip()
         else:
             return _fallback_summary(data)
     except Exception as e:
