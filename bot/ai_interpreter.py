@@ -75,6 +75,10 @@ async def interpret_report(
     Returns:
         Natural language interpretation of the data
     """
+    # Free users: no AI interpretation, template only
+    if not is_pro:
+        return None
+
     # Format data for prompt
     data_str = json.dumps(data, indent=2, ensure_ascii=False, default=str)
 
