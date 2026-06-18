@@ -54,7 +54,7 @@ old_handle = (
 new_handle = (
     "    wol_ee_reply = try_handle(user_id, user_input)\n"
     "    if wol_ee_reply is not None:\n"
-    "        await update.message.reply_text(wol_ee_reply, parse_mode=\"HTML\")\n"
+    "        await _send_wolee_reply(update.message, wol_ee_reply)\n"
     "        return\n\n"
     "    if is_wolee_user(user_id):\n"
     "        await update.message.reply_text(\"🔄 Memproses...\")\n"
@@ -66,12 +66,21 @@ new_handle = (
     "        finally:\n"
     "            db_check.close()\n"
     "        wol_ee_nl = await handle_wolee_message(user_id, user_input, is_pro=is_pro_user)\n"
-    "        await update.message.reply_text(wol_ee_nl or \"Gagal memproses.\", parse_mode=\"HTML\")\n"
+    "        await _send_wolee_reply(update.message, wol_ee_nl or \"Gagal memproses.\")\n"
     "        return\n"
 )
 if old_handle in bot:
     bot = bot.replace(old_handle, new_handle)
     print("handle_message patched")
+
+bot = bot.replace(
+    "        await update.message.reply_text(wol_ee_reply, parse_mode=\"HTML\")\n",
+    "        await _send_wolee_reply(update.message, wol_ee_reply)\n",
+)
+bot = bot.replace(
+    "        await update.message.reply_text(wol_ee_nl or \"Gagal memproses.\", parse_mode=\"HTML\")\n",
+    "        await _send_wolee_reply(update.message, wol_ee_nl or \"Gagal memproses.\")\n",
+)
 
 # summary command
 summary_hook = (
