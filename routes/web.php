@@ -92,6 +92,7 @@ Route::middleware(['auth', 'verified', 'super_admin'])
         Route::get('/feedback', [PlatformController::class, 'feedback'])->name('feedback');
         Route::put('/feedback/{feedback}', [PlatformController::class, 'updateFeedback'])->name('feedback.update');
         Route::get('/ai-usage', [PlatformController::class, 'aiUsage'])->name('ai-usage');
+        Route::get('/bot-skills', [PlatformController::class, 'botSkills'])->name('bot-skills');
     });
 
 Route::middleware('auth')->group(function () {

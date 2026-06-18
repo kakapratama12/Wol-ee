@@ -8,6 +8,8 @@ LOCAL_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 FILES=(
   ai_parser.py
+  skill_registry.py
+  skills.json
   handlers.py
   wol_ee_bridge.py
   wol_ee_client.py

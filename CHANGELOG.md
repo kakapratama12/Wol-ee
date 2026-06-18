@@ -21,6 +21,7 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 - Bot feedback collection: fallback mengarahkan `feedback ...`, API `POST /api/bot/feedback`, dan tabel `bot_feedbacks` untuk kurasi roadmap early adopter.
 - Bot action planner: pencatatan penjualan, pembelian, dan biaya memakai AI intent + slot validation; bot bertanya klarifikasi saat data belum lengkap.
 - Bot confirmation flow: natural language sale/purchase/expense tampil sebagai preview dulu, lalu baru dicatat setelah user menekan konfirmasi.
+- Static Bot Skill Registry (`bot/skills.json`) dan halaman Super Admin `/platform/bot-skills` untuk audit skill, required slots, tool target, dan confirmation policy.
 - Bot query tools (demo owner): `GET /api/reports/pnl`, `/stock-alerts`, `/margin-alerts`, `/top-products`, `/bottom-products`; query router NL tanpa LLM (profit bulan ini, top/bottom products, strategi, stok/margin alert, meta "bisa nanya apa").
 - Kuota AI bot: 25/hari (free/Groq), 150/hari (pro/business/DeepSeek); `GET /api/bot/usage`, `POST /api/bot/ai-usage`.
 - Sidebar navigasi dikategorikan (Transaksi, Inventory, Laporan, Partner, Settings) dengan section collapsible.

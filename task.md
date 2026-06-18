@@ -148,6 +148,7 @@
 - [x] `/platform/tenants` tenant overview
 - [x] `/platform/feedback` feedback inbox + update status/note
 - [x] `/platform/ai-usage` usage summary + provider/request analytics dari `bot_ai_usages` dan `bot_ai_requests`
+- [x] `/platform/bot-skills` read-only static skill registry
 
 ### 5.1 Tenant Management
 - [x] Role: `super_admin` (terpisah dari owner/admin)

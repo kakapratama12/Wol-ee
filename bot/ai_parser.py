@@ -11,6 +11,7 @@ from typing import Any
 import httpx
 
 from config import config
+from skill_registry import action_skills_prompt
 
 # Prompt akuntansi legacy (tetap untuk referensi / format_amount)
 PARSE_PROMPT = """Kamu adalah asisten keuangan untuk UMKM Indonesia.
@@ -40,20 +41,14 @@ HANYA return JSON, tanpa penjelasan tambahan.
 WOLEE_ACTION_PROMPT = """Kamu adalah action planner untuk bot Wol-ee, asisten bisnis F&B Indonesia.
 Tugasmu: deteksi intent user dan ekstrak slot yang diperlukan. Kamu TIDAK mengeksekusi aksi.
 
+Skill registry aktif:
+{skills}
+
 Katalog bahan baku tenant:
 {ingredients}
 
 Katalog produk jadi tenant:
 {products}
-
-Intent yang didukung:
-- record_purchase: beli SATU bahan baku (contoh: "Beli tepung 2kg Rp 36 ribu")
-- record_sale: jual SATU produk (contoh: "Jual matcha latte 10")
-- record_expense: catat biaya operasional (contoh: "bayar listrik bulan ini 1.5jt")
-- check_stock: cek stok (contoh: "stok tepung")
-- sale_batch: laporan penjualan multi-item / copas dari WA (contoh: "matcha 10, croissant 5")
-- purchase_batch: pembelian multi-bahan (contoh: "beli: tepung 10kg 100000, gula 5kg 50000")
-- unknown: tidak bisa diparse
 
 ATURAN PENTING:
 - JANGAN map/menebak nama ke katalog. Kirim nama persis seperti user tulis.
@@ -409,6 +404,7 @@ async def parse_wolee_inventory(
 
     now = datetime.now()
     prompt = WOLEE_INVENTORY_PROMPT.format(
+        skills=action_skills_prompt(),
         ingredients=_format_catalog_ingredients(ingredients),
         products=_format_catalog_products(products),
         current_month=now.month,

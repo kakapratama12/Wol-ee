@@ -93,6 +93,7 @@ const navigation: (NavSingle | NavGroup)[] = [
             { label: 'Tenants', href: '/platform/tenants' },
             { label: 'Feedback', href: '/platform/feedback' },
             { label: 'AI Usage', href: '/platform/ai-usage' },
+            { label: 'Bot Skills', href: '/platform/bot-skills' },
         ],
     },
 ];

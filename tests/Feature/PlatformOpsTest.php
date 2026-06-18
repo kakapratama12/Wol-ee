@@ -91,6 +91,15 @@ it('super admin bisa melihat platform overview tenant feedback dan usage', funct
             ->where('byProvider.1.provider', 'openrouter')
             ->where('byTenant.0.tokens', 140)
         );
+
+    $this->get('/platform/bot-skills')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Platform/BotSkills')
+            ->where('summary.active', 8)
+            ->where('skills.0.name', 'record_sale')
+            ->where('skills.0.confirmation_required', true)
+        );
 });
 
 it('super admin bisa mengupdate status feedback', function () {

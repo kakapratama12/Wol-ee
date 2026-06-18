@@ -17,6 +17,8 @@ bot.py (shell: Telegram, rate limit, backup — tidak diubah)
 
 | File | Fungsi |
 |------|--------|
+| `skills.json` | Static skill registry untuk planner + Super Admin Bot Skills |
+| `skill_registry.py` | Loader skill registry untuk prompt dan slot validation |
 | `query_router.py` | Klasifikasi pertanyaan laporan/pantau tanpa LLM |
 | `ai_parser.py` | AI action planner: intent + slot untuk transaksi/biaya |
 | `wol_ee_client.py` | HTTP client ke Laravel API |

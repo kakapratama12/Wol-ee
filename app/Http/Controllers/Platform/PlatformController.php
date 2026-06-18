@@ -148,6 +148,26 @@ class PlatformController extends Controller
         return back()->with('success', 'Feedback diperbarui.');
     }
 
+    public function botSkills(): Response
+    {
+        $path = base_path('bot/skills.json');
+        $skills = file_exists($path)
+            ? json_decode((string) file_get_contents($path), true, flags: JSON_THROW_ON_ERROR)
+            : [];
+
+        $summary = [
+            'total' => count($skills),
+            'active' => collect($skills)->where('status', 'active')->count(),
+            'planner_enabled' => collect($skills)->where('planner_enabled', true)->count(),
+            'confirmation_required' => collect($skills)->where('confirmation_required', true)->count(),
+        ];
+
+        return Inertia::render('Platform/BotSkills', [
+            'summary' => $summary,
+            'skills' => $skills,
+        ]);
+    }
+
     public function aiUsage(): Response
     {
         $now = Carbon::now('Asia/Jakarta');

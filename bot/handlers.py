@@ -31,6 +31,7 @@ from not_found import format_item_not_found, get_app_url
 from offline_queue import OfflineQueue
 from pending_batch import PendingBatchStorage
 from query_router import classify_query, parse_period
+from skill_registry import required_slots_for_intent
 from wol_ee_client import WolEeApiError, WolEeClient
 
 logger = logging.getLogger(__name__)
@@ -413,15 +414,11 @@ class BotHandlers:
 
     def _missing_required_slot(self, parsed: dict) -> str | None:
         intent = parsed.get("intent")
-        required = {
-            "sale": ["product", "quantity"],
-            "purchase": ["ingredient", "quantity", "quantity_unit", "total"],
-            "expense": ["category", "amount", "period_month", "period_year"],
-        }.get(intent, [])
-        aliases = {"total": "amount"}
+        required = required_slots_for_intent(intent)
+        aliases = {"amount": "amount"}
         for slot in required:
-            value = parsed.get(slot)
-            if slot == "total" and not value:
+            value = parsed.get("total") if slot == "amount" and intent == "purchase" else parsed.get(slot)
+            if slot == "amount" and not value:
                 value = parsed.get("amount")
             if value in {None, "", 0}:
                 return aliases.get(slot, slot)

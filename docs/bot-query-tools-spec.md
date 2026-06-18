@@ -31,10 +31,13 @@ Pesan masuk (user Wol-ee terdaftar)
     │                                                    ▼
     ├─ Keyword sync (stok, history, partners, aging)    API + format
     │
-    └─ ACTION planner → cek kuota AI → Groq/DeepSeek → intent + slots
+    └─ ACTION planner → skill registry → cek kuota AI → Groq/DeepSeek → intent + slots
 ```
 
 **Prinsip:** Query laporan **tidak** mengurangi kuota AI harian.
+
+Skill registry statis hidup di `bot/skills.json`. Super Admin bisa melihat daftar skill,
+required slots, tool target, contoh input, dan confirmation policy di `/platform/bot-skills`.
 
 ---
 
@@ -117,6 +120,8 @@ Upgrade ke Pro untuk kuota lebih besar & respons lebih akurat.
 
 | File | Peran |
 |------|--------|
+| `skills.json` | Registry statis skill bot (source untuk prompt + Super Admin page) |
+| `skill_registry.py` | Loader registry untuk AI planner dan slot validation |
 | `query_router.py` | Klasifikasi QUERY tanpa LLM |
 | `handlers.py` | Handler PnL, stock/margin alerts, capabilities, feedback, event log AI |
 | `wol_ee_client.py` | Client endpoint baru |
