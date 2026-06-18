@@ -10,6 +10,7 @@ Tier behavior:
 
 import json
 import logging
+import asyncio
 from typing import Any
 
 from ai_parser import call_groq, call_openrouter
@@ -111,9 +112,11 @@ def interpret_report_sync(
     context: list[dict] | None = None,
     is_pro: bool = False,
 ) -> str | None:
-    """Sync wrapper for interpret_report — use from sync handlers."""
-    import asyncio
-    try:
+    """Sync wrapper — runs async in a separate thread to avoid event loop conflicts."""
+    import concurrent.futures
+    import threading
+
+    def _run():
         loop = asyncio.new_event_loop()
         try:
             return loop.run_until_complete(
@@ -121,6 +124,11 @@ def interpret_report_sync(
             )
         finally:
             loop.close()
+
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(_run)
+            return future.result(timeout=15)
     except Exception as e:
         logger.error(f"Sync interpretation failed: {e}")
         return None
