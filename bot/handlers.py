@@ -33,6 +33,8 @@ from pending_batch import PendingBatchStorage
 from query_router import classify_query, parse_period
 from skill_registry import required_slots_for_intent
 from wol_ee_client import WolEeApiError, WolEeClient
+from conversation_memory import ConversationMemory
+from ai_interpreter import interpret_report
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +54,7 @@ class BotHandlers:
         self.storage = storage
         self.queue = queue
         self.pending = pending
+        self.memory = ConversationMemory()
         self.client_factory = client_factory or (lambda token: WolEeClient(api_url, token))
 
     def handle_start(self, user_id: int, text: str) -> str:
@@ -1100,7 +1103,7 @@ class BotHandlers:
             "Tanya langsung pakai bahasa bebas."
         )
 
-    def handle_report_today(self, user_id: int) -> str:
+    def handle_report_today(self, user_id: int, question: str = "") -> str:
         client = self._client_for(user_id)
         if client is None:
             return "Belum terdaftar. Ketik /start <token> dulu."
@@ -1108,6 +1111,26 @@ class BotHandlers:
         try:
             data = client.get_report_today()["data"]
             self.storage.touch(user_id)
+
+            # AI interpretation for pro users
+            is_pro = self.storage.uses_premium_llm(user_id)
+            context = self.memory.get_context(user_id)
+
+            import asyncio
+            interpretation = None
+            try:
+                loop = asyncio.get_event_loop()
+                if not loop.is_running():
+                    interpretation = loop.run_until_complete(
+                        interpret_report(data, question or "omset hari ini", context, is_pro)
+                    )
+            except Exception:
+                pass
+
+            if interpretation:
+                return f"<b>Laporan Hari Ini</b>\n\n{interpretation}"
+
+            # Fallback template
             return (
                 f"📊 <b>Laporan Hari Ini</b> ({data['date']})\n\n"
                 f"💰 Omset: <b>{format_amount(data['revenue'])}</b>\n"
