@@ -25,6 +25,7 @@ interface Product {
     name: string;
     unit: string;
     selling_price: number;
+    recipe_type: 'unit' | 'batch';
     is_active: boolean;
     cogs: number;
     margin: number;
@@ -53,19 +54,19 @@ export default function ProductsIndex({ products, ingredients }: Props) {
     const [editing, setEditing] = useState<Product | null>(null);
     const [recipeProduct, setRecipeProduct] = useState<Product | null>(null);
 
-    const productForm = useForm({ name: '', unit: 'pcs', selling_price: '' });
+    const productForm = useForm({ name: '', unit: 'pcs', selling_price: '', recipe_type: 'unit' as 'unit' | 'batch' });
     const recipeForm = useForm<{ items: EditableRow[] }>({ items: [] });
 
     const openCreate = () => {
         setEditing(null);
-        productForm.setData({ name: '', unit: 'pcs', selling_price: '' });
+        productForm.setData({ name: '', unit: 'pcs', selling_price: '', recipe_type: 'unit' });
         productForm.clearErrors();
         setFormOpen(true);
     };
 
     const openEdit = (p: Product) => {
         setEditing(p);
-        productForm.setData({ name: p.name, unit: p.unit, selling_price: String(p.selling_price) });
+        productForm.setData({ name: p.name, unit: p.unit, selling_price: String(p.selling_price), recipe_type: p.recipe_type });
         productForm.clearErrors();
         setFormOpen(true);
     };
@@ -140,7 +141,12 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                     <Card key={p.id}>
                         <CardHeader className="flex-row items-start justify-between space-y-0">
                             <div>
-                                <CardTitle>{p.name}</CardTitle>
+                                <CardTitle className="flex items-center gap-2">
+                                    {p.name}
+                                    <Badge variant={p.recipe_type === 'batch' ? 'default' : 'secondary'} className="text-xs">
+                                        {p.recipe_type === 'batch' ? 'Batch' : 'Unit'}
+                                    </Badge>
+                                </CardTitle>
                                 <p className="mt-1 text-sm text-muted-foreground">
                                     {formatRupiah(p.selling_price)} / {p.unit}
                                 </p>
@@ -181,6 +187,14 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                         <Label htmlFor="name">Nama produk</Label>
                         <Input id="name" value={productForm.data.name} onChange={(e) => productForm.setData('name', e.target.value)} />
                         {productForm.errors.name && <p className="mt-1 text-xs text-destructive">{productForm.errors.name}</p>}
+                    </div>
+                    <div>
+                        <Label htmlFor="recipe_type">Tipe Resep</Label>
+                        <Select value={productForm.data.recipe_type} onChange={(e) => productForm.setData('recipe_type', e.target.value as 'unit' | 'batch')}>
+                            <option value="unit">Unit (per porsi)</option>
+                            <option value="batch">Batch (per produksi)</option>
+                        </Select>
+                        {productForm.errors.recipe_type && <p className="mt-1 text-xs text-destructive">{productForm.errors.recipe_type}</p>}
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div>

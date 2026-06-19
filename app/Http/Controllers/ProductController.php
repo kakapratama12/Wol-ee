@@ -31,6 +31,7 @@ class ProductController extends Controller
                     'name' => $product->name,
                     'unit' => $product->unit,
                     'selling_price' => (float) $product->selling_price,
+                    'recipe_type' => $product->recipe_type ?? 'unit',
                     'is_active' => $product->is_active,
                     'cogs' => $cogsValue,
                     'margin' => $cogs->margin($product),

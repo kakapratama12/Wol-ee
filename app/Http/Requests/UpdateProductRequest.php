@@ -23,6 +23,7 @@ class UpdateProductRequest extends FormRequest
             'name' => ['required', 'string', 'max:255', Rule::unique('products', 'name')->ignore($id)],
             'unit' => ['required', 'string', 'max:20'],
             'selling_price' => ['required', 'numeric', 'gte:0'],
+            'recipe_type' => ['required', Rule::in(['unit', 'batch'])],
             'is_active' => ['boolean'],
         ];
     }
