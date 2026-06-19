@@ -92,9 +92,10 @@ def classify_query(text: str) -> str | None:
     margin_hints = (
         "margin turun",
         "margin jeblok",
+        "margin",
         "produk boncos",
         "margin jelek",
-        "produk rugi",
+        "margin gimana",        "cek margin",        "margin brp",        "produk rugi",
     )
     if any(h in normalized for h in margin_hints):
         return "margin_alerts"

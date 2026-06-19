@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
+from datetime import datetime
 from typing import Callable
 
 from ai_parser import (
@@ -33,6 +34,8 @@ from pending_batch import PendingBatchStorage
 from query_router import classify_query, parse_period
 from skill_registry import required_slots_for_intent
 from wol_ee_client import WolEeApiError, WolEeClient
+from conversation_memory import ConversationMemory
+from ai_interpreter import interpret_report_sync
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +55,7 @@ class BotHandlers:
         self.storage = storage
         self.queue = queue
         self.pending = pending
+        self.memory = ConversationMemory()
         self.client_factory = client_factory or (lambda token: WolEeClient(api_url, token))
 
     def handle_start(self, user_id: int, text: str) -> str:
@@ -96,6 +100,10 @@ class BotHandlers:
         active = self.pending.get_active_for_user(user_id)
         if not active:
             return None
+
+        if text.strip().lower() in {"batal", "cancel", "ga jadi", "gak jadi", "nggak jadi"}:
+            self.pending.delete(active["pending_id"], user_id)
+            return "Dibatalkan."
 
         if active["kind"] == "awaiting_slot":
             return self._handle_pending_slot_reply(user_id, text, active)
@@ -185,6 +193,14 @@ class BotHandlers:
             value = text.strip()
             if len(value) < 2:
                 return "Jawabannya belum jelas. Coba tulis lebih spesifik."
+            if slot == "ingredient" and self._looks_like_multi_item_answer(value):
+                return (
+                    "Aku nangkep ini beberapa bahan, tapi total belanja gabungan belum bisa langsung "
+                    "dibagi ke stok per bahan.\n\n"
+                    "Tolong kirim breakdown per bahan, contoh:\n"
+                    "gula 2kg 60rb, tepung 5kg 80rb, telur 30 butir 75rb\n\n"
+                    "Kalau memang cuma mau catat satu bahan utama, balas nama satu bahan saja."
+                )
             parsed[slot] = value
             return None
 
@@ -214,10 +230,10 @@ class BotHandlers:
             month, year = parse_period(text)
             return self.handle_business_insight(user_id, month, year)
         if kind == "report_today":
-            return self.handle_report_today(user_id)
+            return self.handle_report_today(user_id, question=text)
         if kind == "report_pnl":
             month, year = parse_period(text)
-            return self.handle_report_pnl(user_id, month, year)
+            return self.handle_report_pnl(user_id, month, year, question=text)
         return self.handle_capabilities(user_id)
 
     def _ensure_ai_quota(self, client: WolEeClient, user_id: int) -> str | None:
@@ -283,6 +299,18 @@ class BotHandlers:
         client = self._client_for(user_id)
         if client is None:
             return "Belum terdaftar. Ketik /start <token> dulu."
+
+        fast_expense = self._parse_fast_expense(text)
+        if fast_expense:
+            return self._execute_action_plan(user_id, client, fast_expense, [], [], original_text=text)
+
+        fast_purchase_seed = self._parse_fast_purchase_seed(text)
+        if fast_purchase_seed:
+            return self._execute_action_plan(user_id, client, fast_purchase_seed, [], [], original_text=text)
+
+        bare_list_reply = self._clarify_bare_item_list(text)
+        if bare_list_reply:
+            return bare_list_reply
 
         quota_msg = self._ensure_ai_quota(client, user_id)
         if quota_msg:
@@ -375,6 +403,117 @@ class BotHandlers:
             "feedback <perintah/pertanyaan yang kamu harapkan>\n"
             "Contoh: feedback bandingin profit bulan ini vs bulan lalu"
         )
+
+    def _clarify_bare_item_list(self, text: str) -> str | None:
+        normalized = text.strip().lower()
+        if not self._looks_like_multi_item_answer(normalized):
+            return None
+        if re.search(r"\b(stok|stock|cek|pantau|alert|menipis|kritis)\b", normalized):
+            return None
+        if re.search(r"\b(beli|jual|bayar|biaya|belanja|pengeluaran)\b", normalized):
+            return None
+        return (
+            "Ini seperti daftar bahan, tapi konteks sebelumnya tidak kebaca.\n\n"
+            "Kalau mau catat pembelian stok, kirim per bahan dengan jumlah dan nominal, contoh:\n"
+            "gula 2kg 60rb, tepung 5kg 80rb, telur 30 butir 75rb\n\n"
+            "Kalau mau cek stok, tulis: stok gula"
+        )
+
+    def _looks_like_multi_item_answer(self, text: str) -> bool:
+        normalized = text.strip().lower()
+        has_separator = "," in normalized or re.search(r"\b(dan|&)\b", normalized)
+        if not has_separator:
+            return False
+        if re.search(r"\b(bahan\s*2|bahan-bahan|bahan lain|lainnya|dll|dsb)\b", normalized):
+            return True
+        names = [part.strip(" .,-") for part in re.split(r",|\bdan\b|&", normalized)]
+        names = [name for name in names if len(name) >= 2]
+        return len(names) >= 2
+
+    def _parse_fast_purchase_seed(self, text: str) -> dict | None:
+        normalized = text.strip().lower()
+        if not re.search(r"\b(beli|belanja)\b", normalized):
+            return None
+        if not re.search(r"\b(bahan|bahan baku|stok|stock)\b", normalized):
+            return None
+        amount = parse_money_amount(normalized)
+        if not amount:
+            return None
+        return {
+            "intent": "purchase",
+            "confidence": "high",
+            "ingredient": None,
+            "quantity": None,
+            "quantity_unit": None,
+            "amount": amount,
+            "total": amount,
+            "partner_name": None,
+            "note": text.strip(),
+            "missing_slots": [],
+            "ambiguities": [],
+        }
+
+    def _parse_fast_expense(self, text: str) -> dict | None:
+        normalized = text.strip().lower()
+        if not any(keyword in normalized for keyword in ("bayar", "biaya", "pengeluaran", "expense", "tagihan")):
+            return None
+
+        # Jangan ambil jalan pintas untuk pembelian bahan; ini perlu quantity/unit dan validasi katalog.
+        if re.search(r"\bbeli\b", normalized) and parse_quantity_unit(normalized)[1]:
+            return None
+
+        amount = parse_money_amount(normalized)
+        period = parse_period_text(normalized)
+        now = datetime.now()
+        period_month, period_year = period if period else (now.month, now.year)
+        category = self._fast_expense_category(normalized)
+        if not amount and not category:
+            return None
+
+        return {
+            "intent": "expense",
+            "confidence": "high",
+            "category": category,
+            "amount": amount,
+            "period_month": period_month,
+            "period_year": period_year,
+            "description": text.strip(),
+            "missing_slots": [],
+            "ambiguities": [],
+        }
+
+    def _fast_expense_category(self, normalized: str) -> str | None:
+        known_categories = {
+            "listrik": "Listrik",
+            "pln": "Listrik",
+            "gaji": "Gaji",
+            "upah": "Gaji",
+            "sewa": "Sewa",
+            "rent": "Sewa",
+            "internet": "Internet",
+            "wifi": "Internet",
+            "air": "Air",
+            "pdam": "Air",
+            "gas": "Gas",
+            "transport": "Transport",
+            "transportasi": "Transport",
+            "ojol": "Transport",
+            "maintenance": "Maintenance",
+            "perbaikan": "Maintenance",
+        }
+        for keyword, category in known_categories.items():
+            if re.search(rf"\b{re.escape(keyword)}\b", normalized):
+                return category
+
+        cleaned = normalized
+        cleaned = re.sub(r"\b(?:rp\.?\s*)?\d+(?:[.,]\d+)?\s*(?:jt|juta|rb|ribu|k)?\b", " ", cleaned)
+        cleaned = re.sub(r"\b(bulan ini|bulan lalu|bulan depan)\b", " ", cleaned)
+        cleaned = re.sub(r"\b(20\d{2}|januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember)\b", " ", cleaned)
+        cleaned = re.sub(r"\b(bayar|biaya|pengeluaran|expense|tagihan|untuk|buat|bulan|ini|lalu|depan)\b", " ", cleaned)
+        cleaned = re.sub(r"\s+", " ", cleaned).strip(" -:,.")
+        if not cleaned:
+            return None
+        return cleaned[:40].title()
 
     def _apply_deterministic_slot_hints(self, parsed: dict, original_text: str | None) -> None:
         if not original_text:
@@ -885,7 +1024,7 @@ class BotHandlers:
         except WolEeApiError:
             return "❌ Gagal mengambil laporan aging."
 
-    def handle_report_pnl(self, user_id: int, month: int, year: int) -> str:
+    def handle_report_pnl(self, user_id: int, month: int, year: int, question: str = "") -> str:
         client = self._client_for(user_id)
         if client is None:
             return "Belum terdaftar. Ketik /start <token> dulu."
@@ -1100,7 +1239,7 @@ class BotHandlers:
             "Tanya langsung pakai bahasa bebas."
         )
 
-    def handle_report_today(self, user_id: int) -> str:
+    def handle_report_today(self, user_id: int, question: str = "") -> str:
         client = self._client_for(user_id)
         if client is None:
             return "Belum terdaftar. Ketik /start <token> dulu."
@@ -1108,6 +1247,18 @@ class BotHandlers:
         try:
             data = client.get_report_today()["data"]
             self.storage.touch(user_id)
+
+            # AI interpretation for pro users
+            is_pro = self.storage.uses_premium_llm(user_id)
+            context = self.memory.get_context(user_id)
+            interpretation = interpret_report_sync(
+                data, question or "omset hari ini", context, is_pro
+            )
+
+            if interpretation:
+                return f"<b>Laporan Hari Ini</b>\n\n{interpretation}"
+
+            # Fallback template
             return (
                 f"📊 <b>Laporan Hari Ini</b> ({data['date']})\n\n"
                 f"💰 Omset: <b>{format_amount(data['revenue'])}</b>\n"
