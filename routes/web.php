@@ -15,6 +15,7 @@ use App\Http\Controllers\Platform\PlatformController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\ProductionRunController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -41,6 +42,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
     Route::put('/sales/{sale}', [SaleController::class, 'update'])->name('sales.update');
     Route::delete('/sales/{sale}', [SaleController::class, 'destroy'])->name('sales.destroy');
+
+        Route::get("/production-runs", [ProductionRunController::class, "index"])->name("production-runs.index");
+        Route::post("/production-runs", [ProductionRunController::class, "store"])->name("production-runs.store");
+        Route::delete("/production-runs/{productionRun}", [ProductionRunController::class, "destroy"])->name("production-runs.destroy");
 
     Route::get('/partners', [PartnerController::class, 'index'])->name('partners.index');
     Route::get('/partners/{partner}', [PartnerController::class, 'show'])->name('partners.show');

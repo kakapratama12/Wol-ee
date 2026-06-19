@@ -57,6 +57,7 @@ const navigation: (NavSingle | NavGroup)[] = [
         children: [
             { label: 'Stok Bahan', href: '/inventory' },
             { label: 'Produk & Resep', href: '/products', ownerOnly: true },
+            { label: 'Produksi', href: '/production-runs', ownerOnly: true },
         ],
     },
     {
