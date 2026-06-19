@@ -40,6 +40,12 @@ UMKM F&B punya pain points yang saling terhubung:
 - Transaksi masuk di POS, tapi inventory dihitung manual
 - Data gak nyambung, sering miss
 
+### 2.5 Production Ga Kecatat
+- Bakery/katering punya workflow: bahan baku -> produksi -> produk jadi
+- Ga ada track kapan produksi, berapa yield aktual, berapa waste
+- Owner ga tau margin real karena ga tau actual yield per batch
+- COGS ga akurat karena yield yang dipake adalah asumsi, bukan aktual
+
 ---
 
 ## 3. Core Insight
@@ -140,6 +146,7 @@ Wol-ee:
 | **Transaction List** | Daftar semua transaksi | P1 |
 | **Inventory Management** | Stok, value, history | P1 |
 | **Recipe Management** | Resep + gramasi produk | P1 |
+| **Production Run** | Catat produksi: bahan terpakai, yield aktual, waste | P1 |
 | **Partner Management** | Daftar customer & supplier | P1 |
 | **Partner Aging** | Siapa yang belum bayar, umur berapa lama | P1 |
 | **Invoice Tracking** | Daftar invoice outstanding | P1 |
@@ -238,7 +245,29 @@ Output:
    Konsultasikan dengan konsultan pajak.
 ```
 
-### 6.4 Flow: P&L Report (Dashboard)
+### 6.4 Flow: Production Run (Dashboard)
+
+Owner buka Dashboard -> Produksi -> Input Produksi Baru
+
+- Pilih Resep: Croissant (20 pcs/batch)
+- Jumlah Batch: 2
+
+Bahan Terpakai (auto-fill dari resep, bisa edit):
+- Tepung terigu: 1.000g -> 1.000g (ok)
+- Butter: 500g -> 480g (dikurangi sedikit)
+- Gula: 100g -> 100g (ok)
+- Ragi: 14g -> 14g (ok)
+
+Yield Aktual: 38 pcs
+Waste: 4 pcs (2 rusak, 2 expired)
+Total Cost: Rp 47.500 (snapshot dari harga bahan hari ini)
+
+Hasil:
+- Stok Croissant: 38 pcs (+38)
+- Bahan terpakai: Tepung 1kg, Butter 480g, dst
+- Waste: 4 pcs (Rp 5.000) -> tercatat sebagai expense terpisah
+
+### 6.5 Flow: P&L Report (Dashboard)
 
 ```
 Owner buka Dashboard → Laporan → P&L
@@ -365,49 +394,108 @@ Klik "Lihat Detail" Matcha Latte:
 
 ## 9. Inventory Model
 
-### 9.1 Unit Types
+### 9.1 Dua Lapis Inventory
 
-**Bahan Baku (Gramasi):**
-- Tepung: kg
-- Susu: liter
-- Telur: butir
-- Gula: gram
-- Kopi: kg
+Wol-ee membedakan dua tipe inventory:
 
-**Bahan Baku (Packaged):**
-- Coklat bubuk: sachet
-- Pasta matcha: sachet
-- Sirup: botol
+**Bahan Baku (`item_type: raw_material`)**
+- Yang dibeli dari supplier
+- Stok dikurangi saat dipakai produksi
+- Contoh: tepung, mentega, telur, gula
 
-**Produk Jadi (PCS):**
-- Matcha Latte: biji/pc
-- Croissant: pcs
-- Kopi Susu: cup
-- Roti Goreng: pcs
+**Produk Jadi (`item_type: finished_goods`)**
+- Yang dijual ke customer
+- Stok bertambah dari produksi, berkurang dari penjualan
+- Contoh: roti, kue, minuman
 
-### 9.2 Stock Flow
+> **Kenapa satu tabel?** Karena struktur stock, unit, price, supplier = sama. Field tambahan untuk finished goods (expiry, batch number) ditambah sebagai nullable nanti. Kalau field spesifik numpuk (3+), baru dipisah tabel.
 
-```
-Beli Tepung 5kg (Rp 100.000)
-    ↓
-Stok Tepung: 5kg
-    ↓
-Jual Matcha 10 biji
-    ↓
-Estimasi terpakai: 1kg (100g × 10)
-    ↓
-Stok Tepung: 4kg
-```
+### 9.2 Recipe Types
 
-### 9.3 Alert System
+| Tipe | Deskripsi | Yield | Contoh |
+|------|-----------|-------|--------|
+| **Unit** | Resep per 1 porsi | Tetap (1 porsi = 1 produk) | Es jeruk, kopi |
+| **Batch** | Resep per 1 batch produksi | Bervariasi per batch | Roti, kue, katering |
+
+**Unit:** Quantity di recipe = per 1 porsi. Sales langsung kurangi bahan.
+**Batch:** Quantity di recipe = per 1 batch. Harus lewat Production Run dulu.
+
+### 9.3 Production Run
+
+Production run adalah catatan setiap kali user melakukan produksi.
+
+**Data yang dicatat:**
+- Resep yang dipakai
+- Jumlah batch
+- Bahan yang benar-benar terpakai (editable, bukan auto dari resep)
+- Yield aktual (berapa pcs/loyang yang dihasilkan)
+- Total cost (snapshot dari harga bahan saat produksi, bukan live price)
+- Waste (berapa yang rusak/gagal)
+
+**Flow:**
+1. User pilih resep (misal: Croissant)
+2. Input jumlah batch (misal: 2 batch)
+3. Isi bahan yang terpakai (auto-fill dari resep, tapi bisa diedit)
+4. Input yield aktual (misal: 38 pcs dari 2 batch = 19/batch)
+5. Input waste (misal: 4 pcs rusak)
+6. Submit -> Stok bahan baku berkurang, stok produk jadi bertambah, waste dicatat
+
+**Kenapa yield tidak di-lock?**
+Karena di bakery, yield sering berubah-ubah:
+- Batch 1: 20 pcs (sesuai resep)
+- Batch 2: 18 pcs (adonan kurang kembang)
+- Batch 3: 22 pcs (oven sudah panas sempurna)
+
+Owner perlu tau yield aktual untuk hitung margin real, bukan asumsi.
+
+### 9.4 Waste Tracking
+
+Waste adalah produk yang gagal/rusak saat produksi. Dicatat terpisah dari COGS.
+
+**Alasan dipisah:**
+- Margin jelek = 2 kemungkinan: (1) harga bahan naik, atau (2) demand planning buruk
+- Kalau waste dicampur COGS, owner ga bisa bedain mana yang bisa diperbaiki
+- Waste bisa jadi deductible expense untuk pajak
+
+**Jenis waste:**
+- **Production waste:** Rusak saat produksi (adonan gagal, gosong)
+- **Demand waste:** Produksi berlebih, tidak terjual (barang expired)
+
+### 9.5 Stock Flow: Porsian vs Batch
+
+**Porsian (Es Jeruk):**
+1. Beli Jeruk 30 biji (Rp 60.000)
+2. Jual Es Jeruk 10 gelas
+3. Auto-deduct: 30 biji jeruk (3 biji x 10 gelas)
+4. Stok Jeruk: 0 biji
+
+**Batch (Croissant):**
+1. Beli Tepung 5kg, Butter 3kg
+2. Production Run: 2 batch
+3. Input: Tepung 1kg, Butter 0.5kg terpakai
+4. Yield: 38 pcs, Waste: 4 pcs
+5. Stok Croissant: 38 pcs, Stok Tepung: 4kg, Stok Butter: 2.5kg
+6. Waste Expense: 4 pcs x COGS/pcs
+
+### 9.6 Alert System
 
 | Status | Kondisi | Action |
 |--------|---------|--------|
-| ✅ Aman | Stok > minimum | - |
-| ⚠️ Menipis | Stok < minimum | Alert ke bot |
-| 🔴 Kritis | Stok < 50% minimum | Urgent alert |
+| Aman | Stok > minimum | - |
+| Menipis | Stok < minimum | Alert ke bot |
+| Kritis | Stok < 50% minimum | Urgent alert |
 
----
+### 9.7 Warning Logic
+
+**Validation keras (di Request/Model):**
+- Bahan yang wajib diisi -> harus terisi
+- Yield harus > 0
+
+**Warning behavior (di Service layer):**
+- Bahan resep baru 60% terisi -> warning "ada bahan yang belum dicatat?"
+- Yield jauh dari resep (> 20% deviasi) -> warning "yield ini beda jauh dari resep"
+
+> Warning ada di service layer, bukan model/migration. Hard validation di model, soft warning di service.
 
 ## 10. Tech Architecture (High Level)
 
@@ -486,6 +574,8 @@ Stok Tepung: 4kg
 - Expenses
 - Stock alerts (queue → Telegram, bila dikonfigurasi)
 - Auth Owner/Admin (RBAC dasar)
+- **Production Run Management** (batch production: yield, waste, cost snapshot)
+- **Waste Tracking** (terpisah dari COGS)
 
 ### What's IN (MVP — berikutnya, P1):
 
@@ -571,6 +661,6 @@ Stok Tepung: 4kg
 
 ---
 
-*Document version: 0.4*
-*Last updated: 17 June 2026*
+*Document version: 0.5*
+*Last updated: 19 June 2026*
 *Author: Sena (AI Assistant)*

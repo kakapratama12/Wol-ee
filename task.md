@@ -183,6 +183,82 @@
 
 ---
 
+## Sprint 6: Batch Model & Production Run
+
+> PRD v0.5 — Two-layer inventory, production run, waste tracking.
+
+### 6.1 Database Schema
+
+- [ ] Add `recipe_type` field to `products` table (enum: `unit`, `batch`)
+- [ ] Add `item_type` field to `ingredients` table (enum: `raw_material`, `finished_goods`)
+- [ ] Create `production_runs` table:
+  - `id`, `tenant_id`, `recipe_id` (FK products), `batch_count`
+  - `yield_actual` (integer), `waste_count` (integer)
+  - `total_cost` (decimal, snapshot)
+  - `notes`, `produced_at`, `timestamps`
+- [ ] Create `production_run_items` table (pivot):
+  - `id`, `production_run_id`, `ingredient_id`
+  - `quantity_used` (decimal), `unit_cost_snapshot` (decimal)
+- [ ] Update `stock_movements` types: add `production_input`, `production_output`, `waste`
+- [ ] Add `production_run_id` nullable FK to `stock_movements` (traceability)
+
+### 6.2 Models & Relations
+
+- [ ] Update `Product` model: add `recipe_type` to fillable/casts
+- [ ] Update `Ingredient` model: add `item_type` to fillable/casts
+- [ ] Create `ProductionRun` model + relations (belongsTo Product, hasMany ProductionRunItems, hasMany StockMovements)
+- [ ] Create `ProductionRunItem` model + relations
+- [ ] Update `StockMovement` model: add new type constants
+
+### 6.3 Production Run Service
+
+- [ ] `ProductionRunService::create($data)` — main orchestrator:
+  - Validate bahan cukup (hard validation)
+  - Snapshot harga bahan saat produksi
+  - Create production_run record
+  - Create production_run_items
+  - Deduct raw materials from stock (stock_movements: production_input)
+  - Add finished goods to stock (stock_movements: production_output)
+  - Record waste if any (stock_movements: waste)
+- [ ] `ProductionRunService::reverse($id)` — pembatalan produksi
+- [ ] Warning logic: yield deviation > 20% dari resep (soft warning, di service)
+
+### 6.4 API Endpoints
+
+- [ ] `POST /api/production-runs` — create production run
+- [ ] `GET /api/production-runs` — list production runs (filterable by date, recipe)
+- [ ] `GET /api/production-runs/{id}` — detail production run
+- [ ] `DELETE /api/production-runs/{id}` — reverse production run
+
+### 6.5 Dashboard UI
+
+- [ ] Production Run list page (table: date, recipe, batch, yield, cost, waste)
+- [ ] Production Run create page:
+  - Select recipe (auto-fill bahan dari resep)
+  - Input batch count
+  - Edit bahan terpakai (editable fields)
+  - Input yield aktual + waste
+  - Submit
+- [ ] Update P&L report: tambah baris "Waste Expense" terpisah dari COGS
+
+### 6.6 Seeders & Testing
+
+- [ ] Seeder: tambah sample batch recipe (Croissant) + raw materials
+- [ ] Seeder: tambah sample finished goods (Croissant as finished_goods ingredient)
+- [ ] Test: production run deducts raw materials correctly
+- [ ] Test: production run adds finished goods correctly
+- [ ] Test: waste recorded as separate expense
+- [ ] Test: cost snapshot is historical (doesn't change with current price)
+
+**Sprint 6 Done Criteria:**
+- [ ] User bisa catat production run via dashboard
+- [ ] Stok bahan baku otomatis berkurang
+- [ ] Stok produk jadi otomatis bertambah
+- [ ] Waste tercatat terpisah di P&L
+- [ ] Cost snapshot stabil (historical COGS ga berubah)
+
+---
+
 ## Notes
 
 - **Tenant ID is CRITICAL** — harus di Sprint 1, jangan ditunda
@@ -192,5 +268,5 @@
 
 ---
 
-*Last updated: 17 June 2026*
+*Last updated: 19 June 2026*
 *Owner: Odi (kakapratama12)*
