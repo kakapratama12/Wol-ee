@@ -189,9 +189,9 @@
 
 ### 6.1 Database Schema
 
-- [ ] Add `recipe_type` field to `products` table (enum: `unit`, `batch`)
-- [ ] Add `item_type` field to `ingredients` table (enum: `raw_material`, `finished_goods`)
-- [ ] Create `production_runs` table:
+- [x] Add `recipe_type` field to `products` table (enum: `unit`, `batch`)
+- [x] Add `item_type` field to `ingredients` table (enum: `raw_material`, `finished_goods`)
+- [x] Create `production_runs` table:
   - `id`, `tenant_id`, `recipe_id` (FK products), `batch_count`
   - `yield_actual` (integer), `waste_count` (integer)
   - `total_cost` (decimal, snapshot)
@@ -199,8 +199,8 @@
 - [ ] Create `production_run_items` table (pivot):
   - `id`, `production_run_id`, `ingredient_id`
   - `quantity_used` (decimal), `unit_cost_snapshot` (decimal)
-- [ ] Update `stock_movements` types: add `production_input`, `production_output`, `waste`
-- [ ] Add `production_run_id` nullable FK to `stock_movements` (traceability)
+- [x] Update `stock_movements` types: add `production_input`, `production_output`, `waste`
+- [x] Add `production_run_id` nullable FK to `stock_movements` (traceability)
 
 ### 6.2 Models & Relations
 
