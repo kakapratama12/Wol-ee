@@ -232,14 +232,14 @@
 
 ### 6.5 Dashboard UI
 
-- [ ] Production Run list page (table: date, recipe, batch, yield, cost, waste)
-- [ ] Production Run create page:
+- [x] Production Run list page (table: date, recipe, batch, yield, cost, waste)
+- [x] Production Run create page:
   - Select recipe (auto-fill bahan dari resep)
   - Input batch count
   - Edit bahan terpakai (editable fields)
   - Input yield aktual + waste
   - Submit
-- [ ] Update P&L report: tambah baris "Waste Expense" terpisah dari COGS
+- [x] Update P&L report: tambah baris "Waste Expense" terpisah dari COGS
 
 ### 6.6 Seeders & Testing
 
