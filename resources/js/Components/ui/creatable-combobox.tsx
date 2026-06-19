@@ -123,7 +123,7 @@ export default function CreatableCombobox({
             {open && (
                 <div className='absolute z-50 mt-1 w-full overflow-hidden rounded-md border border-border bg-popover shadow-md'>
                     {/* Search input */}
-                    <div className='flex items-center border-b border-border px-3'>
+                    <div className='flex items-center gap-2 border-b border-border px-3'>
                         <Search className='h-4 w-4 shrink-0 text-muted-foreground' />
                         <input
                             ref={inputRef}
@@ -131,7 +131,7 @@ export default function CreatableCombobox({
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder={searchPlaceholder}
-                            className='h-9 w-full bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground'
+                            className='h-9 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground'
                         />
                     </div>
 
