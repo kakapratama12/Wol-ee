@@ -11,10 +11,16 @@ class StockMovement extends Model
 {
     use BelongsToTenant, HasFactory;
 
+    // Existing types
     public const TYPE_PURCHASE = 'purchase';
     public const TYPE_USAGE = 'usage';
     public const TYPE_ADJUSTMENT = 'adjustment';
     public const TYPE_REVERSAL = 'reversal';
+
+    // New types for batch model
+    public const TYPE_PRODUCTION_INPUT = 'production_input';  // raw materials consumed
+    public const TYPE_PRODUCTION_OUTPUT = 'production_output'; // finished goods produced
+    public const TYPE_WASTE = 'waste';                          // waste/expired
 
     protected $fillable = [
         'ingredient_id',
@@ -23,6 +29,7 @@ class StockMovement extends Model
         'stock_after',
         'source_type',
         'source_id',
+        'production_run_id',
         'note',
         'occurred_at',
         'tenant_id',
@@ -37,5 +44,10 @@ class StockMovement extends Model
     public function ingredient(): BelongsTo
     {
         return $this->belongsTo(Ingredient::class);
+    }
+
+    public function productionRun(): BelongsTo
+    {
+        return $this->belongsTo(ProductionRun::class);
     }
 }
