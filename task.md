@@ -196,7 +196,7 @@
   - `yield_actual` (integer), `waste_count` (integer)
   - `total_cost` (decimal, snapshot)
   - `notes`, `produced_at`, `timestamps`
-- [ ] Create `production_run_items` table (pivot):
+- [x] Create `production_run_items` table (pivot):
   - `id`, `production_run_id`, `ingredient_id`
   - `quantity_used` (decimal), `unit_cost_snapshot` (decimal)
 - [x] Update `stock_movements` types: add `production_input`, `production_output`, `waste`
