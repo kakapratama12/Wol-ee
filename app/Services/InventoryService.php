@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Ingredient;
 use App\Models\PriceHistory;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\StockMovement;
 use App\Models\Transaction;
@@ -179,7 +180,6 @@ class InventoryService
         $movements = StockMovement::query()
             ->where('source_type', Sale::class)
             ->where('source_id', $sale->id)
-            ->where('type', StockMovement::TYPE_USAGE)
             ->get();
 
         foreach ($movements as $movement) {
@@ -187,7 +187,6 @@ class InventoryService
 
             if (! $ingredient) {
                 $movement->delete();
-
                 continue;
             }
 
@@ -229,5 +228,55 @@ class InventoryService
         $ingredient->weighted_avg_price = $weightedAvg;
         $ingredient->unit_price = $lastUnitPrice;
         $ingredient->save();
+    }
+
+    /**
+     * Deduct finished goods stock for batch product sales.
+     * Allows negative stock (no hard stop).
+     */
+    public function deductFinishedGoods(
+        Product $product,
+        int $quantity,
+        Sale $sale,
+        ?CarbonInterface $occurredAt = null,
+    ): void {
+        $occurredAt = $occurredAt ?? Carbon::now();
+
+        $finishedGoodsName = "{$product->name} ( Produk Jadi )";
+        $finishedGoods = Ingredient::where('name', $finishedGoodsName)
+            ->where('tenant_id', $product->tenant_id)
+            ->first();
+
+        if (! $finishedGoods) {
+            // Create the finished goods ingredient if it doesn't exist
+            $finishedGoods = Ingredient::create([
+                'name' => $finishedGoodsName,
+                'item_type' => Ingredient::ITEM_FINISHED_GOODS,
+                'unit_type' => 'gramasi',
+                'base_unit' => $product->unit,
+                'unit_price' => 0,
+                'current_stock' => 0,
+                'minimum_stock' => 0,
+                'tenant_id' => $product->tenant_id,
+            ]);
+        }
+
+        $finishedGoods->refresh();
+        $oldStock = (float) $finishedGoods->current_stock;
+        $newStock = $oldStock - $quantity;
+
+        $finishedGoods->current_stock = $newStock;
+        $finishedGoods->save();
+
+        StockMovement::create([
+            'ingredient_id' => $finishedGoods->id,
+            'type' => StockMovement::TYPE_USAGE,
+            'quantity' => -$quantity,
+            'stock_after' => $newStock,
+            'source_type' => Sale::class,
+            'source_id' => $sale->id,
+            'note' => "Penjualan #{$sale->id}: {$quantity} {$product->unit}",
+            'occurred_at' => $occurredAt,
+        ]);
     }
 }

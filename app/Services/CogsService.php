@@ -86,4 +86,28 @@ class CogsService
     {
         return round($cogs * (1 + ($wastePercent / 100)), 2);
     }
+
+    /**
+     * Average COGS for batch products from production runs.
+     * Returns total cost / total yield across all production runs.
+     */
+    public function averageCogsForBatchProduct(Product $product): float
+    {
+        $product->loadMissing('productionRuns');
+
+        $totalCost = 0;
+        $totalYield = 0;
+
+        foreach ($product->productionRuns as $run) {
+            $totalCost += (float) $run->total_cost;
+            $totalYield += $run->yield_actual;
+        }
+
+        if ($totalYield === 0) {
+            // Fallback to recipe-based COGS if no production runs
+            return $this->cogsForProduct($product);
+        }
+
+        return round($totalCost / $totalYield, 2);
+    }
 }

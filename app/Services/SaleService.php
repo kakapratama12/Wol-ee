@@ -99,7 +99,15 @@ class SaleService
 
         $unitPrice = $unitPrice ?? (float) $product->selling_price;
 
-        $cogsPerUnit = $this->cogs->cogsForProduct($product);
+        // Calculate COGS based on product type
+        if ($product->isBatch()) {
+            // For batch products: use average COGS from production runs
+            $cogsPerUnit = $this->cogs->averageCogsForBatchProduct($product);
+        } else {
+            // For unit products: use recipe-based COGS
+            $cogsPerUnit = $this->cogs->cogsForProduct($product);
+        }
+
         $revenue = round($unitPrice * $quantity, 2);
         $cogsTotal = round($cogsPerUnit * $quantity, 2);
         $profit = round($revenue - $cogsTotal, 2);
@@ -119,19 +127,26 @@ class SaleService
             'occurred_at' => $occurredAt,
         ]);
 
-        foreach ($product->recipeItems as $item) {
-            if (! $item->ingredient) {
-                continue;
+        // Deduct stock based on product type
+        if ($product->isBatch()) {
+            // For batch products: deduct from finished goods stock
+            $this->inventory->deductFinishedGoods($product, $quantity, $sale, $occurredAt);
+        } else {
+            // For unit products: deduct from raw materials based on recipe
+            foreach ($product->recipeItems as $item) {
+                if (! $item->ingredient) {
+                    continue;
+                }
+                $usage = (float) $item->quantity * $quantity;
+                $this->inventory->recordUsage(
+                    $item->ingredient,
+                    $usage,
+                    Sale::class,
+                    $sale->id,
+                    null,
+                    $occurredAt,
+                );
             }
-            $usage = (float) $item->quantity * $quantity;
-            $this->inventory->recordUsage(
-                $item->ingredient,
-                $usage,
-                Sale::class,
-                $sale->id,
-                null,
-                $occurredAt,
-            );
         }
 
         return $sale;
