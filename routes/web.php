@@ -15,6 +15,7 @@ use App\Http\Controllers\Platform\PlatformController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\FinishedGoodsController;
 use App\Http\Controllers\ProductionRunController;
 use Illuminate\Support\Facades\Route;
 
