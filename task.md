@@ -204,11 +204,11 @@
 
 ### 6.2 Models & Relations
 
-- [ ] Update `Product` model: add `recipe_type` to fillable/casts
-- [ ] Update `Ingredient` model: add `item_type` to fillable/casts
-- [ ] Create `ProductionRun` model + relations (belongsTo Product, hasMany ProductionRunItems, hasMany StockMovements)
-- [ ] Create `ProductionRunItem` model + relations
-- [ ] Update `StockMovement` model: add new type constants
+- [x] Update `Product` model: add `recipe_type` to fillable/casts
+- [x] Update `Ingredient` model: add `item_type` to fillable/casts
+- [x] Create `ProductionRun` model + relations (belongsTo Product, hasMany ProductionRunItems, hasMany StockMovements)
+- [x] Create `ProductionRunItem` model + relations
+- [x] Update `StockMovement` model: add new type constants
 
 ### 6.3 Production Run Service
 
