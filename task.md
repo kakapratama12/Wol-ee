@@ -221,7 +221,7 @@
   - Add finished goods to stock (stock_movements: production_output)
   - Record waste if any (stock_movements: waste)
 - [ ] `ProductionRunService::reverse($id)` — pembatalan produksi
-- [ ] Warning logic: yield deviation > 20% dari resep (soft warning, di service)
+- [x] Warning logic: yield deviation > 20% dari resep (soft warning, di service)
 
 ### 6.4 API Endpoints
 
