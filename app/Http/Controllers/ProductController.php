@@ -32,6 +32,7 @@ class ProductController extends Controller
                     'unit' => $product->unit,
                     'selling_price' => (float) $product->selling_price,
                     'recipe_type' => $product->recipe_type ?? 'unit',
+                    'estimated_yield_per_batch' => $product->estimated_yield_per_batch,
                     'is_active' => $product->is_active,
                     'cogs' => $cogsValue,
                     'margin' => $cogs->margin($product),

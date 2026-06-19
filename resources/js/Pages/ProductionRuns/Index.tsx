@@ -23,6 +23,7 @@ interface BatchProduct {
     id: number;
     name: string;
     unit: string;
+    estimated_yield_per_batch: number | null;
     recipe: RecipeItem[];
 }
 
@@ -257,6 +258,11 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                                             value={form.data.yield_actual}
                                             onChange={(e) => form.setData('yield_actual', e.target.value)}
                                         />
+                                        {selectedProduct?.estimated_yield_per_batch && (
+                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                Estimasi: {selectedProduct.estimated_yield_per_batch} pcs/batch
+                                            </p>
+                                        )}
                                     </div>
                                     <div>
                                         <Label>Waste (pcs)</Label>

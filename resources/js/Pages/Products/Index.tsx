@@ -26,6 +26,7 @@ interface Product {
     unit: string;
     selling_price: number;
     recipe_type: 'unit' | 'batch';
+    estimated_yield_per_batch: number | null;
     is_active: boolean;
     cogs: number;
     margin: number;
@@ -54,19 +55,19 @@ export default function ProductsIndex({ products, ingredients }: Props) {
     const [editing, setEditing] = useState<Product | null>(null);
     const [recipeProduct, setRecipeProduct] = useState<Product | null>(null);
 
-    const productForm = useForm({ name: '', unit: 'pcs', selling_price: '', recipe_type: 'unit' as 'unit' | 'batch' });
+    const productForm = useForm({ name: '', unit: 'pcs', selling_price: '', recipe_type: 'unit' as 'unit' | 'batch', estimated_yield_per_batch: '' });
     const recipeForm = useForm<{ items: EditableRow[] }>({ items: [] });
 
     const openCreate = () => {
         setEditing(null);
-        productForm.setData({ name: '', unit: 'pcs', selling_price: '', recipe_type: 'unit' });
+        productForm.setData({ name: '', unit: 'pcs', selling_price: '', recipe_type: 'unit', estimated_yield_per_batch: '' });
         productForm.clearErrors();
         setFormOpen(true);
     };
 
     const openEdit = (p: Product) => {
         setEditing(p);
-        productForm.setData({ name: p.name, unit: p.unit, selling_price: String(p.selling_price), recipe_type: p.recipe_type });
+        productForm.setData({ name: p.name, unit: p.unit, selling_price: String(p.selling_price), recipe_type: p.recipe_type, estimated_yield_per_batch: String(p.estimated_yield_per_batch ?? '') });
         productForm.clearErrors();
         setFormOpen(true);
     };
@@ -196,6 +197,16 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                         </Select>
                         {productForm.errors.recipe_type && <p className="mt-1 text-xs text-destructive">{productForm.errors.recipe_type}</p>}
                     </div>
+                    {productForm.data.recipe_type === 'batch' && (
+                        <div>
+                            <Label htmlFor="estimated_yield_per_batch">Estimasi Yield per Batch (pcs)</Label>
+                            <Input id="estimated_yield_per_batch" type="number" min="1" placeholder="Contoh: 40" value={productForm.data.estimated_yield_per_batch} onChange={(e) => productForm.setData('estimated_yield_per_batch', e.target.value)} />
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Berapa pcs yang dihasilkan dari 1 batch resep. Bisa diedit saat produksi.
+                            </p>
+                            {productForm.errors.estimated_yield_per_batch && <p className="mt-1 text-xs text-destructive">{productForm.errors.estimated_yield_per_batch}</p>}
+                        </div>
+                    )}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <Label htmlFor="unit">Satuan jual</Label>

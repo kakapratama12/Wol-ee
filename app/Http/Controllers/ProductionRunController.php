@@ -49,6 +49,7 @@ class ProductionRunController extends Controller
                 'id' => $p->id,
                 'name' => $p->name,
                 'unit' => $p->unit,
+                'estimated_yield_per_batch' => $p->estimated_yield_per_batch,
                 'recipe' => $p->recipeItems->map(fn ($ri) => [
                     'ingredient_id' => $ri->ingredient_id,
                     'ingredient' => $ri->ingredient?->name,

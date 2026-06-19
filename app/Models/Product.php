@@ -11,10 +11,11 @@ class Product extends Model
 {
     use BelongsToTenant, HasFactory;
 
-    protected $fillable = ['name', 'unit', 'selling_price', 'recipe_type', 'is_active', 'tenant_id'];
+    protected $fillable = ['name', 'unit', 'selling_price', 'recipe_type', 'estimated_yield_per_batch', 'is_active', 'tenant_id'];
 
     protected $casts = [
         'selling_price' => 'decimal:2',
+        'estimated_yield_per_batch' => 'integer',
         'is_active' => 'boolean',
     ];
 
