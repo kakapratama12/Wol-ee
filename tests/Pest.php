@@ -1,6 +1,9 @@
 <?php
 
+use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 /*
@@ -44,7 +47,47 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Autentikasi user dengan tenant untuk test yang membuat data scoped.
+ */
+function authenticateTestTenant(string $role = 'owner'): User
 {
-    // ..
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'role' => $role,
+        'email_verified_at' => now(),
+    ]);
+    test()->actingAs($user);
+
+    return $user;
+}
+
+/**
+ * Autentikasi API bot dengan token per-tenant.
+ *
+ * @return array{tenant: Tenant, user: User, token: string}
+ */
+function authenticateBotTenant(string $role = 'owner'): array
+{
+    $tenant = Tenant::factory()->create();
+
+    $owner = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'role' => User::ROLE_OWNER,
+        'email_verified_at' => now(),
+    ]);
+
+    $user = $role === User::ROLE_OWNER
+        ? $owner
+        : User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => $role,
+            'email_verified_at' => now(),
+        ]);
+    $secret = 'test-bot-secret-32chars-long!!!!!!';
+    $tenant->update(['bot_token' => Hash::make($secret)]);
+    $token = $tenant->id.':'.$secret;
+
+    return compact('tenant', 'user', 'owner', 'token');
 }

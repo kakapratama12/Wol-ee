@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePurchaseRequest;
+use App\Http\Requests\UpdatePurchaseRequest;
 use App\Models\Ingredient;
 use App\Models\Transaction;
 use App\Services\InventoryService;
+use App\Services\PurchaseService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
 
 class TransactionController extends Controller
 {
@@ -20,6 +23,7 @@ class TransactionController extends Controller
             ->paginate(20)
             ->through(fn (Transaction $t) => [
                 'id' => $t->id,
+                'ingredient_id' => $t->ingredient_id,
                 'ingredient' => $t->ingredient?->name,
                 'base_unit' => $t->ingredient?->base_unit,
                 'quantity' => (float) $t->quantity,
@@ -55,5 +59,40 @@ class TransactionController extends Controller
         );
 
         return back()->with('success', 'Pembelian tercatat & stok diperbarui.');
+    }
+
+    public function update(UpdatePurchaseRequest $request, Transaction $transaction, PurchaseService $purchases): RedirectResponse
+    {
+        $data = $request->validated();
+        $ingredient = Ingredient::findOrFail($data['ingredient_id']);
+        $quantity = (float) $data['quantity'];
+        $unitPrice = round((float) $data['total'] / max($quantity, 1e-9), 4);
+
+        try {
+            $purchases->update(
+                transaction: $transaction,
+                ingredient: $ingredient,
+                quantity: $quantity,
+                unitPrice: $unitPrice,
+                note: $data['note'] ?? null,
+                occurredAt: $request->date('occurred_at'),
+                userId: $request->user()->id,
+            );
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['quantity' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Pembelian diperbarui & stok disesuaikan.');
+    }
+
+    public function destroy(Transaction $transaction, PurchaseService $purchases): RedirectResponse
+    {
+        try {
+            $purchases->void($transaction);
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['quantity' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Pembelian dihapus & stok dikurangi.');
     }
 }

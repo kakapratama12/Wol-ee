@@ -9,6 +9,7 @@ use App\Models\Ingredient;
 use App\Models\Product;
 use App\Models\RecipeItem;
 use App\Services\CogsService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -55,6 +56,17 @@ class ProductController extends Controller
         Product::create($request->validated());
 
         return back()->with('success', 'Produk ditambahkan.');
+    }
+
+    public function storeJson(StoreProductRequest $request): JsonResponse
+    {
+        $product = Product::create($request->validated());
+
+        return response()->json([
+            'id' => $product->id,
+            'name' => $product->name,
+            'selling_price' => (float) $product->selling_price,
+        ]);
     }
 
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse

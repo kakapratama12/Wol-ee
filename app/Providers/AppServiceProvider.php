@@ -34,7 +34,9 @@ class AppServiceProvider extends ServiceProvider
         Vite::prefetch(concurrency: 3);
 
         RateLimiter::for('bot', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            $tenantId = $request->attributes->get('tenant')?->id;
+
+            return Limit::perMinute(60)->by($tenantId ?: $request->ip());
         });
     }
 }

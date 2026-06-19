@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Expense;
 use App\Models\Ingredient;
 use App\Models\Sale;
+use App\Models\Transaction;
 use App\Services\PnlService;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
@@ -44,6 +46,42 @@ class DashboardController extends Controller
                 'occurred_at' => $s->occurred_at?->toIso8601String(),
             ]);
 
+        $recentPurchases = Transaction::query()
+            ->with('ingredient:id,name,base_unit')
+            ->latest('occurred_at')
+            ->take(8)
+            ->get()
+            ->map(fn (Transaction $t) => [
+                'id' => $t->id,
+                'ingredient' => $t->ingredient?->name,
+                'base_unit' => $t->ingredient?->base_unit,
+                'quantity' => (float) $t->quantity,
+                'total' => (float) $t->total,
+                'source' => $t->source,
+                'occurred_at' => $t->occurred_at?->toIso8601String(),
+            ]);
+
+        $monthlyChart = collect(range(5, 0))
+            ->map(function (int $monthsAgo) use ($now) {
+                $period = $now->copy()->subMonths($monthsAgo);
+                $month = $period->month;
+                $year = $period->year;
+
+                return [
+                    'label' => $period->translatedFormat('M Y'),
+                    'month' => $month,
+                    'year' => $year,
+                    'revenue' => round((float) Sale::query()
+                        ->whereYear('occurred_at', $year)
+                        ->whereMonth('occurred_at', $month)
+                        ->sum('revenue'), 2),
+                    'expense' => round((float) Expense::query()
+                        ->where('period_year', $year)
+                        ->where('period_month', $month)
+                        ->sum('amount'), 2),
+                ];
+            });
+
         return Inertia::render('Dashboard', [
             'month' => $now->translatedFormat('F Y'),
             'metrics' => [
@@ -55,6 +93,8 @@ class DashboardController extends Controller
             ],
             'lowStock' => $lowStock,
             'recentSales' => $recentSales,
+            'recentPurchases' => $recentPurchases,
+            'monthlyChart' => $monthlyChart,
         ]);
     }
 }

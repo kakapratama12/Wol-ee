@@ -1,4 +1,4 @@
-export type UserRole = 'owner' | 'admin';
+export type UserRole = 'owner' | 'admin' | 'super_admin';
 
 export interface User {
     id: number;
@@ -20,6 +20,7 @@ export type PageProps<
         user: User;
     };
     flash: FlashMessages;
+    hasInvoices: boolean;
 };
 
 export interface Paginated<T> {

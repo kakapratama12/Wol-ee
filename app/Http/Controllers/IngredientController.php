@@ -9,6 +9,7 @@ use App\Models\Ingredient;
 use App\Models\PriceHistory;
 use App\Models\Supplier;
 use App\Services\InventoryService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
@@ -28,6 +29,7 @@ class IngredientController extends Controller
                 'unit_type' => $i->unit_type,
                 'base_unit' => $i->base_unit,
                 'unit_price' => (float) $i->unit_price,
+                'weighted_avg_price' => (float) $i->weighted_avg_price,
                 'current_stock' => (float) $i->current_stock,
                 'minimum_stock' => (float) $i->minimum_stock,
                 'supplier' => $i->supplier?->name,
@@ -45,6 +47,7 @@ class IngredientController extends Controller
     {
         $data = $request->validated();
         $data['current_stock'] = $data['current_stock'] ?? 0;
+        $data['weighted_avg_price'] = $data['unit_price'];
 
         $ingredient = Ingredient::create($data);
 
@@ -57,10 +60,35 @@ class IngredientController extends Controller
         return back()->with('success', 'Bahan ditambahkan.');
     }
 
+    public function storeJson(StoreIngredientRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+        $data['current_stock'] = $data['current_stock'] ?? 0;
+        $data['weighted_avg_price'] = $data['unit_price'];
+
+        $ingredient = Ingredient::create($data);
+
+        PriceHistory::create([
+            'ingredient_id' => $ingredient->id,
+            'unit_price' => $ingredient->unit_price,
+            'recorded_at' => Carbon::today(),
+        ]);
+
+        return response()->json([
+            'id' => $ingredient->id,
+            'name' => $ingredient->name,
+            'base_unit' => $ingredient->base_unit,
+        ]);
+    }
+
     public function update(UpdateIngredientRequest $request, Ingredient $ingredient): RedirectResponse
     {
         $data = $request->validated();
         $priceChanged = round((float) $ingredient->unit_price, 4) !== round((float) $data['unit_price'], 4);
+
+        if ($priceChanged) {
+            $data['weighted_avg_price'] = $data['unit_price'];
+        }
 
         $ingredient->update($data);
 

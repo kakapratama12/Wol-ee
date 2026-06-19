@@ -2,37 +2,31 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
+use App\Models\Tenant;
+use App\Services\BotTokenService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class GenerateBotToken extends Command
 {
-    protected $signature = 'wolee:bot-token {email=bot@wol-ee.local} {--name=Telegram Bot}';
+    protected $signature = 'wol-ee:generate-bot-token {--tenant=}';
 
-    protected $description = 'Buat/ambil user bot dan terbitkan Sanctum token untuk integrasi bot Telegram';
+    protected $aliases = ['wolee:bot-token'];
 
-    public function handle(): int
+    protected $description = 'Generate token bot per tenant (format: {tenant_id}:{secret})';
+
+    public function handle(BotTokenService $botTokens): int
     {
-        $email = $this->argument('email');
+        $tenant = $this->option('tenant')
+            ? Tenant::query()->findOrFail($this->option('tenant'))
+            : Tenant::query()->firstOrFail();
 
-        $user = User::firstOrCreate(
-            ['email' => $email],
-            [
-                'name' => $this->option('name'),
-                'password' => Hash::make(Str::random(32)),
-                'role' => User::ROLE_ADMIN,
-            ],
-        );
+        $plainToken = $botTokens->generate($tenant);
 
-        $token = $user->createToken('telegram-bot')->plainTextToken;
-
-        $this->info('Token bot berhasil dibuat untuk '.$user->email);
+        $this->info('Token bot berhasil dibuat untuk tenant: '.$tenant->name);
         $this->newLine();
         $this->line('Simpan token ini di konfigurasi bot (header: Authorization: Bearer <token>):');
         $this->newLine();
-        $this->line($token);
+        $this->line($plainToken);
 
         return self::SUCCESS;
     }

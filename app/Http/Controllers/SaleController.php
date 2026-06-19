@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSaleRequest;
+use App\Http\Requests\UpdateSaleRequest;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Services\SaleService;
@@ -20,6 +21,7 @@ class SaleController extends Controller
             ->paginate(20)
             ->through(fn (Sale $s) => [
                 'id' => $s->id,
+                'product_id' => $s->product_id,
                 'product' => $s->product?->name,
                 'quantity' => $s->quantity,
                 'unit_price' => (float) $s->unit_price,
@@ -28,6 +30,7 @@ class SaleController extends Controller
                 'profit' => (float) $s->profit,
                 'margin' => (float) $s->margin,
                 'source' => $s->source,
+                'note' => $s->note,
                 'occurred_at' => $s->occurred_at?->toIso8601String(),
             ]);
 
@@ -55,5 +58,30 @@ class SaleController extends Controller
         );
 
         return back()->with('success', 'Penjualan tercatat & stok dikurangi.');
+    }
+
+    public function update(UpdateSaleRequest $request, Sale $sale, SaleService $sales): RedirectResponse
+    {
+        $data = $request->validated();
+        $product = Product::findOrFail($data['product_id']);
+
+        $sales->update(
+            sale: $sale,
+            product: $product,
+            quantity: (int) $data['quantity'],
+            unitPrice: isset($data['unit_price']) ? (float) $data['unit_price'] : null,
+            note: $data['note'] ?? null,
+            occurredAt: $request->date('occurred_at'),
+            userId: $request->user()->id,
+        );
+
+        return back()->with('success', 'Penjualan diperbarui & stok disesuaikan.');
+    }
+
+    public function destroy(Sale $sale, SaleService $sales): RedirectResponse
+    {
+        $sales->void($sale);
+
+        return back()->with('success', 'Penjualan dihapus & stok dikembalikan.');
     }
 }

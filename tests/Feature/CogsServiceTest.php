@@ -7,6 +7,7 @@ use App\Services\CogsService;
 
 function makeMatchaLatte(): Product
 {
+    authenticateTestTenant();
     // Harga disimpan per base_unit.
     $susu = Ingredient::create([
         'name' => 'Susu',

@@ -5,6 +5,7 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Select } from '@/Components/ui/select';
 import { formatRupiah, formatPercent } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 interface ExpenseRow {
     category: string;
@@ -92,8 +93,14 @@ export default function Pnl({ report, period, periodLabel }: Props) {
                     )}
                     <Line label="Total Expenses" value={`(${formatRupiah(report.total_expenses)})`} bold muted />
 
-                    <div className="my-3 border-t border-border" />
-                    <Line label="Laba Bersih" value={formatRupiah(report.net_profit)} bold hint={`Margin ${formatPercent(report.net_margin)}`} big />
+                    <Line
+                        label="Laba (Rugi) bersih"
+                        value={formatRupiah(report.net_profit)}
+                        bold
+                        hint={`Margin ${formatPercent(report.net_margin)}`}
+                        big
+                        negative={report.net_profit < 0}
+                    />
                 </CardContent>
             </Card>
         </AppLayout>
@@ -111,6 +118,7 @@ function Line({
     muted,
     big,
     hint,
+    negative,
 }: {
     label: string;
     value: string;
@@ -118,11 +126,18 @@ function Line({
     muted?: boolean;
     big?: boolean;
     hint?: string;
+    negative?: boolean;
 }) {
     return (
         <div className="flex items-center justify-between py-0.5">
             <span className={muted ? 'text-muted-foreground' : ''}>{label}</span>
-            <span className={`${bold ? 'font-bold' : ''} ${big ? 'text-lg text-success' : ''}`}>
+            <span
+                className={cn(
+                    bold && 'font-bold',
+                    big && 'text-lg',
+                    negative ? 'text-destructive' : big ? 'text-success' : '',
+                )}
+            >
                 {value}
                 {hint && <span className="ml-2 text-xs font-normal text-muted-foreground">{hint}</span>}
             </span>

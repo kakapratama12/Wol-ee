@@ -5,7 +5,7 @@ import StatCard from '@/Components/StatCard';
 import StockStatusBadge from '@/Components/StockStatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
-import { formatRupiah, formatPercent, formatNumber } from '@/lib/format';
+import { formatRupiah, formatPercent, formatNumber, formatDate } from '@/lib/format';
 
 interface Metrics {
     revenue: number;
@@ -31,6 +31,25 @@ interface RecentSale {
     revenue: number;
     profit: number;
     margin: number;
+    occurred_at: string | null;
+}
+
+interface RecentPurchase {
+    id: number;
+    ingredient: string | null;
+    base_unit: string | null;
+    quantity: number;
+    total: number;
+    source: string;
+    occurred_at: string | null;
+}
+
+interface MonthlyChartPoint {
+    label: string;
+    month: number;
+    year: number;
+    revenue: number;
+    expense: number;
 }
 
 interface Props {
@@ -38,9 +57,13 @@ interface Props {
     metrics: Metrics;
     lowStock: LowStock[];
     recentSales: RecentSale[];
+    recentPurchases: RecentPurchase[];
+    monthlyChart: MonthlyChartPoint[];
 }
 
-export default function Dashboard({ month, metrics, lowStock, recentSales }: Props) {
+export default function Dashboard({ month, metrics, lowStock, recentSales, recentPurchases, monthlyChart }: Props) {
+    const maxChartValue = Math.max(1, ...monthlyChart.flatMap((point) => [point.revenue, point.expense]));
+
     return (
         <AppLayout title="Dashboard">
             <Head title="Dashboard" />
@@ -58,12 +81,69 @@ export default function Dashboard({ month, metrics, lowStock, recentSales }: Pro
                     icon={<TrendingUp className="h-5 w-5" />}
                 />
                 <StatCard
-                    label="Laba Bersih"
+                    label="Laba (Rugi) bersih"
                     value={formatRupiah(metrics.net_profit)}
-                    accent="default"
+                    accent={metrics.net_profit < 0 ? 'danger' : 'success'}
                     icon={<Percent className="h-5 w-5" />}
                 />
             </div>
+
+            <Card className="mt-6">
+                <CardHeader>
+                    <CardTitle>Revenue vs Expense Bulanan</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {monthlyChart.length === 0 ? (
+                        <p className="py-6 text-center text-sm text-muted-foreground">Belum ada data chart.</p>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="flex gap-4 text-xs text-muted-foreground">
+                                <span className="flex items-center gap-2">
+                                    <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+                                    Revenue
+                                </span>
+                                <span className="flex items-center gap-2">
+                                    <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                                    Expense
+                                </span>
+                            </div>
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                {monthlyChart.map((point) => (
+                                    <div key={`${point.year}-${point.month}`} className="rounded-md border p-3">
+                                        <p className="text-sm font-medium">{point.label}</p>
+                                        <div className="mt-3 space-y-2">
+                                            <div>
+                                                <div className="mb-1 flex justify-between text-xs text-muted-foreground">
+                                                    <span>Revenue</span>
+                                                    <span>{formatRupiah(point.revenue)}</span>
+                                                </div>
+                                                <div className="h-2 rounded-full bg-muted">
+                                                    <div
+                                                        className="h-2 rounded-full bg-primary"
+                                                        style={{ width: `${Math.max(2, (point.revenue / maxChartValue) * 100)}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="mb-1 flex justify-between text-xs text-muted-foreground">
+                                                    <span>Expense</span>
+                                                    <span>{formatRupiah(point.expense)}</span>
+                                                </div>
+                                                <div className="h-2 rounded-full bg-muted">
+                                                    <div
+                                                        className="h-2 rounded-full bg-amber-500"
+                                                        style={{ width: `${Math.max(2, (point.expense / maxChartValue) * 100)}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
                 <Card>
@@ -138,6 +218,45 @@ export default function Dashboard({ month, metrics, lowStock, recentSales }: Pro
                         )}
                         <Link href="/sales" className="mt-3 inline-block text-sm font-medium text-primary hover:underline">
                             Lihat semua penjualan
+                        </Link>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Pembelian Terbaru</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {recentPurchases.length === 0 ? (
+                            <p className="py-6 text-center text-sm text-muted-foreground">Belum ada pembelian.</p>
+                        ) : (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Tanggal</TableHead>
+                                        <TableHead>Bahan</TableHead>
+                                        <TableHead>Qty</TableHead>
+                                        <TableHead>Total</TableHead>
+                                        <TableHead>Source</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {recentPurchases.map((p) => (
+                                        <TableRow key={p.id}>
+                                            <TableCell className="text-muted-foreground">{formatDate(p.occurred_at)}</TableCell>
+                                            <TableCell className="font-medium">{p.ingredient ?? '-'}</TableCell>
+                                            <TableCell>
+                                                {formatNumber(p.quantity, 2)} {p.base_unit ?? ''}
+                                            </TableCell>
+                                            <TableCell>{formatRupiah(p.total)}</TableCell>
+                                            <TableCell className="text-xs uppercase text-muted-foreground">{p.source}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
+                        <Link href="/transactions" className="mt-3 inline-block text-sm font-medium text-primary hover:underline">
+                            Lihat semua pembelian
                         </Link>
                     </CardContent>
                 </Card>

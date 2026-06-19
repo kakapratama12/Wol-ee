@@ -9,6 +9,7 @@ use App\Services\SaleService;
 
 function setupProduct(): Product
 {
+    authenticateTestTenant();
     $tepung = Ingredient::create([
         'name' => 'Tepung',
         'unit_type' => 'gramasi',
@@ -70,4 +71,26 @@ it('mencatat stock movement bertipe usage', function () {
         'source_type' => \App\Models\Sale::class,
         'source_id' => $sale->id,
     ]);
+});
+
+it('menghapus penjualan dan mengembalikan stok', function () {
+    $product = setupProduct();
+
+    $sale = saleService()->record($product, quantity: 5);
+    saleService()->void($sale);
+
+    $tepung = Ingredient::where('name', 'Tepung')->first();
+    expect((float) $tepung->current_stock)->toBe(5000.0);
+    $this->assertDatabaseMissing('sales', ['id' => $sale->id]);
+});
+
+it('memperbarui penjualan dan menyesuaikan stok', function () {
+    $product = setupProduct();
+
+    $sale = saleService()->record($product, quantity: 5);
+    saleService()->update($sale, $product, quantity: 8);
+
+    $tepung = Ingredient::where('name', 'Tepung')->first();
+    // 5000 - (100g * 8) = 4200g
+    expect((float) $tepung->current_stock)->toBe(4200.0);
 });

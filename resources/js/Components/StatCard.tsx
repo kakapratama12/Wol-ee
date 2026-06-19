@@ -28,7 +28,15 @@ export default function StatCard({ label, value, hint, icon, accent = 'default' 
                 )}
                 <div className="min-w-0">
                     <p className="truncate text-sm text-muted-foreground">{label}</p>
-                    <p className="text-xl font-bold tracking-tight">{value}</p>
+                    <p
+                        className={cn(
+                            'text-xl font-bold tracking-tight',
+                            accent === 'danger' && 'text-destructive',
+                            accent === 'success' && 'text-success',
+                        )}
+                    >
+                        {value}
+                    </p>
                     {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
                 </div>
             </CardContent>

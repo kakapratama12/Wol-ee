@@ -2,10 +2,21 @@
 
 namespace App\Services;
 
+use App\Models\Ingredient;
 use App\Models\Product;
 
 class CogsService
 {
+    /**
+     * Harga per base_unit untuk perhitungan COGS (weighted average).
+     */
+    public function costPrice(Ingredient $ingredient): float
+    {
+        $weighted = (float) $ingredient->weighted_avg_price;
+
+        return $weighted > 0 ? $weighted : (float) $ingredient->unit_price;
+    }
+
     /**
      * COGS per 1 porsi produk = Σ (gramasi resep × harga per base_unit bahan).
      */
@@ -18,7 +29,7 @@ class CogsService
             if (! $item->ingredient) {
                 continue;
             }
-            $total += (float) $item->quantity * (float) $item->ingredient->unit_price;
+            $total += (float) $item->quantity * $this->costPrice($item->ingredient);
         }
 
         return round($total, 2);
@@ -38,13 +49,14 @@ class CogsService
             if (! $item->ingredient) {
                 continue;
             }
-            $cost = round((float) $item->quantity * (float) $item->ingredient->unit_price, 2);
+            $costPrice = $this->costPrice($item->ingredient);
+            $cost = round((float) $item->quantity * $costPrice, 2);
             $rows[] = [
                 'ingredient_id' => $item->ingredient_id,
                 'ingredient' => $item->ingredient->name,
                 'quantity' => (float) $item->quantity,
                 'base_unit' => $item->ingredient->base_unit,
-                'unit_price' => (float) $item->ingredient->unit_price,
+                'unit_price' => $costPrice,
                 'cost' => $cost,
             ];
         }
