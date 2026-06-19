@@ -1,185 +1,203 @@
 # Wol-ee Sprint Plan
 
-> **Source of truth** — branch `develop` di GitHub. Update status setelah selesai development.
+> **Source of truth** — Update status setelah selesai development.
 > Status: `[ ]` = belum, `[x]` = done, `[-]` = skip/ditunda
+
+---
+
+## ⚠️ Git Workflow (IMPORTANT)
+
+```
+main     → production (hanya dari develop via PR/merge)
+develop  → current development (cursor push ke sini)
+feature/ → optional, untuk feature besar
+```
+
+**Rules:**
+1. **Cursor push ke `develop`**, BUKAN ke `main`
+2. **Main hanya diupdate** via PR dari develop (atau merge manual setelah review)
+3. **Commit message format:** `[Sprint X] Description` (contoh: `[Sprint 1] Add tenant_id to ingredients`)
+4. **Setiap selesai task**, update status di `task.md` (centang `[x]`)
 
 ---
 
 ## Sprint 1: Foundation
 
 ### 1.1 Multi-Tenant Isolation
-- [x] Buat `tenants` table (id, name, slug, plan, status, created_at)
-- [x] Tambah `tenant_id` ke: ingredients, products, transactions, sales, expenses, suppliers, recipe_items, stock_movements, price_histories
-- [x] Tambah `tenant_id` ke: users (user belongs to tenant)
-- [x] Update semua model: tambah relation ke Tenant (`BelongsToTenant` trait + global scope)
-- [x] Update semua controller: filter by auth()->user()->tenant_id (via global scope)
-- [x] Database seeder: create sample tenant
+- [ ] Buat `tenants` table (id, name, slug, plan, status, created_at)
+- [ ] Tambah `tenant_id` ke: ingredients, products, transactions, sales, expenses, suppliers, recipe_items, stock_movements, price_histories
+- [ ] Tambah `tenant_id` ke: users (user belongs to tenant)
+- [ ] Update semua model: tambah relation ke Tenant
+- [ ] Update semua controller: filter by auth()->user()->tenant_id
+- [ ] Database seeder: create sample tenant
 
 ### 1.2 Auth & Roles
-- [x] Login/register endpoint (Sanctum) — *API Sanctum live; web register via Breeze*
-- [x] Role: owner (full access), admin (limited)
-- [x] Middleware: check role (`EnsureUserIsOwner`)
-- [x] Dashboard auth (session-based via Breeze)
+- [ ] Login/register endpoint (Sanctum)
+- [ ] Role: owner (full access), admin (limited)
+- [ ] Middleware: check role
+- [ ] Dashboard auth (session-based)
 
 ### 1.3 Database Cleanup
-- [x] Pastikan semua migration jalan (termasuk tenant)
-- [x] Pastikan semua relation benar
-- [x] Pastikan factory & seeder works
+- [ ] Pastikan semua migration jalan
+- [ ] Pastikan semua relation benar
+- [ ] Pastikan factory & seeder works
 
 **Sprint 1 Done Criteria:**
-- [x] User bisa login
-- [x] Data terisolasi per tenant
-- [x] Role owner/admin works
+- ✅ User bisa login
+- ✅ Data terisolasi per tenant
+- ✅ Role owner/admin works
 
 ---
 
 ## Sprint 2: Partner & Invoice
 
 ### 2.1 Partner Management
-- [x] Partners table (id, tenant_id, name, type[customer/supplier], contact, phone, email, address)
-- [x] Partner model + migration
-- [x] PartnerController: CRUD (API + web)
-- [x] Dashboard: Partner list page
-- [x] Dashboard: Partner detail page (aging + outstanding invoices)
+- [ ] Partners table (id, tenant_id, name, type[customer/supplier], contact, phone, email, address)
+- [ ] Partner model + migration
+- [ ] PartnerController: CRUD
+- [ ] Dashboard: Partner list page
+- [ ] Dashboard: Partner detail page (history transaksi)
 
 ### 2.2 Partner Aging
-- [x] Aging calculation logic (0-30, 31-60, 61-90, 90+ days)
-- [x] Dashboard: Aging report page (di partner detail)
-- [x] Bot endpoint: GET /api/reports/aging (+ GET /api/partners/{id}/aging)
+- [ ] Aging calculation logic (0-30, 31-60, 61-90, 90+ days)
+- [ ] Dashboard: Aging report page
+- [ ] Bot endpoint: GET /api/partners/aging
 
 ### 2.3 Invoice Tracking
-- [x] Invoices table (id, tenant_id, partner_id, amount, due_date, status[paid/outstanding/partial], paid_at)
-- [x] Invoice model + migration
-- [x] InvoiceController: CRUD (API + web)
-- [x] Dashboard: Invoice list page
-- [x] Dashboard: Mark invoice as paid (dashboard UI)
+- [ ] Invoices table (id, tenant_id, partner_id, amount, due_date, status[paid/outstanding], paid_at)
+- [ ] Invoice model + migration
+- [ ] InvoiceController: CRUD
+- [ ] Dashboard: Invoice list page
+- [ ] Dashboard: Mark invoice as paid
 
 **Sprint 2 Done Criteria:**
-- [x] Bisa CRUD partner (API + dashboard)
-- [x] Aging report tampil di dashboard
-- [x] Bisa create & track invoice (API + dashboard)
+- ✅ Bisa CRUD partner
+- ✅ Aging report tampil di dashboard
+- ✅ Bisa create & track invoice
 
 ---
 
-## Sprint 3: Dashboard Enhancement — [x] DONE (MVP v0.1.0)
-
-> Sudah live di production. Item di bawah = baseline selesai. Lihat **Gaps** untuk enhancement berikutnya.
+## Sprint 3: Dashboard Enhancement
 
 ### 3.1 Dashboard Overview
-- [x] Summary cards: Omset, COGS, Profit, Margin
-- [x] Chart: Revenue vs Expense (bulanan)
-- [x] Recent sales list
-- [x] Recent purchase transactions list
+- [ ] Summary cards: Omset, COGS, Profit, Margin
+- [ ] Chart: Revenue vs Expense (bulanan)
+- [ ] Recent transactions list
 
 ### 3.2 P&L Report
-- [x] P&L calculation (Revenue - COGS - Expenses)
-- [x] Dashboard: P&L page
-- [x] Export to Excel
+- [ ] P&L calculation (Revenue - COGS - Expenses)
+- [ ] Dashboard: P&L page
+- [ ] Export to Excel
 
 ### 3.3 Tax Simulator
-- [x] Tax simulator page (input: omset, COGS, expense, waste%, business type)
-- [x] Output: PP 23 vs Normal comparison
-- [x] Business type selector (perorangan/CV/PT)
+- [ ] Tax simulator page (input: omset, COGS, expense, waste%, business type)
+- [ ] Output: PP 23 vs Normal comparison
+- [ ] Business type selector (perorangan/CV/PT)
 
 ### 3.4 Margin Protection
-- [x] Price tracker (historical prices)
-- [x] Margin alerts (margin turun > 2%)
-- [x] What-if simulator (kalau harga naik X%, margin jadi berapa)
+- [ ] Price tracker (historical prices)
+- [ ] Margin alerts (margin turun > 2%)
+- [ ] What-if simulator (kalau harga naik X%, margin jadi berapa)
 
-**Sprint 3 Done Criteria:** ✅
+**Sprint 3 Done Criteria:**
+- ✅ Dashboard overview lengkap
+- ✅ P&L bisa di-export
+- ✅ Tax simulator works
+- ✅ Margin alerts muncul
 
 ---
 
 ## Sprint 4: Bot Integration
 
-### 4.1 API untuk Bot
-- [x] POST /api/transactions (pembelian)
-- [x] POST /api/sales (penjualan)
-- [x] GET /api/stock (cek stok)
-- [x] GET /api/reports/today
-- [x] GET /api/reports/aging (cek aging)
-- [x] Auth: **1 API token per tenant** (`{tenant_id}:{secret}`, hashed di `tenants.bot_token`)
-  - Middleware `BotTokenAuth` + `POST /api/bot/validate-token`
-  - Generate via Settings > Bot Integration atau `php artisan wol-ee:generate-bot-token`
-- [x] Error format standar (`success`, `message`, `error_code`, `errors`/`suggestions`)
-- [x] Idempotency: **tidak perlu v1** (single user input, no race condition)
+> **Integration Spec:** Bot (Python) → HTTP POST → Laravel API → DB Wol-ee
 
-### 4.2 Bot Logic
-- [x] NL parsing rules — modul `bot/handlers.py`
-- [x] AI action planner intent + slot validation untuk sale/purchase/expense
-- [x] Incomplete data handling (format hint + offline queue saat timeout)
-- [x] Response format (JSON via `bot/wol_ee_client.py`)
+### 4.1 Laravel API (sudah ada, perlu review)
+- [ ] POST /api/transactions (pembelian) ✓
+- [ ] POST /api/sales (penjualan) ✓
+- [ ] GET /api/stock (cek stok) ✓
+- [ ] GET /api/partners/aging (cek aging) —待Sprint 2
+- [ ] Auth: API token per tenant
 
-### 4.3 Bot → Dashboard Sync
-- [x] Data dari bot muncul di dashboard (setelah tenant scoping)
-- [x] Source tagging (bot vs dashboard via `source` column)
-- [x] Edit data bot via dashboard (penjualan & pembelian bot bisa dikoreksi/hapus via dashboard)
-- [x] Bot bisa mencatat biaya operasional via `POST /api/expenses`
+### 4.2 Bot Changes (Python)
+- [ ] Tambah config: `WOL_EE_API_URL` & `WOL_EE_API_TOKEN`
+- [ ] Tambah function: `post_to_wol_ee(endpoint, data)`
+- [ ] Update transaction handler: setelah parse NL → call Laravel API
+- [ ] Update sales handler: setelah parse NL → call Laravel API
+- [ ] Update stock check: call Laravel API (atau query langsung)
+- [ ] Fallback: kalau API down → simpan ke local DB, retry nanti
+- [ ] Logging: log semua API calls (success/failure)
 
-### 4.4 Bot Query Tools (demo owner) — [x] DONE
-- [x] `GET /api/reports/pnl`, `/margin-alerts`, `/stock-alerts`
-- [x] Query router bot (NL laporan tanpa LLM): profit bulan ini, omset hari ini, stok/margin alert
-- [x] `explain_capabilities` — meta "bisa nanya apa"
-- [x] Fix `/summary` → PnL bulan ini (bukan hari ini)
-- Spec: [docs/bot-query-tools-spec.md](docs/bot-query-tools-spec.md)
+### 4.3 Integration Flow
+```
+User: "Beli tepung 2kg harga 18rb"
+    ↓
+Bot: Parse NL → {item: "tepung", qty: 2, unit: "kg", price: 18000}
+    ↓
+Bot: POST /api/transactions {ingredient: "tepung", quantity: 2, unit_price: 18000, source: "bot"}
+    ↓
+Laravel: Validate → Save ke DB → Update stock
+    ↓
+Laravel: Return {message: "Tercatat", new_stock: 5.5, stock_status: "aman"}
+    ↓
+Bot: Reply ke user: "✅ Pembelian tercatat. Stok tepung: 5.5 kg (aman)"
+```
 
-### 4.5 Bot AI Quota — [x] DONE
-- [x] Tabel `bot_ai_usages` + `BotUsageService`
-- [x] `GET /api/bot/usage`, `POST /api/bot/ai-usage` (consume)
-- [x] Free: 25 AI/hari (Groq); Pro/Business: 150/hari (DeepSeek)
-- [x] Tier LLM dari `tenants.plan`, bukan legacy keuangan-bot `User.plan`
+### 4.4 Response Format (Bot → User)
+```json
+// Success
+{
+  "success": true,
+  "message": "Pembelian tercatat.",
+  "data": {
+    "ingredient": "tepung",
+    "quantity": 2,
+    "unit": "kg",
+    "total": 36000,
+    "new_stock": 5.5,
+    "stock_status": "aman"
+  }
+}
+
+// Incomplete data
+{
+  "success": false,
+  "message": "Harga belum diisi. Berapa per kg?",
+  "missing": ["unit_price"]
+}
+```
+
+### 4.5 Error Handling
+- API timeout → retry 1x → fallback ke local DB
+- API error 422 → return validation error ke user
+- API error 500 → log error, return generic message
 
 **Sprint 4 Done Criteria:**
-- [x] Bot auth per-tenant token
-- [x] Bot bisa input transaksi & penjualan (API ready)
-- [x] Bot bisa cek stok
-- [x] Data sync bot ↔ dashboard (modul `bot/` deployed ke keuangan-bot, NL via ai_parser)
+- ✅ Bot bisa input transaksi → masuk ke DB Wol-ee
+- ✅ Bot bisa cek stok → data dari DB Wol-ee
+- ✅ Data sync bot ↔ dashboard real-time
+- ✅ Fallback works kalau API down
 
 ---
 
-## Sprint 5: Super Admin (Phase 2) — [-] SKIP sampai spec dikonfirmasi
-
-> Spec draft di bawah — **jangan implement** sampai tim approve.
-
-### 5A. Super Admin Ops Panel — [x] DONE
-- [x] Role `super_admin` + middleware akses platform
-- [x] Bootstrap super admin via `php artisan wol-ee:create-super-admin`
-- [x] `/platform` overview operasional
-- [x] `/platform/tenants` tenant overview
-- [x] `/platform/feedback` feedback inbox + update status/note
-- [x] `/platform/ai-usage` usage summary + provider/request analytics dari `bot_ai_usages` dan `bot_ai_requests`
-- [x] `/platform/bot-skills` read-only static skill registry
+## Sprint 5: Super Admin (Phase 2)
 
 ### 5.1 Tenant Management
-- [x] Role: `super_admin` (terpisah dari owner/admin)
-- [ ] Login: panel terpisah di `/platform/login`
-- [x] List semua tenant
-- [ ] Create / suspend / soft-delete tenant (`status`: active | suspended | deleted; data retained)
+- [ ] Super admin panel
+- [ ] List semua tenant
+- [ ] Create/suspend/delete tenant
 
 ### 5.2 Billing
-- [ ] Billing MVP **manual** — `tenants.plan` = `free` | `pro` | `business`
-- [ ] Tanpa payment gateway di v1
+- [ ] Subscription management
+- [ ] Payment tracking
 
 ### 5.3 Monitoring
-- [ ] Laravel activity log
-- [ ] Bot API call count (`api_calls` table)
-- [x] AI usage analytics basic: quota consumption per tenant dan aggregate
-- [x] Filter monitoring basic per tenant/plan/periode (`bot_ai_usages`)
-- [x] Feedback inbox: review `bot_feedbacks`, status `new/reviewed/planned/shipped/rejected`
-- [x] Token/LLM usage detail, provider metrics, dan request per minute (`bot_ai_requests`)
-- [ ] Feedback tag/kategori kebutuhan
-- [ ] Active users & error logs stats
-
-### 5.4 Support
-- [ ] Impersonate: super_admin bisa login sebagai owner tenant mana pun
-
-### 5.5 Bootstrap
-- [ ] Super admin pertama via `php artisan db:seed --class=SuperAdminSeeder` atau dedicated artisan command
+- [ ] Active users stats
+- [ ] Bot usage stats
+- [ ] Error logs
 
 **Sprint 5 Done Criteria:**
-- [ ] Super admin bisa manage tenant
-- [ ] Billing visible (manual)
-- [ ] Impersonate works
+- ✅ Super admin bisa manage tenant
+- ✅ Billing visible
 
 ---
 
@@ -187,8 +205,8 @@
 
 - **Tenant ID is CRITICAL** — harus di Sprint 1, jangan ditunda
 - **Partner & Invoice** — penting untuk B2B use case
-- **Bot integration** — API dasar ada; tenant token + wire Python bot = sisa kerja
-- **Super admin** — Phase 2, spec di atas menunggu konfirmasi tim
+- **Bot integration** — bisa delay, dashboard lebih prioritas
+- **Super admin** — Phase 2, gak urgent
 
 ---
 
