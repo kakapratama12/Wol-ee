@@ -8,7 +8,7 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
-import { Select } from '@/Components/ui/select';
+import CreatableCombobox from '@/Components/ui/creatable-combobox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { formatRupiah, formatNumber, formatDate } from '@/lib/format';
 import type { Paginated } from '@/types';
@@ -44,7 +44,13 @@ function toDatetimeLocal(iso: string | null): string {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export default function TransactionsIndex({ transactions, ingredients }: Props) {
+export default function TransactionsIndex({ transactions, ingredients: initialIngredients }: Props) {
+    const [ingredients, setIngredients] = useState(initialIngredients);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [newIngredient, setNewIngredient] = useState({ name: '', unit_type: 'gramasi', base_unit: '', unit_price: '', minimum_stock: '0' });
+    const [creating, setCreating] = useState(false);
+    const [createError, setCreateError] = useState('');
+
     const form = useForm({ ingredient_id: '', quantity: '', total: '', note: '' });
     const editForm = useForm({
         ingredient_id: '',
@@ -72,7 +78,6 @@ export default function TransactionsIndex({ transactions, ingredients }: Props) 
             note: transaction.note ?? '',
             occurred_at: toDatetimeLocal(transaction.occurred_at),
         });
-        editForm.clearErrors();
     };
 
     const submitEdit = (e: React.FormEvent) => {
@@ -90,6 +95,38 @@ export default function TransactionsIndex({ transactions, ingredients }: Props) 
         }
     };
 
+    const handleCreateIngredient = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setCreating(true);
+        setCreateError('');
+        try {
+            const res = await fetch('/inventory/json', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-XSRF-TOKEN': decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? ''),
+                },
+                body: JSON.stringify(newIngredient),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setCreateError(data.message || 'Gagal menyimpan');
+                return;
+            }
+            // Add to list & auto-select
+            const updated = [...ingredients, data].sort((a, b) => a.name.localeCompare(b.name));
+            setIngredients(updated);
+            form.setData('ingredient_id', String(data.id));
+            setShowCreateModal(false);
+            setNewIngredient({ name: '', unit_type: 'gramasi', base_unit: '', unit_price: '', minimum_stock: '0' });
+        } catch {
+            setCreateError('Terjadi kesalahan');
+        } finally {
+            setCreating(false);
+        }
+    };
+
     return (
         <AppLayout title="Pembelian Bahan">
             <Head title="Pembelian" />
@@ -102,16 +139,16 @@ export default function TransactionsIndex({ transactions, ingredients }: Props) 
                     <CardContent>
                         <form onSubmit={submit} className="space-y-4">
                             <div>
-                                <Label htmlFor="ingredient_id">Bahan</Label>
-                                <Select id="ingredient_id" value={form.data.ingredient_id} onChange={(e) => form.setData('ingredient_id', e.target.value)}>
-                                    <option value="">- Pilih bahan -</option>
-                                    {ingredients.map((i) => (
-                                        <option key={i.id} value={i.id}>
-                                            {i.name}
-                                        </option>
-                                    ))}
-                                </Select>
-                                {form.errors.ingredient_id && <p className="mt-1 text-xs text-destructive">{form.errors.ingredient_id}</p>}
+                                <Label>Bahan</Label>
+                                <CreatableCombobox
+                                    options={ingredients.map((i) => ({ id: i.id, label: i.name, sublabel: i.base_unit }))}
+                                    value={form.data.ingredient_id}
+                                    onChange={(v) => form.setData('ingredient_id', v)}
+                                    onCreateNew={() => setShowCreateModal(true)}
+                                    placeholder="- Pilih bahan -"
+                                    createLabel="Tambah Bahan Baru"
+                                    error={form.errors.ingredient_id}
+                                />
                             </div>
                             <div>
                                 <Label htmlFor="quantity">Jumlah {selected ? `(${selected.base_unit})` : ''}</Label>
@@ -148,80 +185,117 @@ export default function TransactionsIndex({ transactions, ingredients }: Props) 
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {transactions.data.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                                            Belum ada pembelian.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
                                 {transactions.data.map((t) => (
                                     <TableRow key={t.id}>
-                                        <TableCell className="text-muted-foreground">{formatDate(t.occurred_at)}</TableCell>
-                                        <TableCell className="font-medium">{t.ingredient ?? '-'}</TableCell>
-                                        <TableCell>
-                                            {formatNumber(t.quantity, 2)} {t.base_unit}
-                                        </TableCell>
+                                        <TableCell className="text-sm">{formatDate(t.occurred_at)}</TableCell>
+                                        <TableCell className="font-medium">{t.ingredient}</TableCell>
+                                        <TableCell>{formatNumber(t.quantity)} {t.base_unit}</TableCell>
                                         <TableCell>{formatRupiah(t.total)}</TableCell>
-                                        <TableCell className="uppercase text-xs text-muted-foreground">{t.source}</TableCell>
+                                        <TableCell>
+                                            <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                                                {t.source}
+                                            </span>
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-1">
-                                                <Button variant="ghost" size="icon" onClick={() => openEdit(t)}>
+                                                <Button variant="ghost" size="sm" onClick={() => openEdit(t)}>
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" onClick={() => remove(t)}>
+                                                <Button variant="ghost" size="sm" onClick={() => remove(t)}>
                                                     <Trash2 className="h-4 w-4 text-destructive" />
                                                 </Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}
+                                {transactions.data.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                                            Belum ada pembelian.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
-                        <Pagination links={transactions.links} />
+                        <div className="border-t px-4 py-3">
+                            <Pagination links={transactions.links} />
+                        </div>
                     </CardContent>
                 </Card>
             </div>
 
-            <Modal open={editing !== null} onClose={() => setEditing(null)} title="Edit Pembelian">
-                <form onSubmit={submitEdit} className="space-y-4">
+            {/* Edit Modal */}
+            {editing && (
+                <Modal open={!!editing} onClose={() => setEditing(null)} title="Edit Pembelian">
+                    <form onSubmit={submitEdit} className="space-y-4">
+                        <div>
+                            <Label>Bahan</Label>
+                            <CreatableCombobox
+                                options={ingredients.map((i) => ({ id: i.id, label: i.name, sublabel: i.base_unit }))}
+                                value={editForm.data.ingredient_id}
+                                onChange={(v) => editForm.setData('ingredient_id', v)}
+                                onCreateNew={() => { setEditing(null); setShowCreateModal(true); }}
+                                placeholder="- Pilih bahan -"
+                                createLabel="Tambah Bahan Baru"
+                            />
+                        </div>
+                        <div>
+                            <Label>Jumlah {editSelected ? `(${editSelected.base_unit})` : ''}</Label>
+                            <Input type="number" step="0.0001" value={editForm.data.quantity} onChange={(e) => editForm.setData('quantity', e.target.value)} />
+                        </div>
+                        <div>
+                            <Label>Total harga (Rp)</Label>
+                            <Input type="number" step="1" value={editForm.data.total} onChange={(e) => editForm.setData('total', e.target.value)} />
+                        </div>
+                        <div>
+                            <Label>Catatan</Label>
+                            <Input value={editForm.data.note} onChange={(e) => editForm.setData('note', e.target.value)} />
+                        </div>
+                        <div>
+                            <Label>Tanggal</Label>
+                            <Input type="datetime-local" value={editForm.data.occurred_at} onChange={(e) => editForm.setData('occurred_at', e.target.value)} />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => setEditing(null)}>Batal</Button>
+                            <Button type="submit" disabled={editForm.processing}>Simpan</Button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
+
+            {/* Create Ingredient Modal */}
+            <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} title="Bahan Baru">
+                <form onSubmit={handleCreateIngredient} className="space-y-4">
                     <div>
-                        <Label>Bahan</Label>
-                        <Select value={editForm.data.ingredient_id} onChange={(e) => editForm.setData('ingredient_id', e.target.value)}>
-                            <option value="">- Pilih bahan -</option>
-                            {ingredients.map((i) => (
-                                <option key={i.id} value={i.id}>
-                                    {i.name}
-                                </option>
-                            ))}
-                        </Select>
-                        {editForm.errors.ingredient_id && <p className="mt-1 text-xs text-destructive">{editForm.errors.ingredient_id}</p>}
+                        <Label htmlFor="ing-name">Nama Bahan</Label>
+                        <Input id="ing-name" value={newIngredient.name} onChange={(e) => setNewIngredient({ ...newIngredient, name: e.target.value })} required />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <Label htmlFor="ing-unit">Satuan</Label>
+                            <Input id="ing-unit" value={newIngredient.base_unit} onChange={(e) => setNewIngredient({ ...newIngredient, base_unit: e.target.value })} placeholder="kg, liter, pcs" required />
+                        </div>
+                        <div>
+                            <Label htmlFor="ing-price">Harga / satuan (Rp)</Label>
+                            <Input id="ing-price" type="number" step="1" value={newIngredient.unit_price} onChange={(e) => setNewIngredient({ ...newIngredient, unit_price: e.target.value })} required />
+                        </div>
                     </div>
                     <div>
-                        <Label>Jumlah {editSelected ? `(${editSelected.base_unit})` : ''}</Label>
-                        <Input type="number" step="0.0001" value={editForm.data.quantity} onChange={(e) => editForm.setData('quantity', e.target.value)} />
-                        {editForm.errors.quantity && <p className="mt-1 text-xs text-destructive">{editForm.errors.quantity}</p>}
+                        <Label htmlFor="ing-type">Tipe</Label>
+                        <select
+                            id="ing-type"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            value={newIngredient.unit_type}
+                            onChange={(e) => setNewIngredient({ ...newIngredient, unit_type: e.target.value })}
+                        >
+                            <option value="gramasi">Gramasi (timbang)</option>
+                            <option value="packaged">Packaged (pcs/kg)</option>
+                        </select>
                     </div>
-                    <div>
-                        <Label>Total harga (Rp)</Label>
-                        <Input type="number" step="1" value={editForm.data.total} onChange={(e) => editForm.setData('total', e.target.value)} />
-                        {editForm.errors.total && <p className="mt-1 text-xs text-destructive">{editForm.errors.total}</p>}
-                    </div>
-                    <div>
-                        <Label>Tanggal</Label>
-                        <Input type="datetime-local" value={editForm.data.occurred_at} onChange={(e) => editForm.setData('occurred_at', e.target.value)} />
-                    </div>
-                    <div>
-                        <Label>Catatan</Label>
-                        <Input value={editForm.data.note} onChange={(e) => editForm.setData('note', e.target.value)} />
-                    </div>
+                    {createError && <p className="text-sm text-destructive">{createError}</p>}
                     <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-                            Batal
-                        </Button>
-                        <Button type="submit" disabled={editForm.processing}>
-                            Simpan
-                        </Button>
+                        <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>Batal</Button>
+                        <Button type="submit" disabled={creating}>{creating ? 'Menyimpan...' : 'Simpan'}</Button>
                     </div>
                 </form>
             </Modal>

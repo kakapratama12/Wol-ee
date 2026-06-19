@@ -8,7 +8,7 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
-import { Select } from '@/Components/ui/select';
+import CreatableCombobox from '@/Components/ui/creatable-combobox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { formatRupiah, formatPercent, formatDate } from '@/lib/format';
 import type { Paginated } from '@/types';
@@ -46,7 +46,13 @@ function toDatetimeLocal(iso: string | null): string {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export default function SalesIndex({ sales, products }: Props) {
+export default function SalesIndex({ sales, products: initialProducts }: Props) {
+    const [products, setProducts] = useState(initialProducts);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [newProduct, setNewProduct] = useState({ name: '', unit: 'pcs', selling_price: '' });
+    const [creating, setCreating] = useState(false);
+    const [createError, setCreateError] = useState('');
+
     const form = useForm({ product_id: '', quantity: '', unit_price: '', note: '' });
     const editForm = useForm({
         product_id: '',
@@ -74,7 +80,6 @@ export default function SalesIndex({ sales, products }: Props) {
             note: sale.note ?? '',
             occurred_at: toDatetimeLocal(sale.occurred_at),
         });
-        editForm.clearErrors();
     };
 
     const submitEdit = (e: React.FormEvent) => {
@@ -92,6 +97,37 @@ export default function SalesIndex({ sales, products }: Props) {
         }
     };
 
+    const handleCreateProduct = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setCreating(true);
+        setCreateError('');
+        try {
+            const res = await fetch('/products/json', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-XSRF-TOKEN': decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? ''),
+                },
+                body: JSON.stringify(newProduct),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setCreateError(data.message || 'Gagal menyimpan');
+                return;
+            }
+            const updated = [...products, data].sort((a, b) => a.name.localeCompare(b.name));
+            setProducts(updated);
+            form.setData('product_id', String(data.id));
+            setShowCreateModal(false);
+            setNewProduct({ name: '', unit: 'pcs', selling_price: '' });
+        } catch {
+            setCreateError('Terjadi kesalahan');
+        } finally {
+            setCreating(false);
+        }
+    };
+
     return (
         <AppLayout title="Penjualan">
             <Head title="Penjualan" />
@@ -104,16 +140,16 @@ export default function SalesIndex({ sales, products }: Props) {
                     <CardContent>
                         <form onSubmit={submit} className="space-y-4">
                             <div>
-                                <Label htmlFor="product_id">Produk</Label>
-                                <Select id="product_id" value={form.data.product_id} onChange={(e) => form.setData('product_id', e.target.value)}>
-                                    <option value="">- Pilih produk -</option>
-                                    {products.map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                            {p.name} ({formatRupiah(p.selling_price)})
-                                        </option>
-                                    ))}
-                                </Select>
-                                {form.errors.product_id && <p className="mt-1 text-xs text-destructive">{form.errors.product_id}</p>}
+                                <Label>Produk</Label>
+                                <CreatableCombobox
+                                    options={products.map((p) => ({ id: p.id, label: p.name, sublabel: formatRupiah(p.selling_price) }))}
+                                    value={form.data.product_id}
+                                    onChange={(v) => form.setData('product_id', v)}
+                                    onCreateNew={() => setShowCreateModal(true)}
+                                    placeholder="- Pilih produk -"
+                                    createLabel="Tambah Produk Baru"
+                                    error={form.errors.product_id}
+                                />
                             </div>
                             <div>
                                 <Label htmlFor="quantity">Jumlah</Label>
@@ -154,85 +190,103 @@ export default function SalesIndex({ sales, products }: Props) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {sales.data.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-                                            Belum ada penjualan.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
                                 {sales.data.map((s) => (
                                     <TableRow key={s.id}>
-                                        <TableCell className="text-muted-foreground">{formatDate(s.occurred_at)}</TableCell>
-                                        <TableCell className="font-medium">{s.product ?? '-'}</TableCell>
+                                        <TableCell className="text-sm">{formatDate(s.occurred_at)}</TableCell>
+                                        <TableCell className="font-medium">{s.product}</TableCell>
                                         <TableCell>{s.quantity}</TableCell>
                                         <TableCell>{formatRupiah(s.revenue)}</TableCell>
-                                        <TableCell className="text-warning">{formatRupiah(s.cogs)}</TableCell>
-                                        <TableCell className="text-success">{formatRupiah(s.profit)}</TableCell>
+                                        <TableCell>{formatRupiah(s.cogs)}</TableCell>
+                                        <TableCell>{formatRupiah(s.profit)}</TableCell>
                                         <TableCell>{formatPercent(s.margin)}</TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-1">
-                                                <Button variant="ghost" size="icon" onClick={() => openEdit(s)}>
+                                                <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" onClick={() => remove(s)}>
+                                                <Button variant="ghost" size="sm" onClick={() => remove(s)}>
                                                     <Trash2 className="h-4 w-4 text-destructive" />
                                                 </Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}
+                                {sales.data.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                                            Belum ada penjualan.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
-                        <Pagination links={sales.links} />
+                        <div className="border-t px-4 py-3">
+                            <Pagination links={sales.links} />
+                        </div>
                     </CardContent>
                 </Card>
             </div>
 
-            <Modal open={editing !== null} onClose={() => setEditing(null)} title="Edit Penjualan">
-                <form onSubmit={submitEdit} className="space-y-4">
+            {/* Edit Modal */}
+            {editing && (
+                <Modal open={!!editing} onClose={() => setEditing(null)} title="Edit Penjualan">
+                    <form onSubmit={submitEdit} className="space-y-4">
+                        <div>
+                            <Label>Produk</Label>
+                            <CreatableCombobox
+                                options={products.map((p) => ({ id: p.id, label: p.name, sublabel: formatRupiah(p.selling_price) }))}
+                                value={editForm.data.product_id}
+                                onChange={(v) => editForm.setData('product_id', v)}
+                                onCreateNew={() => { setEditing(null); setShowCreateModal(true); }}
+                                placeholder="- Pilih produk -"
+                                createLabel="Tambah Produk Baru"
+                            />
+                        </div>
+                        <div>
+                            <Label>Jumlah</Label>
+                            <Input type="number" step="1" value={editForm.data.quantity} onChange={(e) => editForm.setData('quantity', e.target.value)} />
+                        </div>
+                        <div>
+                            <Label>Harga jual / unit</Label>
+                            <Input type="number" step="1" placeholder={editSelected ? String(editSelected.selling_price) : ''} value={editForm.data.unit_price} onChange={(e) => editForm.setData('unit_price', e.target.value)} />
+                        </div>
+                        <div>
+                            <Label>Catatan</Label>
+                            <Input value={editForm.data.note} onChange={(e) => editForm.setData('note', e.target.value)} />
+                        </div>
+                        <div>
+                            <Label>Tanggal</Label>
+                            <Input type="datetime-local" value={editForm.data.occurred_at} onChange={(e) => editForm.setData('occurred_at', e.target.value)} />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => setEditing(null)}>Batal</Button>
+                            <Button type="submit" disabled={editForm.processing}>Simpan</Button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
+
+            {/* Create Product Modal */}
+            <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} title="Produk Baru">
+                <form onSubmit={handleCreateProduct} className="space-y-4">
                     <div>
-                        <Label>Produk</Label>
-                        <Select value={editForm.data.product_id} onChange={(e) => editForm.setData('product_id', e.target.value)}>
-                            <option value="">- Pilih produk -</option>
-                            {products.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                    {p.name} ({formatRupiah(p.selling_price)})
-                                </option>
-                            ))}
-                        </Select>
-                        {editForm.errors.product_id && <p className="mt-1 text-xs text-destructive">{editForm.errors.product_id}</p>}
+                        <Label htmlFor="prod-name">Nama Produk</Label>
+                        <Input id="prod-name" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} required />
                     </div>
-                    <div>
-                        <Label>Jumlah</Label>
-                        <Input type="number" step="1" value={editForm.data.quantity} onChange={(e) => editForm.setData('quantity', e.target.value)} />
-                        {editForm.errors.quantity && <p className="mt-1 text-xs text-destructive">{editForm.errors.quantity}</p>}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <Label htmlFor="prod-unit">Satuan</Label>
+                            <Input id="prod-unit" value={newProduct.unit} onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })} placeholder="pcs, porsi, gelas" required />
+                        </div>
+                        <div>
+                            <Label htmlFor="prod-price">Harga Jual (Rp)</Label>
+                            <Input id="prod-price" type="number" step="1" value={newProduct.selling_price} onChange={(e) => setNewProduct({ ...newProduct, selling_price: e.target.value })} required />
+                        </div>
                     </div>
-                    <div>
-                        <Label>Harga jual / unit (opsional)</Label>
-                        <Input
-                            type="number"
-                            step="1"
-                            placeholder={editSelected ? String(editSelected.selling_price) : ''}
-                            value={editForm.data.unit_price}
-                            onChange={(e) => editForm.setData('unit_price', e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <Label>Tanggal</Label>
-                        <Input type="datetime-local" value={editForm.data.occurred_at} onChange={(e) => editForm.setData('occurred_at', e.target.value)} />
-                    </div>
-                    <div>
-                        <Label>Catatan</Label>
-                        <Input value={editForm.data.note} onChange={(e) => editForm.setData('note', e.target.value)} />
-                    </div>
+                    {createError && <p className="text-sm text-destructive">{createError}</p>}
                     <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-                            Batal
-                        </Button>
-                        <Button type="submit" disabled={editForm.processing}>
-                            Simpan
-                        </Button>
+                        <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>Batal</Button>
+                        <Button type="submit" disabled={creating}>{creating ? 'Menyimpan...' : 'Simpan'}</Button>
                     </div>
                 </form>
             </Modal>
