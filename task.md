@@ -212,7 +212,7 @@
 
 ### 6.3 Production Run Service
 
-- [ ] `ProductionRunService::create($data)` — main orchestrator:
+- [x] `ProductionRunService::create($data)` — main orchestrator:
   - Validate bahan cukup (hard validation)
   - Snapshot harga bahan saat produksi
   - Create production_run record
@@ -220,15 +220,15 @@
   - Deduct raw materials from stock (stock_movements: production_input)
   - Add finished goods to stock (stock_movements: production_output)
   - Record waste if any (stock_movements: waste)
-- [ ] `ProductionRunService::reverse($id)` — pembatalan produksi
+- [x] `ProductionRunService::reverse($id)` — pembatalan produksi
 - [x] Warning logic: yield deviation > 20% dari resep (soft warning, di service)
 
 ### 6.4 API Endpoints
 
-- [ ] `POST /api/production-runs` — create production run
-- [ ] `GET /api/production-runs` — list production runs (filterable by date, recipe)
-- [ ] `GET /api/production-runs/{id}` — detail production run
-- [ ] `DELETE /api/production-runs/{id}` — reverse production run
+- [x] `POST /api/production-runs` — create production run
+- [x] `GET /api/production-runs` — list production runs (filterable by date, recipe)
+- [x] `GET /api/production-runs/{id}` — detail production run
+- [x] `DELETE /api/production-runs/{id}` — reverse production run
 
 ### 6.5 Dashboard UI
 
