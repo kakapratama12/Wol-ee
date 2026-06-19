@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
-import { Trash2, Plus, Factory, AlertTriangle } from 'lucide-react';
+import { Trash2, Plus, Factory, AlertTriangle, Pencil } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -8,6 +8,7 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Select } from '@/Components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import Modal from '@/Components/ui/modal';
 import { formatRupiah, formatNumber, formatDate } from '@/lib/format';
 
 interface RecipeItem {
@@ -55,6 +56,7 @@ interface ItemRow {
 
 export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
     const [showForm, setShowForm] = useState(false);
+    const [editingRun, setEditingRun] = useState<ProductionRun | null>(null);
 
     const form = useForm({
         product_id: '',
@@ -63,6 +65,11 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
         yield_actual: '',
         waste_count: '0',
         notes: '',
+    });
+
+    const yieldForm = useForm({
+        yield_actual: '',
+        waste_count: '0',
     });
 
     const selectedProduct = useMemo(
@@ -116,6 +123,23 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
         if (confirm(`Batalkan produksi "${run.product}" (${run.yield_actual} ${run.product}? Seluruh stok akan dikembalikan.`)) {
             router.delete(`/production-runs/${run.id}`);
         }
+    };
+
+    const openEditYield = (run: ProductionRun) => {
+        setEditingRun(run);
+        yieldForm.setData({
+            yield_actual: String(run.yield_actual),
+            waste_count: String(run.waste_count),
+        });
+        yieldForm.clearErrors();
+    };
+
+    const submitYield = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingRun) return;
+        yieldForm.put(`/production-runs/${editingRun.id}/yield`, {
+            onSuccess: () => setEditingRun(null),
+        });
     };
 
     return (
@@ -312,14 +336,23 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                                             <TableCell className="text-right">{formatRupiah(run.total_cost)}</TableCell>
                                             <TableCell className="text-right">{formatRupiah(run.cost_per_unit)}</TableCell>
                                             <TableCell>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => reverseRun(run)}
-                                                    className="text-red-600 hover:text-red-700"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                <div className="flex gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => openEditYield(run)}
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => reverseRun(run)}
+                                                        className="text-red-600 hover:text-red-700"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -329,6 +362,54 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                     </Card>
                 )}
             </div>
+
+            {/* Edit Yield Modal */}
+            <Modal
+                open={!!editingRun}
+                onClose={() => setEditingRun(null)}
+                title={`Edit Yield - ${editingRun?.product ?? ''}`}
+            >
+                <form onSubmit={submitYield} className="space-y-4">
+                    <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
+                        <p>Production Run #{editingRun?.id}</p>
+                        <p>Batch: {editingRun?.batch_count} | Total Biaya: {formatRupiah(editingRun?.total_cost ?? 0)}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <Label>Yield Aktual (pcs)</Label>
+                            <Input
+                                type="number"
+                                min="1"
+                                value={yieldForm.data.yield_actual}
+                                onChange={(e) => yieldForm.setData('yield_actual', e.target.value)}
+                            />
+                            {yieldForm.errors.yield_actual && (
+                                <p className="mt-1 text-xs text-destructive">{yieldForm.errors.yield_actual}</p>
+                            )}
+                        </div>
+                        <div>
+                            <Label>Waste (pcs)</Label>
+                            <Input
+                                type="number"
+                                min="0"
+                                value={yieldForm.data.waste_count}
+                                onChange={(e) => yieldForm.setData('waste_count', e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        Stok produk jadi akan otomatis disesuaikan berdasarkan perubahan yield.
+                    </p>
+                    <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={() => setEditingRun(null)}>
+                            Batal
+                        </Button>
+                        <Button type="submit" disabled={yieldForm.processing}>
+                            Simpan
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
         </AppLayout>
     );
 }

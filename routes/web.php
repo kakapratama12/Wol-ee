@@ -45,6 +45,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get("/production-runs", [ProductionRunController::class, "index"])->name("production-runs.index");
         Route::post("/production-runs", [ProductionRunController::class, "store"])->name("production-runs.store");
+        Route::put("/production-runs/{productionRun}/yield", [ProductionRunController::class, "updateYield"])->name("production-runs.updateYield");
         Route::delete("/production-runs/{productionRun}", [ProductionRunController::class, "destroy"])->name("production-runs.destroy");
 
     Route::get('/partners', [PartnerController::class, 'index'])->name('partners.index');

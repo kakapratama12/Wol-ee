@@ -183,6 +183,62 @@ class ProductionRunService
     }
 
     /**
+     * Update yield and waste for a production run.
+     * Adjusts finished goods stock accordingly.
+     * Atomic — all or nothing.
+     */
+    public function updateYield(
+        ProductionRun $productionRun,
+        int $newYieldActual,
+        int $newWasteCount = 0,
+    ): ProductionRun {
+        if ($newYieldActual <= 0) {
+            throw new \InvalidArgumentException('Yield aktual harus lebih dari 0.');
+        }
+
+        return DB::transaction(function () use ($productionRun, $newYieldActual, $newWasteCount) {
+            $oldYield = $productionRun->yield_actual;
+            $oldWaste = $productionRun->waste_count;
+            $yieldDiff = $newYieldActual - $oldYield;
+            $wasteDiff = $newWasteCount - $oldWaste;
+
+            // Update the production run
+            $productionRun->update([
+                'yield_actual' => $newYieldActual,
+                'waste_count' => $newWasteCount,
+            ]);
+
+            // Adjust finished goods stock based on yield difference
+            $finishedGoods = $this->getOrCreateFinishedGoods($productionRun->product);
+            $finishedGoods->refresh();
+            $oldStock = (float) $finishedGoods->current_stock;
+            $newStock = $oldStock + $yieldDiff;
+
+            // Also adjust for waste difference
+            $newStock -= $wasteDiff;
+
+            $finishedGoods->current_stock = $newStock;
+            $finishedGoods->save();
+
+            // Record stock adjustment movement
+            $totalDiff = $yieldDiff - $wasteDiff;
+            if ($totalDiff != 0) {
+                StockMovement::create([
+                    'ingredient_id' => $finishedGoods->id,
+                    'type' => 'adjustment',
+                    'quantity' => $totalDiff,
+                    'stock_after' => $newStock,
+                    'production_run_id' => $productionRun->id,
+                    'note' => "Adjustment production run #{$productionRun->id}: yield {$oldYield}→{$newYieldActual}, waste {$oldWaste}→{$newWasteCount}",
+                    'occurred_at' => now(),
+                ]);
+            }
+
+            return $productionRun->fresh();
+        });
+    }
+
+    /**
      * Reverse a production run: restore raw materials, remove finished goods.
      */
     public function reverse(ProductionRun $productionRun): void

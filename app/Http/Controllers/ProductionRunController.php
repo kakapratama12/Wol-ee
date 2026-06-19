@@ -105,4 +105,24 @@ class ProductionRunController extends Controller
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
+
+    public function updateYield(Request $request, ProductionRun $productionRun, ProductionRunService $service): RedirectResponse
+    {
+        $validated = $request->validate([
+            'yield_actual' => ['required', 'integer', 'gt:0'],
+            'waste_count' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        try {
+            $service->updateYield(
+                productionRun: $productionRun,
+                newYieldActual: $validated['yield_actual'],
+                newWasteCount: $validated['waste_count'] ?? 0,
+            );
+
+            return back()->with('success', 'Yield diperbarui & stok disesuaikan.');
+        } catch (\InvalidArgumentException $e) {
+            return back()->withErrors(['yield_actual' => $e->getMessage()]);
+        }
+    }
 }
