@@ -18,7 +18,7 @@ class ProductionRunController extends Controller
     public function index(): Response
     {
         $runs = ProductionRun::query()
-            ->with('product:id,name,unit')
+            ->with(['product:id,name,unit', 'items.ingredient:id,name,base_unit'])
             ->latest('produced_at')
             ->limit(50)
             ->get()
@@ -36,6 +36,14 @@ class ProductionRunController extends Controller
                 'waste_percentage' => round($run->getWastePercentage(), 1),
                 'notes' => $run->notes,
                 'produced_at' => $run->produced_at?->toIso8601String(),
+                'items' => $run->items->map(fn ($item) => [
+                    'id' => $item->id,
+                    'ingredient_id' => $item->ingredient_id,
+                    'ingredient' => $item->ingredient?->name,
+                    'base_unit' => $item->ingredient?->base_unit,
+                    'quantity_used' => (float) $item->quantity_used,
+                    'unit_cost_snapshot' => (float) $item->unit_cost_snapshot,
+                ])->values(),
             ]);
 
         // Batch products with their recipes
@@ -71,9 +79,6 @@ class ProductionRunController extends Controller
         $validated = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'batch_count' => ['required', 'integer', 'min:1'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.ingredient_id' => ['required', 'integer', 'exists:ingredients,id'],
-            'items.*.quantity_used' => ['required', 'numeric', 'gt:0'],
             'notes' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -83,7 +88,6 @@ class ProductionRunController extends Controller
             $service->create(
                 product: $product,
                 batchCount: $validated['batch_count'],
-                items: $validated['items'],
                 notes: $validated['notes'] ?? null,
             );
 
@@ -121,6 +125,30 @@ class ProductionRunController extends Controller
             return back()->with('success', 'Yield diperbarui & stok disesuaikan.');
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['yield_actual' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Update ingredient quantities for a production run.
+     * Adjusts stock based on the diff and recalculates total_cost.
+     */
+    public function updateItems(Request $request, ProductionRun $productionRun, ProductionRunService $service): RedirectResponse
+    {
+        $validated = $request->validate([
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.ingredient_id' => ['required', 'integer', 'exists:ingredients,id'],
+            'items.*.quantity_used' => ['required', 'numeric', 'gt:0'],
+        ]);
+
+        try {
+            $service->updateItems(
+                productionRun: $productionRun,
+                newItems: $validated['items'],
+            );
+
+            return back()->with('success', 'Bahan produksi diperbarui & stok disesuaikan.');
+        } catch (\InvalidArgumentException $e) {
+            return back()->withErrors(['items' => $e->getMessage()]);
         }
     }
 }

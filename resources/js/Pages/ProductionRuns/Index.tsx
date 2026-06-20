@@ -1,12 +1,11 @@
 import { useState, useMemo } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
-import { Trash2, Plus, Factory, AlertTriangle, Pencil } from 'lucide-react';
+import { Trash2, Plus, Factory, AlertTriangle, Pencil, FlaskConical } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
-import { Select } from '@/Components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import Modal from '@/Components/ui/modal';
 import { formatRupiah, formatNumber, formatDate } from '@/lib/format';
@@ -27,6 +26,15 @@ interface BatchProduct {
     recipe: RecipeItem[];
 }
 
+interface RunItem {
+    id: number;
+    ingredient_id: number;
+    ingredient: string;
+    base_unit: string;
+    quantity_used: number;
+    unit_cost_snapshot: number;
+}
+
 interface ProductionRun {
     id: number;
     product: string | null;
@@ -41,6 +49,7 @@ interface ProductionRun {
     waste_percentage: number;
     notes: string | null;
     produced_at: string | null;
+    items: RunItem[];
 }
 
 interface Props {
@@ -48,22 +57,22 @@ interface Props {
     batchProducts: BatchProduct[];
 }
 
-interface ItemRow {
+interface EditItemRow {
     ingredient_id: number;
     ingredient: string;
     base_unit: string;
-    quantity: string;
+    quantity_used: string;
     unit_price: number;
 }
 
 export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
     const [showForm, setShowForm] = useState(false);
     const [editingRun, setEditingRun] = useState<ProductionRun | null>(null);
+    const [editingItemsRun, setEditingItemsRun] = useState<ProductionRun | null>(null);
 
     const form = useForm({
         product_id: '',
         batch_count: '1',
-        items: [] as ItemRow[],
         notes: '',
     });
 
@@ -72,45 +81,15 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
         waste_count: '0',
     });
 
-    const selectProduct = (productId: string) => {
-        const product = batchProducts.find((p) => String(p.id) === productId);
-        if (!product) return;
-
-        form.setData({
-            product_id: productId,
-            batch_count: '1',
-            items: product.recipe.map((r) => ({
-                ingredient_id: r.ingredient_id,
-                ingredient: r.ingredient ?? '-',
-                base_unit: r.base_unit ?? '-',
-                quantity: String(r.quantity),
-                unit_price: r.unit_price,
-            })),
-            notes: '',
-        });
-    };
-
-    const updateItem = (index: number, key: 'quantity', value: string) => {
-        const items = [...form.data.items];
-        items[index] = { ...items[index], [key]: value };
-        form.setData('items', items);
-    };
-
-    const estimatedTotalCost = useMemo(() => {
-        return form.data.items.reduce((sum, item) => {
-            return sum + (parseFloat(item.quantity) || 0) * item.unit_price;
-        }, 0);
-    }, [form.data.items]);
+    const itemsForm = useForm({
+        items: [] as EditItemRow[],
+    });
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         form.transform((data) => ({
             product_id: Number(data.product_id),
             batch_count: Number(data.batch_count),
-            items: data.items.map((item) => ({
-                ingredient_id: item.ingredient_id,
-                quantity_used: Number(item.quantity),
-            })),
             notes: data.notes || null,
         }));
         form.post('/production-runs', {
@@ -144,6 +123,46 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
         });
     };
 
+    const openEditItems = (run: ProductionRun) => {
+        setEditingItemsRun(run);
+        itemsForm.setData({
+            items: run.items.map((item) => ({
+                ingredient_id: item.ingredient_id,
+                ingredient: item.ingredient,
+                base_unit: item.base_unit,
+                quantity_used: String(item.quantity_used),
+                unit_price: item.unit_cost_snapshot,
+            })),
+        });
+        itemsForm.clearErrors();
+    };
+
+    const updateEditItem = (index: number, value: string) => {
+        const items = [...itemsForm.data.items];
+        items[index] = { ...items[index], quantity_used: value };
+        itemsForm.setData('items', items);
+    };
+
+    const editItemsTotalCost = useMemo(() => {
+        return itemsForm.data.items.reduce((sum, item) => {
+            return sum + (parseFloat(item.quantity_used) || 0) * item.unit_price;
+        }, 0);
+    }, [itemsForm.data.items]);
+
+    const submitItems = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingItemsRun) return;
+        itemsForm.transform((data) => ({
+            items: data.items.map((item) => ({
+                ingredient_id: item.ingredient_id,
+                quantity_used: Number(item.quantity_used),
+            })),
+        }));
+        itemsForm.put(`/production-runs/${editingItemsRun.id}/items`, {
+            onSuccess: () => setEditingItemsRun(null),
+        });
+    };
+
     return (
         <AppLayout>
             <Head title="Produksi" />
@@ -152,7 +171,7 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">Produksi</h1>
                     {batchProducts.length > 0 && (
-                        <Button onClick={() => { setShowForm(true); form.reset(); form.setData('items', []); }}>
+                        <Button onClick={() => { setShowForm(true); form.reset(); }}>
                             <Plus className="mr-2 h-4 w-4" />
                             Produksi Baru
                         </Button>
@@ -171,7 +190,7 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                     </Card>
                 )}
 
-                {/* Create Form */}
+                {/* Create Form — simplified: just product + batch count + notes */}
                 {showForm && (
                     <Card>
                         <CardHeader>
@@ -185,7 +204,7 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                                         <select
                                             className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                             value={form.data.product_id}
-                                            onChange={(e) => selectProduct(e.target.value)}
+                                            onChange={(e) => form.setData('product_id', e.target.value)}
                                         >
                                             <option value="">Pilih produk...</option>
                                             {batchProducts.map((p) => (
@@ -205,54 +224,19 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                                     </div>
                                 </div>
 
-                                {/* Ingredient List — card layout, mobile-friendly */}
-                                {form.data.items.length > 0 && (
-                                    <div>
-                                        <Label>Bahan Terpakai (bisa diedit)</Label>
-                                        <div className="mt-2 space-y-3">
-                                            {form.data.items.map((item, i) => (
-                                                <div key={item.ingredient_id} className="rounded-lg border p-3">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <p className="font-medium text-sm">{item.ingredient}</p>
-                                                        <p className="text-xs text-muted-foreground">{formatRupiah(item.unit_price)}/{item.base_unit}</p>
-                                                    </div>
-                                                    <div className="flex items-end gap-2">
-                                                        <div className="flex-1">
-                                                            <Label className="text-xs text-muted-foreground">Qty</Label>
-                                                            <Input
-                                                                type="number"
-                                                                step="0.01"
-                                                                min="0"
-                                                                value={item.quantity}
-                                                                onChange={(e) => updateItem(i, 'quantity', e.target.value)}
-                                                                className="mt-1"
-                                                            />
-                                                        </div>
-                                                        <p className="pb-2 text-sm font-medium whitespace-nowrap">
-                                                            = {formatRupiah((parseFloat(item.quantity) || 0) * item.unit_price)}
-                                                        </p>
-                                                    </div>
-                                                    <p className="text-xs text-muted-foreground mt-1">{item.base_unit}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div className="mt-3 flex justify-end rounded-lg bg-muted/50 p-3">
-                                            <p className="text-sm font-semibold">Total: {formatRupiah(estimatedTotalCost)}</p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                    <div>
-                                        <Label>Catatan</Label>
-                                        <Input
-                                            className="mt-1"
-                                            placeholder="Opsional"
-                                            value={form.data.notes}
-                                            onChange={(e) => form.setData('notes', e.target.value)}
-                                        />
-                                    </div>
+                                <div>
+                                    <Label>Catatan</Label>
+                                    <Input
+                                        className="mt-1"
+                                        placeholder="Opsional"
+                                        value={form.data.notes}
+                                        onChange={(e) => form.setData('notes', e.target.value)}
+                                    />
                                 </div>
+
+                                <p className="text-xs text-muted-foreground">
+                                    Bahan akan otomatis digunakan sesuai resep × jumlah batch. Stok bisa diedit setelah produksi tercatat.
+                                </p>
 
                                 {form.errors.batch_count && (
                                     <div className="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700">
@@ -274,7 +258,7 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                     </Card>
                 )}
 
-                {/* List */}
+                {/* History Table */}
                 {runs.length > 0 && (
                     <Card>
                         <CardHeader>
@@ -321,7 +305,16 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
+                                                        onClick={() => openEditItems(run)}
+                                                        title="Edit Bahan"
+                                                    >
+                                                        <FlaskConical className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
                                                         onClick={() => openEditYield(run)}
+                                                        title="Edit Yield"
                                                     >
                                                         <Pencil className="h-4 w-4" />
                                                     </Button>
@@ -387,6 +380,72 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                         </Button>
                         <Button type="submit" disabled={yieldForm.processing}>
                             Simpan
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Edit Ingredients Modal */}
+            <Modal
+                open={!!editingItemsRun}
+                onClose={() => setEditingItemsRun(null)}
+                title={`Edit Bahan - ${editingItemsRun?.product ?? ''}`}
+            >
+                <form onSubmit={submitItems} className="space-y-4">
+                    <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
+                        <p>Production Run #{editingItemsRun?.id}</p>
+                        <p>Batch: {editingItemsRun?.batch_count}</p>
+                    </div>
+
+                    <div className="space-y-3">
+                        {itemsForm.data.items.map((item, i) => (
+                            <div key={item.ingredient_id} className="rounded-lg border p-3">
+                                <div className="flex items-center justify-between mb-2">
+                                    <p className="font-medium text-sm">{item.ingredient}</p>
+                                    <p className="text-xs text-muted-foreground">{formatRupiah(item.unit_price)}/{item.base_unit}</p>
+                                </div>
+                                <div className="flex items-end gap-2">
+                                    <div className="flex-1">
+                                        <Label className="text-xs text-muted-foreground">Qty</Label>
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={item.quantity_used}
+                                            onChange={(e) => updateEditItem(i, e.target.value)}
+                                            className="mt-1"
+                                        />
+                                    </div>
+                                    <p className="pb-2 text-sm font-medium whitespace-nowrap">
+                                        = {formatRupiah((parseFloat(item.quantity_used) || 0) * item.unit_price)}
+                                    </p>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">{item.base_unit}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="flex justify-end rounded-lg bg-muted/50 p-3">
+                        <p className="text-sm font-semibold">Total: {formatRupiah(editItemsTotalCost)}</p>
+                    </div>
+
+                    {itemsForm.errors.items && (
+                        <div className="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700">
+                            <AlertTriangle className="h-4 w-4" />
+                            {itemsForm.errors.items}
+                        </div>
+                    )}
+
+                    <p className="text-xs text-muted-foreground">
+                        Perubahan jumlah bahan akan otomatis menyesuaikan stok dan total biaya.
+                    </p>
+
+                    <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={() => setEditingItemsRun(null)}>
+                            Batal
+                        </Button>
+                        <Button type="submit" disabled={itemsForm.processing}>
+                            {itemsForm.processing ? 'Menyimpan...' : 'Simpan'}
                         </Button>
                     </div>
                 </form>

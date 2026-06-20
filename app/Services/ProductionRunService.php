@@ -20,14 +20,14 @@ class ProductionRunService
     ) {}
 
     /**
-     * Create a production run: deduct raw materials only.
+     * Create a production run: auto-use recipe quantities × batchCount.
+     * Deduct raw materials, no user input needed for ingredients.
      * Yield is recorded later via updateYield().
      * Atomic — all or nothing.
      */
     public function create(
         Product $product,
         int $batchCount,
-        array $items, // [{ingredient_id, quantity_used}]
         ?string $notes = null,
         ?CarbonInterface $producedAt = null,
     ): ProductionRun {
@@ -38,28 +38,32 @@ class ProductionRunService
             );
         }
 
-        // Validate: all recipe items must be provided
+        // Load recipe items with ingredients
         $product->loadMissing('recipeItems.ingredient');
-        $recipeIngredientIds = $product->recipeItems->pluck('ingredient_id')->toArray();
-        $providedIngredientIds = array_column($items, 'ingredient_id');
-        $missingIds = array_diff($recipeIngredientIds, $providedIngredientIds);
 
-        if (! empty($missingIds)) {
-            $missingNames = Ingredient::whereIn('id', $missingIds)->pluck('name')->implode(', ');
+        if ($product->recipeItems->isEmpty()) {
             throw new InvalidArgumentException(
-                "Ada bahan resep yang belum dicatat: {$missingNames}. Isi semua bahan yang terpakai."
+                "Produk \"{$product->name}\" belum memiliki resep. Tambahkan resep terlebih dulu."
             );
         }
+
+        // Build items from recipe quantities × batchCount
+        $items = $product->recipeItems->map(function ($recipeItem) use ($batchCount) {
+            $ingredient = $recipeItem->ingredient;
+            if (! $ingredient) {
+                throw new InvalidArgumentException(
+                    "Bahan resep ID {$recipeItem->ingredient_id} tidak ditemukan."
+                );
+            }
+            return [
+                'ingredient_id' => $recipeItem->ingredient_id,
+                'quantity_used' => (float) $recipeItem->quantity * $batchCount,
+            ];
+        })->toArray();
 
         // Validate: stock sufficient for all items
         foreach ($items as $item) {
             $ingredient = Ingredient::find($item['ingredient_id']);
-            if (! $ingredient) {
-                throw new InvalidArgumentException(
-                    "Bahan dengan ID {$item['ingredient_id']} tidak ditemukan."
-                );
-            }
-
             $ingredient->refresh();
             if ((float) $ingredient->current_stock < (float) $item['quantity_used']) {
                 throw new InvalidArgumentException(
@@ -122,6 +126,154 @@ class ProductionRunService
             // No finished goods added at creation time — yield recorded later
 
             return $productionRun;
+        });
+    }
+
+    /**
+     * Update ingredient quantities for an existing production run.
+     * Adjusts stock based on the difference between old and new quantities.
+     * Recalculates total_cost.
+     * Atomic — all or nothing.
+     */
+    public function updateItems(
+        ProductionRun $productionRun,
+        array $newItems, // [{ingredient_id, quantity_used}]
+    ): ProductionRun {
+        return DB::transaction(function () use ($productionRun, $newItems) {
+            // Load current items with ingredients
+            $productionRun->load('items.ingredient');
+
+            // Build map of old items by ingredient_id
+            $oldItemsMap = [];
+            foreach ($productionRun->items as $item) {
+                $oldItemsMap[$item->ingredient_id] = $item;
+            }
+
+            // Build map of new items by ingredient_id
+            $newItemsMap = [];
+            foreach ($newItems as $newItem) {
+                $ingredientId = $newItem['ingredient_id'];
+                $newQty = (float) $newItem['quantity_used'];
+                $newItemsMap[$ingredientId] = $newQty;
+            }
+
+            // Process each ingredient: adjust stock for diff
+            $totalCost = 0;
+
+            // Handle items that exist in old OR new (or both)
+            $allIngredientIds = array_unique(array_merge(
+                array_keys($oldItemsMap),
+                array_keys($newItemsMap)
+            ));
+
+            foreach ($allIngredientIds as $ingredientId) {
+                $oldQty = isset($oldItemsMap[$ingredientId])
+                    ? (float) $oldItemsMap[$ingredientId]->quantity_used
+                    : 0.0;
+                $newQty = $newItemsMap[$ingredientId] ?? 0.0;
+                $diff = $newQty - $oldQty;
+
+                if (abs($diff) < 0.0001) {
+                    // No meaningful change — just accumulate cost from existing item
+                    if (isset($oldItemsMap[$ingredientId])) {
+                        $item = $oldItemsMap[$ingredientId];
+                        $totalCost += $item->quantity_used * $item->unit_cost_snapshot;
+                    }
+                    continue;
+                }
+
+                $ingredient = Ingredient::find($ingredientId);
+                if (! $ingredient) {
+                    throw new InvalidArgumentException(
+                        "Bahan dengan ID {$ingredientId} tidak ditemukan."
+                    );
+                }
+
+                $unitCostSnapshot = $this->cogs->costPrice($ingredient);
+
+                if ($diff > 0) {
+                    // Using more: deduct additional stock
+                    $ingredient->refresh();
+                    if ((float) $ingredient->current_stock < $diff) {
+                        throw new InvalidArgumentException(
+                            "Stok \"{$ingredient->name}\" tidak cukup untuk penambahan. " .
+                            "Tersedia: {$ingredient->current_stock} {$ingredient->base_unit}, " .
+                            "diperlukan tambahan: {$diff} {$ingredient->base_unit}."
+                        );
+                    }
+
+                    $this->inventory->recordUsage(
+                        $ingredient,
+                        $diff,
+                        ProductionRun::class,
+                        $productionRun->id,
+                        "Adjustment production run #{$productionRun->id}: {$oldQty} → {$newQty} {$ingredient->base_unit}",
+                    );
+                } else {
+                    // Using less: return stock
+                    $returnQty = abs($diff);
+                    $ingredient->refresh();
+                    $ingredient->current_stock = (float) $ingredient->current_stock + $returnQty;
+                    $ingredient->save();
+
+                    StockMovement::create([
+                        'ingredient_id' => $ingredient->id,
+                        'type' => StockMovement::TYPE_REVERSAL,
+                        'quantity' => $returnQty,
+                        'stock_after' => $ingredient->current_stock,
+                        'production_run_id' => $productionRun->id,
+                        'note' => "Adjustment production run #{$productionRun->id}: {$oldQty} → {$newQty} {$ingredient->base_unit}",
+                        'occurred_at' => now(),
+                    ]);
+                }
+
+                // Update or create production run item
+                if (isset($oldItemsMap[$ingredientId])) {
+                    $oldItemsMap[$ingredientId]->update([
+                        'quantity_used' => $newQty,
+                        'unit_cost_snapshot' => $unitCostSnapshot,
+                    ]);
+                } else {
+                    ProductionRunItem::create([
+                        'production_run_id' => $productionRun->id,
+                        'ingredient_id' => $ingredientId,
+                        'quantity_used' => $newQty,
+                        'unit_cost_snapshot' => $unitCostSnapshot,
+                    ]);
+                }
+
+                $totalCost += $newQty * $unitCostSnapshot;
+            }
+
+            // Remove items that were deleted (present in old but not in new)
+            foreach ($oldItemsMap as $ingredientId => $item) {
+                if (! isset($newItemsMap[$ingredientId])) {
+                    // Return stock for removed item
+                    $ingredient = $item->ingredient;
+                    if ($ingredient) {
+                        $returnQty = (float) $item->quantity_used;
+                        $ingredient->refresh();
+                        $ingredient->current_stock = (float) $ingredient->current_stock + $returnQty;
+                        $ingredient->save();
+
+                        StockMovement::create([
+                            'ingredient_id' => $ingredient->id,
+                            'type' => StockMovement::TYPE_REVERSAL,
+                            'quantity' => $returnQty,
+                            'stock_after' => $ingredient->current_stock,
+                            'production_run_id' => $productionRun->id,
+                            'note' => "Removed ingredient from production run #{$productionRun->id}: {$returnQty} {$ingredient->base_unit}",
+                            'occurred_at' => now(),
+                        ]);
+                    }
+                    $item->delete();
+                }
+            }
+
+            // Update total cost
+            $productionRun->update(['total_cost' => round($totalCost, 4)]);
+
+            return $productionRun->fresh();
         });
     }
 

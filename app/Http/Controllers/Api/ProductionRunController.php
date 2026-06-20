@@ -38,8 +38,7 @@ class ProductionRunController extends Controller
 
         if ($request->filled('from') && $request->filled('to')) {
             $query->whereBetween('produced_at', [
-                $request->date('from'),
-                $request->date('to'),
+                $request->date('from'), $request->date('to'),
             ]);
         }
 
@@ -64,7 +63,7 @@ class ProductionRunController extends Controller
     }
 
     /**
-     * Create a production run.
+     * Create a production run (auto-uses recipe quantities).
      */
     public function store(StoreProductionRunRequest $request): JsonResponse
     {
@@ -90,9 +89,6 @@ class ProductionRunController extends Controller
             $productionRun = $this->productionRunService->create(
                 product: $product,
                 batchCount: $request->integer('batch_count'),
-                items: $request->input('items', []),
-                yieldActual: $request->integer('yield_actual'),
-                wasteCount: $request->integer('waste_count', 0),
                 notes: $request->input('notes'),
                 producedAt: $request->date('produced_at'),
             );
