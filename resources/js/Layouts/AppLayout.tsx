@@ -57,7 +57,7 @@ const navigation: (NavSingle | NavGroup)[] = [
         icon: <Boxes className="h-4 w-4" />,
         children: [
             { label: 'Stok Bahan Dasar', href: '/inventory?type=raw_material' },
-            { label: 'Stok Prep', href: '/inventory?type=prep' },
+            { label: 'Stok Prep', href: '/prep-stocks' },
             { label: 'Stok Produk Jadi', href: '/finished-goods', ownerOnly: true },
         ],
     },

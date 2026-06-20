@@ -16,6 +16,7 @@ use App\Http\Controllers\SaleController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\FinishedGoodsController;
+use App\Http\Controllers\PrepStockController;
 use App\Http\Controllers\ProductionRunController;
 use Illuminate\Support\Facades\Route;
 
@@ -52,6 +53,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get("/finished-goods", [FinishedGoodsController::class, "index"])->name("finished-goods.index");
         Route::post("/finished-goods/{product}/adjust", [FinishedGoodsController::class, "adjustStock"])->name("finished-goods.adjust");
+
+        Route::get("/prep-stocks", [PrepStockController::class, "index"])->name("prep-stocks.index");
+        Route::post("/prep-stocks/{ingredient}/adjust", [PrepStockController::class, "adjustStock"])->name("prep-stocks.adjust");
 
     Route::get('/partners', [PartnerController::class, 'index'])->name('partners.index');
     Route::get('/partners/{partner}', [PartnerController::class, 'show'])->name('partners.show');

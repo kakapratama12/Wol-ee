@@ -52,7 +52,6 @@ export default function InventoryIndex({ ingredients, itemType, counts, canManag
 
     const tabs = [
         { key: 'raw_material', label: 'Bahan Dasar', count: counts.raw_material ?? 0 },
-        { key: 'prep', label: 'Prep', count: counts.prep ?? 0 },
         { key: 'finished_goods', label: 'Produk Jadi', count: counts.finished_goods ?? 0 },
     ];
 
