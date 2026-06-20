@@ -38,6 +38,7 @@ interface IngredientOption {
     name: string;
     base_unit: string;
     unit_price: number;
+    item_type: string;
 }
 
 interface Props {
@@ -51,6 +52,20 @@ interface EditableRow {
 }
 
 export default function ProductsIndex({ products, ingredients }: Props) {
+    // Group ingredients by item_type for the recipe dropdown
+    const ingredientGroups = useMemo(() => {
+        const groups: Record<string, { label: string; items: IngredientOption[] }> = {
+            raw_material: { label: 'Bahan Dasar', items: [] },
+            prep: { label: 'Prep', items: [] },
+        };
+        ingredients.forEach((ing) => {
+            if (groups[ing.item_type]) {
+                groups[ing.item_type].items.push(ing);
+            }
+        });
+        return groups;
+    }, [ingredients]);
+
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState<Product | null>(null);
     const [recipeProduct, setRecipeProduct] = useState<Product | null>(null);
@@ -242,11 +257,17 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                                         <Label className="text-xs">Bahan</Label>
                                         <Select value={row.ingredient_id} onChange={(e) => updateRow(i, 'ingredient_id', e.target.value)}>
                                             <option value="">- pilih -</option>
-                                            {ingredients.map((x) => (
-                                                <option key={x.id} value={x.id}>
-                                                    {x.name} ({x.base_unit})
-                                                </option>
-                                            ))}
+                                            {Object.entries(ingredientGroups).map(([key, group]) =>
+                                                group.items.length > 0 ? (
+                                                    <optgroup key={key} label={group.label}>
+                                                        {group.items.map((x) => (
+                                                            <option key={x.id} value={x.id}>
+                                                                {x.name} ({x.base_unit})
+                                                            </option>
+                                                        ))}
+                                                    </optgroup>
+                                                ) : null
+                                            )}
                                         </Select>
                                     </div>
                                     <div className="w-28">

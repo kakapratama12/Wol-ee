@@ -49,7 +49,9 @@ class ProductController extends Controller
 
         return Inertia::render('Products/Index', [
             'products' => $products,
-            'ingredients' => Ingredient::orderBy('name')->get(['id', 'name', 'base_unit', 'unit_price']),
+            'ingredients' => Ingredient::whereIn('item_type', ['raw_material', 'prep'])
+                ->orderBy('name')
+                ->get(['id', 'name', 'base_unit', 'unit_price', 'item_type']),
         ]);
     }
 

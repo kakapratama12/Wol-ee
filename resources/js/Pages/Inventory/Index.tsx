@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { Plus, Pencil, SlidersHorizontal, Trash2 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import StockStatusBadge from '@/Components/StockStatusBadge';
@@ -15,6 +15,7 @@ import { formatRupiah, formatNumber } from '@/lib/format';
 interface Ingredient {
     id: number;
     name: string;
+    item_type: string;
     unit_type: string;
     base_unit: string;
     unit_price: number;
@@ -26,11 +27,14 @@ interface Ingredient {
 
 interface Props {
     ingredients: Ingredient[];
+    itemType: string;
+    counts: Record<string, number>;
     canManage: boolean;
 }
 
 const emptyForm = {
     name: '',
+    item_type: 'raw_material',
     unit_type: 'gramasi',
     base_unit: 'g',
     unit_price: '',
@@ -38,7 +42,7 @@ const emptyForm = {
     minimum_stock: '',
 };
 
-export default function InventoryIndex({ ingredients, canManage }: Props) {
+export default function InventoryIndex({ ingredients, itemType, counts, canManage }: Props) {
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState<Ingredient | null>(null);
     const [adjusting, setAdjusting] = useState<Ingredient | null>(null);
@@ -46,9 +50,19 @@ export default function InventoryIndex({ ingredients, canManage }: Props) {
     const form = useForm<Record<string, string>>({ ...emptyForm });
     const adjustForm = useForm({ current_stock: '', note: '' });
 
+    const tabs = [
+        { key: 'raw_material', label: 'Bahan Dasar', count: counts.raw_material ?? 0 },
+        { key: 'prep', label: 'Prep', count: counts.prep ?? 0 },
+        { key: 'finished_goods', label: 'Produk Jadi', count: counts.finished_goods ?? 0 },
+    ];
+
+    const switchTab = (type: string) => {
+        router.get('/inventory', { type }, { preserveState: true, replace: true });
+    };
+
     const openCreate = () => {
         setEditing(null);
-        form.setData({ ...emptyForm });
+        form.setData({ ...emptyForm, item_type: itemType });
         form.clearErrors();
         setFormOpen(true);
     };
@@ -99,12 +113,32 @@ export default function InventoryIndex({ ingredients, canManage }: Props) {
             <Head title="Inventory" />
 
             <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">{ingredients.length} bahan terdaftar</p>
+                <p className="text-sm text-muted-foreground">{ingredients.length} item</p>
                 {canManage && (
-                    <Button onClick={openCreate}>
+                    <Button onClick={openCreate} disabled={itemType === 'finished_goods'}>
                         <Plus className="h-4 w-4" /> Tambah Bahan
                     </Button>
                 )}
+            </div>
+
+            {/* Tabs */}
+            <div className="mb-4 flex gap-1 rounded-lg bg-muted p-1">
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.key}
+                        onClick={() => switchTab(tab.key)}
+                        className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                            itemType === tab.key
+                                ? 'bg-background text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                        {tab.label}
+                        <span className="ml-1.5 rounded-full bg-muted-foreground/20 px-1.5 py-0.5 text-xs">
+                            {tab.count}
+                        </span>
+                    </button>
+                ))}
             </div>
 
             <Card>
@@ -172,6 +206,7 @@ export default function InventoryIndex({ ingredients, canManage }: Props) {
 
             <Modal open={formOpen} onClose={() => setFormOpen(false)} title={editing ? 'Edit Bahan' : 'Tambah Bahan'}>
                 <form onSubmit={submit} className="space-y-4">
+                    <input type="hidden" value={form.data.item_type} />
                     <div>
                         <Label htmlFor="name">Nama</Label>
                         <Input id="name" value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} />

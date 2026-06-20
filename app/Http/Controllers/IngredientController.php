@@ -19,13 +19,17 @@ class IngredientController extends Controller
 {
     public function index(): Response
     {
+        $itemType = request()->query('type', Ingredient::ITEM_RAW_MATERIAL);
+
         $ingredients = Ingredient::query()
             ->with('supplier:id,name')
+            ->where('item_type', $itemType)
             ->orderBy('name')
             ->get()
             ->map(fn (Ingredient $i) => [
                 'id' => $i->id,
                 'name' => $i->name,
+                'item_type' => $i->item_type,
                 'unit_type' => $i->unit_type,
                 'base_unit' => $i->base_unit,
                 'unit_price' => (float) $i->unit_price,
@@ -36,8 +40,16 @@ class IngredientController extends Controller
                 'status' => $i->stock_status,
             ]);
 
+        $counts = [
+            Ingredient::ITEM_RAW_MATERIAL => Ingredient::where('item_type', Ingredient::ITEM_RAW_MATERIAL)->count(),
+            Ingredient::ITEM_PREP => Ingredient::where('item_type', Ingredient::ITEM_PREP)->count(),
+            Ingredient::ITEM_FINISHED_GOODS => Ingredient::where('item_type', Ingredient::ITEM_FINISHED_GOODS)->count(),
+        ];
+
         return Inertia::render('Inventory/Index', [
             'ingredients' => $ingredients,
+            'itemType' => $itemType,
+            'counts' => $counts,
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
             'canManage' => $this->isOwner(),
         ]);

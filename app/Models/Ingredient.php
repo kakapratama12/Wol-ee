@@ -18,6 +18,7 @@ class Ingredient extends Model
 
     // Constants for item_type
     const ITEM_RAW_MATERIAL = 'raw_material';
+    const ITEM_PREP = 'prep';
     const ITEM_FINISHED_GOODS = 'finished_goods';
 
     protected $fillable = [
@@ -86,6 +87,14 @@ class Ingredient extends Model
     public function isFinishedGoods(): bool
     {
         return $this->item_type === self::ITEM_FINISHED_GOODS;
+    }
+
+    /**
+     * Check if this is a prep item (bahan setengah jadi)
+     */
+    public function isPrep(): bool
+    {
+        return $this->item_type === self::ITEM_PREP;
     }
 
     public function getStockStatusAttribute(): string
