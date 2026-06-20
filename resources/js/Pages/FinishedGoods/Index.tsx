@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
-import { Package, ChevronDown, ChevronUp, Edit2, Factory } from 'lucide-react';
+import { Package, ChevronDown, ChevronUp, Pencil, Factory } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -39,28 +39,31 @@ interface Props {
 
 export default function FinishedGoodsIndex({ batchProducts }: Props) {
     const [expandedProduct, setExpandedProduct] = useState<number | null>(null);
-    const [adjustingProduct, setAdjustingProduct] = useState<BatchProduct | null>(null);
+    const [editingRun, setEditingRun] = useState<ProductionDetail & { product_name?: string } | null>(null);
 
-    const adjustForm = useForm({
-        adjustment: '',
-        note: '',
+    const yieldForm = useForm({
+        yield_actual: '',
+        waste_count: '0',
     });
 
     const toggleExpand = (productId: number) => {
         setExpandedProduct(expandedProduct === productId ? null : productId);
     };
 
-    const openAdjust = (product: BatchProduct) => {
-        setAdjustingProduct(product);
-        adjustForm.setData({ adjustment: '', note: '' });
-        adjustForm.clearErrors();
+    const openEditYield = (detail: ProductionDetail, productName: string) => {
+        setEditingRun({ ...detail, product_name: productName });
+        yieldForm.setData({
+            yield_actual: String(detail.yield_actual),
+            waste_count: String(detail.waste_count),
+        });
+        yieldForm.clearErrors();
     };
 
-    const submitAdjust = (e: React.FormEvent) => {
+    const submitYield = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!adjustingProduct) return;
-        adjustForm.post(`/finished-goods/${adjustingProduct.id}/adjust`, {
-            onSuccess: () => setAdjustingProduct(null),
+        if (!editingRun) return;
+        yieldForm.put(`/production-runs/${editingRun.id}/yield`, {
+            onSuccess: () => setEditingRun(null),
         });
     };
 
@@ -134,9 +137,6 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                     </div>
 
                                     <div className="flex gap-2 mb-3">
-                                        <Button variant="outline" size="sm" onClick={() => openAdjust(product)}>
-                                            <Edit2 className="h-4 w-4 mr-1" /> Adjust Stok
-                                        </Button>
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -169,6 +169,7 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                                             <TableHead className="text-right">Total Biaya</TableHead>
                                                             <TableHead className="text-right">Biaya/Unit</TableHead>
                                                             <TableHead>Catatan</TableHead>
+                                                            <TableHead></TableHead>
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
@@ -196,6 +197,15 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                                                 <TableCell className="text-muted-foreground text-sm">
                                                                     {detail.notes || '-'}
                                                                 </TableCell>
+                                                                <TableCell>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        onClick={() => openEditYield(detail, product.name)}
+                                                                    >
+                                                                        <Pencil className="h-4 w-4" />
+                                                                    </Button>
+                                                                </TableCell>
                                                             </TableRow>
                                                         ))}
                                                     </TableBody>
@@ -210,44 +220,48 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                 )}
             </div>
 
-            {/* Adjust Stock Modal */}
+            {/* Edit Yield Modal */}
             <Modal
-                open={!!adjustingProduct}
-                onClose={() => setAdjustingProduct(null)}
-                title={`Adjust Stok - ${adjustingProduct?.name ?? ''}`}
+                open={!!editingRun}
+                onClose={() => setEditingRun(null)}
+                title={`Edit Hasil Produksi - ${editingRun?.product_name ?? ''}`}
             >
-                <form onSubmit={submitAdjust} className="space-y-4">
+                <form onSubmit={submitYield} className="space-y-4">
                     <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
-                        <p>Stok saat ini: <strong>{formatNumber(adjustingProduct?.current_stock ?? 0)} {adjustingProduct?.unit}</strong></p>
+                        <p>Production Run #{editingRun?.id}</p>
+                        <p>Total Biaya: {formatRupiah(editingRun?.total_cost ?? 0)}</p>
                     </div>
-                    <div>
-                        <Label>Penyesuaian (pcs)</Label>
-                        <Input
-                            type="number"
-                            placeholder=" positif = tambah, negatif = kurang"
-                            value={adjustForm.data.adjustment}
-                            onChange={(e) => adjustForm.setData('adjustment', e.target.value)}
-                        />
-                        <p className="mt-1 text-xs text-muted-foreground">
-                            Contoh: 10 untuk menambah stok, -5 untuk mengurangi stok.
-                        </p>
-                        {adjustForm.errors.adjustment && (
-                            <p className="mt-1 text-xs text-destructive">{adjustForm.errors.adjustment}</p>
-                        )}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <Label>Yield Aktual (pcs)</Label>
+                            <Input
+                                type="number"
+                                min="1"
+                                value={yieldForm.data.yield_actual}
+                                onChange={(e) => yieldForm.setData('yield_actual', e.target.value)}
+                            />
+                            {yieldForm.errors.yield_actual && (
+                                <p className="mt-1 text-xs text-destructive">{yieldForm.errors.yield_actual}</p>
+                            )}
+                        </div>
+                        <div>
+                            <Label>Waste (pcs)</Label>
+                            <Input
+                                type="number"
+                                min="0"
+                                value={yieldForm.data.waste_count}
+                                onChange={(e) => yieldForm.setData('waste_count', e.target.value)}
+                            />
+                        </div>
                     </div>
-                    <div>
-                        <Label>Catatan (opsional)</Label>
-                        <Input
-                            placeholder="Misal: Koreksi stok fisik"
-                            value={adjustForm.data.note}
-                            onChange={(e) => adjustForm.setData('note', e.target.value)}
-                        />
-                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        Stok produk jadi akan otomatis disesuaikan berdasarkan perubahan yield.
+                    </p>
                     <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" onClick={() => setAdjustingProduct(null)}>
+                        <Button type="button" variant="outline" onClick={() => setEditingRun(null)}>
                             Batal
                         </Button>
-                        <Button type="submit" disabled={adjustForm.processing}>
+                        <Button type="submit" disabled={yieldForm.processing}>
                             Simpan
                         </Button>
                     </div>

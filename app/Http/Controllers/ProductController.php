@@ -87,9 +87,10 @@ class ProductController extends Controller
 
     public function updateRecipe(UpdateRecipeRequest $request, Product $product): RedirectResponse
     {
-        $items = $request->validated()['items'];
+        $validated = $request->validated();
+        $items = $validated['items'];
 
-        DB::transaction(function () use ($product, $items) {
+        DB::transaction(function () use ($product, $items, $validated) {
             $product->recipeItems()->delete();
 
             foreach ($items as $item) {
@@ -97,6 +98,13 @@ class ProductController extends Controller
                     'product_id' => $product->id,
                     'ingredient_id' => $item['ingredient_id'],
                     'quantity' => $item['quantity'],
+                ]);
+            }
+
+            // Update estimated_yield_per_batch if provided (recipe-level setting)
+            if (array_key_exists('estimated_yield_per_batch', $validated)) {
+                $product->update([
+                    'estimated_yield_per_batch' => $validated['estimated_yield_per_batch'] ?? null,
                 ]);
             }
         });

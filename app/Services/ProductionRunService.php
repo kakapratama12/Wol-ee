@@ -77,7 +77,10 @@ class ProductionRunService
         }
 
         // Warning: yield deviation > 20% (soft warning, logged but not blocked)
-        $expectedYield = $batchCount * 20; // Assume 20 per batch as baseline
+        // Use estimated_yield_per_batch from product/recipe if available, fallback to batch_count * 20
+        $expectedYield = $product->estimated_yield_per_batch
+            ? $batchCount * $product->estimated_yield_per_batch
+            : $batchCount * 20;
         $deviation = abs($yieldActual - $expectedYield) / $expectedYield * 100;
         if ($deviation > 20) {
             \Log::warning("Yield deviation > 20% for production run", [

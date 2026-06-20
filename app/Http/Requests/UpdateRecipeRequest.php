@@ -20,6 +20,7 @@ class UpdateRecipeRequest extends FormRequest
             'items' => ['present', 'array'],
             'items.*.ingredient_id' => ['required', 'integer', 'exists:ingredients,id'],
             'items.*.quantity' => ['required', 'numeric', 'gt:0'],
+            'estimated_yield_per_batch' => ['nullable', 'integer', 'min:1'],
         ];
     }
 }
