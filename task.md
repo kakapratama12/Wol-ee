@@ -259,6 +259,47 @@
 
 ---
 
+## Sprint 7: Multi-Level BOM, Prep & Financial Reports
+
+### 7.1 Production Run Simplification
+- [x] Production run creation: auto-use recipe quantities (no manual ingredient input)
+- [x] Edit bahan button in production history (adjust actual quantities post-production)
+- [x] updateItems() handles stock diff + cost recalculation
+
+### 7.2 Prep Item Type
+- [x] Ingredient model: `is_prep` flag on products
+- [x] ProductionRunService: prep products create prep ingredients (`item_type=prep`)
+- [x] FinishedGoodsController: exclude prep products from finished goods page
+- [x] PrepStockController: dedicated page for prep items (card layout, stock movements)
+- [x] Sidebar: 3 inventory sections (Stok Bahan Dasar, Stok Prep, Stok Produk Jadi)
+- [x] Products page: Kategori dropdown (Produk Jadi / Prep) for batch products
+
+### 7.3 Recipe Restrictions
+- [x] Prep recipes: only allow raw_material ingredients
+- [x] Produk Jadi recipes: allow raw_material + prep ingredients
+- [x] Server-side + frontend validation
+
+### 7.4 Expense Categories
+- [x] Migration: add category column to expenses (bahan_baku, operasional, overhead, non_operasional)
+- [x] "Di Luar Usaha" category for cicilan, prive, beli aset
+- [x] P&L excludes non_operasional expenses
+- [x] Badge colors per category
+
+### 7.5 Cashflow Report
+- [x] CashEntry model + migration for modal/capital inflows
+- [x] CashflowService: derives cashflow from Sales, Transactions, Expenses, CashEntries
+- [x] Cashflow page with month/year picker, saldo display
+- [x] "Catat Kas Masuk" form for modal awal/tambahan
+- [x] Sidebar: "Laporan Cashflow" under Laporan group
+- [x] Saldo carry-forward otomatis
+
+### 7.6 UI Cleanup
+- [x] Sidebar: split Inventory (3 stock pages) and Produk (Resep + Produksi) groups
+- [x] Inventory page: removed tabs, only shows raw_material items
+- [x] Mobile-friendly card layout for production run ingredients
+
+---
+
 ## Notes
 
 - **Tenant ID is CRITICAL** — harus di Sprint 1, jangan ditunda
