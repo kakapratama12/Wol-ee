@@ -460,12 +460,19 @@ class ProductionRunService
     }
 
     /**
-     * Get or create finished goods ingredient for a product.
-     * Naming convention: "{product_name} ( Produk Jadi )"
+     * Get or create finished goods / prep ingredient for a product.
+     * If product is_prep=true: name "{product_name} ( Prep )", item_type 'prep'
+     * If product is_prep=false: name "{product_name} ( Produk Jadi )", item_type 'finished_goods'
      */
     private function getOrCreateFinishedGoods(Product $product): Ingredient
     {
-        $name = "{$product->name} ( Produk Jadi )";
+        if ($product->is_prep) {
+            $name = "{$product->name} ( Prep )";
+            $itemType = Ingredient::ITEM_PREP;
+        } else {
+            $name = "{$product->name} ( Produk Jadi )";
+            $itemType = Ingredient::ITEM_FINISHED_GOODS;
+        }
 
         $finishedGoods = Ingredient::where('name', $name)
             ->where('tenant_id', $product->tenant_id)
@@ -474,7 +481,7 @@ class ProductionRunService
         if (! $finishedGoods) {
             $finishedGoods = Ingredient::create([
                 'name' => $name,
-                'item_type' => Ingredient::ITEM_FINISHED_GOODS,
+                'item_type' => $itemType,
                 'unit_type' => 'gramasi',
                 'base_unit' => $product->unit,
                 'unit_price' => 0,

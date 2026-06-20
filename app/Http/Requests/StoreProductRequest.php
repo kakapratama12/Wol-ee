@@ -24,6 +24,7 @@ class StoreProductRequest extends FormRequest
             'recipe_type' => ['required', Rule::in(['unit', 'batch'])],
             'estimated_yield_per_batch' => ['nullable', 'integer', 'min:1'],
             'is_active' => ['boolean'],
+            'is_prep' => ['nullable', 'boolean'],
         ];
     }
 }

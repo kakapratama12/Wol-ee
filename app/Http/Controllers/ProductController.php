@@ -34,6 +34,7 @@ class ProductController extends Controller
                     'recipe_type' => $product->recipe_type ?? 'unit',
                     'estimated_yield_per_batch' => $product->estimated_yield_per_batch,
                     'is_active' => $product->is_active,
+                    'is_prep' => $product->is_prep ?? false,
                     'cogs' => $cogsValue,
                     'margin' => $cogs->margin($product),
                     'recipe' => $product->recipeItems->map(fn (RecipeItem $item) => [

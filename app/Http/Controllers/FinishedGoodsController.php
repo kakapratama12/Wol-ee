@@ -18,6 +18,7 @@ class FinishedGoodsController extends Controller
         // Get all batch products with their finished goods ingredients
         $batchProducts = Product::query()
             ->where('recipe_type', 'batch')
+            ->where('is_prep', false)
             ->with(['productionRuns' => function ($q) {
                 $q->latest('produced_at');
             }])

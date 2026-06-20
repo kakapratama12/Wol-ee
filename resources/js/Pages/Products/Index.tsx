@@ -28,6 +28,7 @@ interface Product {
     recipe_type: 'unit' | 'batch';
     estimated_yield_per_batch: number | null;
     is_active: boolean;
+    is_prep: boolean;
     cogs: number;
     margin: number;
     recipe: RecipeRow[];
@@ -70,19 +71,19 @@ export default function ProductsIndex({ products, ingredients }: Props) {
     const [editing, setEditing] = useState<Product | null>(null);
     const [recipeProduct, setRecipeProduct] = useState<Product | null>(null);
 
-    const productForm = useForm({ name: '', unit: 'pcs', selling_price: '', recipe_type: 'unit' as 'unit' | 'batch' });
+    const productForm = useForm({ name: '', unit: 'pcs', selling_price: '', recipe_type: 'unit' as 'unit' | 'batch', is_prep: false });
     const recipeForm = useForm<{ items: EditableRow[]; estimated_yield_per_batch: string }>({ items: [], estimated_yield_per_batch: '' });
 
     const openCreate = () => {
         setEditing(null);
-        productForm.setData({ name: '', unit: 'pcs', selling_price: '', recipe_type: 'unit' });
+        productForm.setData({ name: '', unit: 'pcs', selling_price: '', recipe_type: 'unit', is_prep: false });
         productForm.clearErrors();
         setFormOpen(true);
     };
 
     const openEdit = (p: Product) => {
         setEditing(p);
-        productForm.setData({ name: p.name, unit: p.unit, selling_price: String(p.selling_price), recipe_type: p.recipe_type });
+        productForm.setData({ name: p.name, unit: p.unit, selling_price: String(p.selling_price), recipe_type: p.recipe_type, is_prep: p.is_prep });
         productForm.clearErrors();
         setFormOpen(true);
     };
@@ -163,6 +164,11 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                                     <Badge variant={p.recipe_type === 'batch' ? 'default' : 'secondary'} className="text-xs">
                                         {p.recipe_type === 'batch' ? 'Batch' : 'Unit'}
                                     </Badge>
+                                    {p.is_prep && (
+                                        <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
+                                            Prep
+                                        </Badge>
+                                    )}
                                 </CardTitle>
                                 <p className="mt-1 text-sm text-muted-foreground">
                                     {formatRupiah(p.selling_price)} / {p.unit}
@@ -218,6 +224,22 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                         </Select>
                         {productForm.errors.recipe_type && <p className="mt-1 text-xs text-destructive">{productForm.errors.recipe_type}</p>}
                     </div>
+                    {productForm.data.recipe_type === 'batch' && (
+                        <div>
+                            <Label htmlFor="is_prep">Kategori</Label>
+                            <Select
+                                value={productForm.data.is_prep ? 'true' : 'false'}
+                                onChange={(e) => productForm.setData('is_prep', e.target.value === 'true')}
+                            >
+                                <option value="false">Produk Jadi</option>
+                                <option value="true">Prep - Bahan Setengah Jadi</option>
+                            </Select>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Prep akan masuk ke Stok Prep, bukan Stok Produk Jadi. Bisa jadi bahan resep produk lain.
+                            </p>
+                            {productForm.errors.is_prep && <p className="mt-1 text-xs text-destructive">{productForm.errors.is_prep}</p>}
+                        </div>
+                    )}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <Label htmlFor="unit">Satuan jual</Label>
