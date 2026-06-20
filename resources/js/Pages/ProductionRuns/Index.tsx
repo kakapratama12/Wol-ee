@@ -205,46 +205,40 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                                     </div>
                                 </div>
 
-                                {/* Ingredient Table */}
+                                {/* Ingredient List — card layout, mobile-friendly */}
                                 {form.data.items.length > 0 && (
                                     <div>
                                         <Label>Bahan Terpakai (bisa diedit)</Label>
-                                        <Table className="mt-2">
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Bahan</TableHead>
-                                                    <TableHead className="w-32">Qty</TableHead>
-                                                    <TableHead>Satuan</TableHead>
-                                                    <TableHead className="text-right">Harga/Unit</TableHead>
-                                                    <TableHead className="text-right">Subtotal</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {form.data.items.map((item, i) => (
-                                                    <TableRow key={item.ingredient_id}>
-                                                        <TableCell>{item.ingredient}</TableCell>
-                                                        <TableCell>
+                                        <div className="mt-2 space-y-3">
+                                            {form.data.items.map((item, i) => (
+                                                <div key={item.ingredient_id} className="rounded-lg border p-3">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <p className="font-medium text-sm">{item.ingredient}</p>
+                                                        <p className="text-xs text-muted-foreground">{formatRupiah(item.unit_price)}/{item.base_unit}</p>
+                                                    </div>
+                                                    <div className="flex items-end gap-2">
+                                                        <div className="flex-1">
+                                                            <Label className="text-xs text-muted-foreground">Qty</Label>
                                                             <Input
                                                                 type="number"
                                                                 step="0.01"
                                                                 min="0"
                                                                 value={item.quantity}
                                                                 onChange={(e) => updateItem(i, 'quantity', e.target.value)}
+                                                                className="mt-1"
                                                             />
-                                                        </TableCell>
-                                                        <TableCell>{item.base_unit}</TableCell>
-                                                        <TableCell className="text-right">{formatRupiah(item.unit_price)}</TableCell>
-                                                        <TableCell className="text-right">
-                                                            {formatRupiah((parseFloat(item.quantity) || 0) * item.unit_price)}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                                <TableRow className="font-semibold">
-                                                    <TableCell colSpan={4} className="text-right">Total Biaya Bahan</TableCell>
-                                                    <TableCell className="text-right">{formatRupiah(estimatedTotalCost)}</TableCell>
-                                                </TableRow>
-                                            </TableBody>
-                                        </Table>
+                                                        </div>
+                                                        <p className="pb-2 text-sm font-medium whitespace-nowrap">
+                                                            = {formatRupiah((parseFloat(item.quantity) || 0) * item.unit_price)}
+                                                        </p>
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground mt-1">{item.base_unit}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="mt-3 flex justify-end rounded-lg bg-muted/50 p-3">
+                                            <p className="text-sm font-semibold">Total: {formatRupiah(estimatedTotalCost)}</p>
+                                        </div>
                                     </div>
                                 )}
 
