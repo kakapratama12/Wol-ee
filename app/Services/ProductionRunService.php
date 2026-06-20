@@ -20,15 +20,14 @@ class ProductionRunService
     ) {}
 
     /**
-     * Create a production run: deduct raw materials, add finished goods, record waste.
+     * Create a production run: deduct raw materials only.
+     * Yield is recorded later via updateYield().
      * Atomic — all or nothing.
      */
     public function create(
         Product $product,
         int $batchCount,
         array $items, // [{ingredient_id, quantity_used}]
-        int $yieldActual,
-        int $wasteCount = 0,
         ?string $notes = null,
         ?CarbonInterface $producedAt = null,
     ): ProductionRun {
@@ -37,11 +36,6 @@ class ProductionRunService
             throw new InvalidArgumentException(
                 "Produk \"{$product->name}\" bukan tipe batch. Gunakan production run untuk tipe batch saja."
             );
-        }
-
-        // Validate: yield must be > 0
-        if ($yieldActual <= 0) {
-            throw new InvalidArgumentException('Yield aktual harus lebih dari 0.');
         }
 
         // Validate: all recipe items must be provided
@@ -76,41 +70,25 @@ class ProductionRunService
             }
         }
 
-        // Warning: yield deviation > 20% (soft warning, logged but not blocked)
-        // Use estimated_yield_per_batch from product/recipe if available, fallback to batch_count * 20
-        $expectedYield = $product->estimated_yield_per_batch
-            ? $batchCount * $product->estimated_yield_per_batch
-            : $batchCount * 20;
-        $deviation = abs($yieldActual - $expectedYield) / $expectedYield * 100;
-        if ($deviation > 20) {
-            \Log::warning("Yield deviation > 20% for production run", [
-                'product_id' => $product->id,
-                'batch_count' => $batchCount,
-                'expected_yield' => $expectedYield,
-                'actual_yield' => $yieldActual,
-                'deviation' => round($deviation, 2) . '%',
-            ]);
-        }
-
         return DB::transaction(function () use (
-            $product, $batchCount, $items, $yieldActual, $wasteCount, $notes, $producedAt
+            $product, $batchCount, $items, $notes, $producedAt
         ) {
             $producedAt = $producedAt ?? Carbon::now();
 
-            // 1. Create production run
+            // 1. Create production run (yield_actual = 0, waste_count = 0)
             $totalCost = 0;
             $productionRun = ProductionRun::create([
                 'tenant_id' => $product->tenant_id,
                 'product_id' => $product->id,
                 'batch_count' => $batchCount,
-                'yield_actual' => $yieldActual,
-                'waste_count' => $wasteCount,
+                'yield_actual' => 0,
+                'waste_count' => 0,
                 'total_cost' => 0, // Will update after calculating
                 'notes' => $notes,
                 'produced_at' => $producedAt,
             ]);
 
-            // 2. Process each ingredient
+            // 2. Process each ingredient — deduct raw materials only
             foreach ($items as $item) {
                 $ingredient = Ingredient::find($item['ingredient_id']);
                 $quantityUsed = (float) $item['quantity_used'];
@@ -141,45 +119,7 @@ class ProductionRunService
             // Update total cost
             $productionRun->update(['total_cost' => round($totalCost, 4)]);
 
-            // 3. Add finished goods to stock
-            // Find or create finished goods ingredient for this product
-            $finishedGoods = $this->getOrCreateFinishedGoods($product);
-
-            // Add yield to finished goods stock
-            $finishedGoods->refresh();
-            $oldStock = (float) $finishedGoods->current_stock;
-            $newStock = $oldStock + $yieldActual;
-            $finishedGoods->current_stock = $newStock;
-            $finishedGoods->save();
-
-            // Record production output movement
-            StockMovement::create([
-                'ingredient_id' => $finishedGoods->id,
-                'type' => StockMovement::TYPE_PRODUCTION_OUTPUT,
-                'quantity' => $yieldActual,
-                'stock_after' => $newStock,
-                'production_run_id' => $productionRun->id,
-                'note' => "Production run #{$productionRun->id}: {$yieldActual} {$finishedGoods->base_unit}",
-                'occurred_at' => $producedAt,
-            ]);
-
-            // 4. Record waste if any
-            if ($wasteCount > 0) {
-                $wasteStock = (float) $finishedGoods->current_stock;
-                $newWasteStock = $wasteStock - $wasteCount;
-                $finishedGoods->current_stock = $newWasteStock;
-                $finishedGoods->save();
-
-                StockMovement::create([
-                    'ingredient_id' => $finishedGoods->id,
-                    'type' => StockMovement::TYPE_WASTE,
-                    'quantity' => -$wasteCount,
-                    'stock_after' => $newWasteStock,
-                    'production_run_id' => $productionRun->id,
-                    'note' => "Production run #{$productionRun->id}: {$wasteCount} {$finishedGoods->base_unit} waste",
-                    'occurred_at' => $producedAt,
-                ]);
-            }
+            // No finished goods added at creation time — yield recorded later
 
             return $productionRun;
         });
@@ -187,7 +127,9 @@ class ProductionRunService
 
     /**
      * Update yield and waste for a production run.
-     * Adjusts finished goods stock accordingly.
+     * On first-time recording (old yield == 0), ADD finished goods to stock.
+     * On subsequent edits, adjust diff.
+     * Yield deviation warning only triggers when yield_actual > 0.
      * Atomic — all or nothing.
      */
     public function updateYield(
@@ -200,10 +142,28 @@ class ProductionRunService
         }
 
         return DB::transaction(function () use ($productionRun, $newYieldActual, $newWasteCount) {
-            $oldYield = $productionRun->yield_actual;
-            $oldWaste = $productionRun->waste_count;
-            $yieldDiff = $newYieldActual - $oldYield;
-            $wasteDiff = $newWasteCount - $oldWaste;
+            $oldYield = $productionRun->yield_actual ?? 0;
+            $oldWaste = $productionRun->waste_count ?? 0;
+            $isFirstTimeRecording = ($oldYield === 0 && $oldWaste === 0);
+
+            // Yield deviation warning (only when yield_actual > 0)
+            if ($newYieldActual > 0) {
+                $product = $productionRun->product;
+                $expectedYield = $product->estimated_yield_per_batch
+                    ? $productionRun->batch_count * $product->estimated_yield_per_batch
+                    : $productionRun->batch_count * 20;
+                $deviation = abs($newYieldActual - $expectedYield) / $expectedYield * 100;
+                if ($deviation > 20) {
+                    \Log::warning("Yield deviation > 20% for production run", [
+                        'production_run_id' => $productionRun->id,
+                        'product_id' => $product->id,
+                        'batch_count' => $productionRun->batch_count,
+                        'expected_yield' => $expectedYield,
+                        'actual_yield' => $newYieldActual,
+                        'deviation' => round($deviation, 2) . '%',
+                    ]);
+                }
+            }
 
             // Update the production run
             $productionRun->update([
@@ -211,30 +171,65 @@ class ProductionRunService
                 'waste_count' => $newWasteCount,
             ]);
 
-            // Adjust finished goods stock based on yield difference
+            // Adjust finished goods stock
             $finishedGoods = $this->getOrCreateFinishedGoods($productionRun->product);
             $finishedGoods->refresh();
             $oldStock = (float) $finishedGoods->current_stock;
-            $newStock = $oldStock + $yieldDiff;
 
-            // Also adjust for waste difference
-            $newStock -= $wasteDiff;
+            if ($isFirstTimeRecording) {
+                // First time: ADD yield to stock, then subtract waste
+                $newStock = $oldStock + $newYieldActual - $newWasteCount;
+                $finishedGoods->current_stock = $newStock;
+                $finishedGoods->save();
 
-            $finishedGoods->current_stock = $newStock;
-            $finishedGoods->save();
-
-            // Record stock adjustment movement
-            $totalDiff = $yieldDiff - $wasteDiff;
-            if ($totalDiff != 0) {
+                // Record production output
                 StockMovement::create([
                     'ingredient_id' => $finishedGoods->id,
-                    'type' => 'adjustment',
-                    'quantity' => $totalDiff,
+                    'type' => StockMovement::TYPE_PRODUCTION_OUTPUT,
+                    'quantity' => $newYieldActual,
                     'stock_after' => $newStock,
                     'production_run_id' => $productionRun->id,
-                    'note' => "Adjustment production run #{$productionRun->id}: yield {$oldYield}→{$newYieldActual}, waste {$oldWaste}→{$newWasteCount}",
+                    'note' => "Production run #{$productionRun->id}: {$newYieldActual} {$finishedGoods->base_unit}",
                     'occurred_at' => now(),
                 ]);
+
+                // Record waste if any
+                if ($newWasteCount > 0) {
+                    $wasteStock = (float) $finishedGoods->current_stock;
+                    $newWasteStock = $wasteStock - $newWasteCount;
+                    $finishedGoods->current_stock = $newWasteStock;
+                    $finishedGoods->save();
+
+                    StockMovement::create([
+                        'ingredient_id' => $finishedGoods->id,
+                        'type' => StockMovement::TYPE_WASTE,
+                        'quantity' => -$newWasteCount,
+                        'stock_after' => $newWasteStock,
+                        'production_run_id' => $productionRun->id,
+                        'note' => "Production run #{$productionRun->id}: {$newWasteCount} {$finishedGoods->base_unit} waste",
+                        'occurred_at' => now(),
+                    ]);
+                }
+            } else {
+                // Subsequent edit: adjust diff
+                $yieldDiff = $newYieldActual - $oldYield;
+                $wasteDiff = $newWasteCount - $oldWaste;
+                $newStock = $oldStock + $yieldDiff - $wasteDiff;
+                $finishedGoods->current_stock = $newStock;
+                $finishedGoods->save();
+
+                $totalDiff = $yieldDiff - $wasteDiff;
+                if ($totalDiff != 0) {
+                    StockMovement::create([
+                        'ingredient_id' => $finishedGoods->id,
+                        'type' => 'adjustment',
+                        'quantity' => $totalDiff,
+                        'stock_after' => $newStock,
+                        'production_run_id' => $productionRun->id,
+                        'note' => "Adjustment production run #{$productionRun->id}: yield {$oldYield}→{$newYieldActual}, waste {$oldWaste}→{$newWasteCount}",
+                        'occurred_at' => now(),
+                    ]);
+                }
             }
 
             return $productionRun->fresh();

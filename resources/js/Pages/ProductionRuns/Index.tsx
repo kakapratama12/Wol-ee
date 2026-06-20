@@ -34,6 +34,7 @@ interface ProductionRun {
     batch_count: number;
     yield_actual: number;
     waste_count: number;
+    yield_recorded: boolean;
     total_cost: number;
     cost_per_unit: number;
     yield_per_batch: number;
@@ -63,8 +64,6 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
         product_id: '',
         batch_count: '1',
         items: [] as ItemRow[],
-        yield_actual: '',
-        waste_count: '0',
         notes: '',
     });
 
@@ -72,11 +71,6 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
         yield_actual: '',
         waste_count: '0',
     });
-
-    const selectedProduct = useMemo(
-        () => batchProducts.find((p) => String(p.id) === form.data.product_id),
-        [form.data.product_id, batchProducts],
-    );
 
     const selectProduct = (productId: string) => {
         const product = batchProducts.find((p) => String(p.id) === productId);
@@ -92,8 +86,6 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                 quantity: String(r.quantity),
                 unit_price: r.unit_price,
             })),
-            yield_actual: '',
-            waste_count: '0',
             notes: '',
         });
     };
@@ -112,6 +104,15 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+        form.transform((data) => ({
+            product_id: Number(data.product_id),
+            batch_count: Number(data.batch_count),
+            items: data.items.map((item) => ({
+                ingredient_id: item.ingredient_id,
+                quantity_used: Number(item.quantity),
+            })),
+            notes: data.notes || null,
+        }));
         form.post('/production-runs', {
             onSuccess: () => {
                 setShowForm(false);
@@ -247,33 +248,7 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                                    <div>
-                                        <Label>Yield Aktual (pcs)</Label>
-                                        <Input
-                                            type="number"
-                                            min="1"
-                                            className="mt-1"
-                                            placeholder="Contoh: 38"
-                                            value={form.data.yield_actual}
-                                            onChange={(e) => form.setData('yield_actual', e.target.value)}
-                                        />
-                                        {selectedProduct?.estimated_yield_per_batch && (
-                                            <p className="mt-1 text-xs text-muted-foreground">
-                                                Estimasi: {selectedProduct.estimated_yield_per_batch} pcs/batch
-                                            </p>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <Label>Waste (pcs)</Label>
-                                        <Input
-                                            type="number"
-                                            min="0"
-                                            className="mt-1"
-                                            value={form.data.waste_count}
-                                            onChange={(e) => form.setData('waste_count', e.target.value)}
-                                        />
-                                    </div>
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
                                         <Label>Catatan</Label>
                                         <Input
@@ -331,7 +306,13 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                                             <TableCell>{formatDate(run.produced_at)}</TableCell>
                                             <TableCell className="font-medium">{run.product}</TableCell>
                                             <TableCell className="text-center">{run.batch_count}</TableCell>
-                                            <TableCell className="text-center">{formatNumber(run.yield_actual)}</TableCell>
+                                            <TableCell className="text-center font-medium">
+                                                {run.yield_recorded ? (
+                                                    formatNumber(run.yield_actual)
+                                                ) : (
+                                                    <span className="text-muted-foreground italic text-xs">Belum Catat</span>
+                                                )}
+                                            </TableCell>
                                             <TableCell className="text-center">
                                                 {run.waste_count > 0 ? (
                                                     <span className="text-orange-600">{formatNumber(run.waste_count)} ({run.waste_percentage}%)</span>

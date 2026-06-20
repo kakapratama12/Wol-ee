@@ -152,6 +152,11 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                                 <p className="mt-1 text-sm text-muted-foreground">
                                     {formatRupiah(p.selling_price)} / {p.unit}
                                 </p>
+                                {p.recipe_type === 'batch' && p.estimated_yield_per_batch && (
+                                    <p className="mt-1 text-xs text-blue-600">
+                                        Estimasi: {p.estimated_yield_per_batch} pcs/batch
+                                    </p>
+                                )}
                             </div>
                             {!p.is_active && <Badge variant="secondary">Nonaktif</Badge>}
                         </CardHeader>

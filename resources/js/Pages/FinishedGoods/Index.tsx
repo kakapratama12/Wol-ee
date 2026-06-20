@@ -16,6 +16,7 @@ interface ProductionDetail {
     produced_at: string | null;
     yield_actual: number;
     waste_count: number;
+    yield_recorded: boolean;
     total_cost: number;
     cost_per_unit: number;
     notes: string | null;
@@ -177,7 +178,11 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                                             <TableRow key={detail.id}>
                                                                 <TableCell>{formatDate(detail.produced_at)}</TableCell>
                                                                 <TableCell className="text-center font-medium">
-                                                                    {formatNumber(detail.yield_actual)}
+                                                                    {detail.yield_recorded ? (
+                                                                        formatNumber(detail.yield_actual)
+                                                                    ) : (
+                                                                        <span className="text-muted-foreground italic text-xs">Belum Catat Yield</span>
+                                                                    )}
                                                                 </TableCell>
                                                                 <TableCell className="text-center">
                                                                     {detail.waste_count > 0 ? (
@@ -192,7 +197,7 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                                                     {formatRupiah(detail.total_cost)}
                                                                 </TableCell>
                                                                 <TableCell className="text-right">
-                                                                    {formatRupiah(detail.cost_per_unit)}
+                                                                    {detail.yield_recorded ? formatRupiah(detail.cost_per_unit) : '-'}
                                                                 </TableCell>
                                                                 <TableCell className="text-muted-foreground text-sm">
                                                                     {detail.notes || '-'}
@@ -203,7 +208,11 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                                                         size="sm"
                                                                         onClick={() => openEditYield(detail, product.name)}
                                                                     >
-                                                                        <Pencil className="h-4 w-4" />
+                                                                        {detail.yield_recorded ? (
+                                                                            <Pencil className="h-4 w-4" />
+                                                                        ) : (
+                                                                            <span className="text-xs">Catat Yield</span>
+                                                                        )}
                                                                     </Button>
                                                                 </TableCell>
                                                             </TableRow>

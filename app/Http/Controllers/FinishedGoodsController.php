@@ -46,6 +46,7 @@ class FinishedGoodsController extends Controller
                         'produced_at' => $run->produced_at?->toIso8601String(),
                         'yield_actual' => $run->yield_actual,
                         'waste_count' => $run->waste_count,
+                        'yield_recorded' => ($run->yield_actual ?? 0) > 0,
                         'total_cost' => (float) $run->total_cost,
                         'cost_per_unit' => $run->yield_actual > 0 ? round((float) $run->total_cost / $run->yield_actual, 2) : 0,
                         'notes' => $run->notes,

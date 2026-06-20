@@ -29,6 +29,7 @@ class ProductionRunController extends Controller
                 'batch_count' => $run->batch_count,
                 'yield_actual' => $run->yield_actual,
                 'waste_count' => $run->waste_count,
+                'yield_recorded' => ($run->yield_actual ?? 0) > 0,
                 'total_cost' => (float) $run->total_cost,
                 'cost_per_unit' => $run->getCostPerUnit(),
                 'yield_per_batch' => $run->getYieldPerBatch(),
@@ -73,8 +74,6 @@ class ProductionRunController extends Controller
             'items' => ['required', 'array', 'min:1'],
             'items.*.ingredient_id' => ['required', 'integer', 'exists:ingredients,id'],
             'items.*.quantity_used' => ['required', 'numeric', 'gt:0'],
-            'yield_actual' => ['required', 'integer', 'gt:0'],
-            'waste_count' => ['nullable', 'integer', 'min:0'],
             'notes' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -85,8 +84,6 @@ class ProductionRunController extends Controller
                 product: $product,
                 batchCount: $validated['batch_count'],
                 items: $validated['items'],
-                yieldActual: $validated['yield_actual'],
-                wasteCount: $validated['waste_count'] ?? 0,
                 notes: $validated['notes'] ?? null,
             );
 

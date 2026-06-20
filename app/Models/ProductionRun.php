@@ -31,6 +31,14 @@ class ProductionRun extends Model
         'produced_at' => 'datetime',
     ];
 
+    /**
+     * Get yield_actual, defaulting to 0 if null
+     */
+    public function getYieldActualAttribute(?int $value): int
+    {
+        return $value ?? 0;
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
