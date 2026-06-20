@@ -71,6 +71,12 @@ export default function ProductsIndex({ products, ingredients }: Props) {
     const [editing, setEditing] = useState<Product | null>(null);
     const [recipeProduct, setRecipeProduct] = useState<Product | null>(null);
 
+    // Filtered groups for prep products (only raw_material)
+    const filteredIngredientGroups = useMemo(() => {
+        if (!recipeProduct?.is_prep) return ingredientGroups;
+        return { raw_material: ingredientGroups.raw_material };
+    }, [recipeProduct, ingredientGroups]);
+
     const productForm = useForm({ name: '', unit: 'pcs', selling_price: '', recipe_type: 'unit' as 'unit' | 'batch', is_prep: false });
     const recipeForm = useForm<{ items: EditableRow[]; estimated_yield_per_batch: string }>({ items: [], estimated_yield_per_batch: '' });
 
@@ -269,6 +275,11 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                 className="max-w-2xl"
             >
                 <form onSubmit={saveRecipe} className="space-y-4">
+                    {recipeProduct?.is_prep && (
+                        <p className="rounded-md bg-orange-50 p-2 text-xs text-orange-700 border border-orange-200">
+                            Produk prep hanya boleh menggunakan bahan baku (raw material). Bahan prep lainnya tidak tersedia.
+                        </p>
+                    )}
                     <div className="space-y-2">
                         {recipeForm.data.items.map((row, i) => {
                             const ing = ingredients.find((x) => String(x.id) === row.ingredient_id);
@@ -279,7 +290,7 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                                         <Label className="text-xs">Bahan</Label>
                                         <Select value={row.ingredient_id} onChange={(e) => updateRow(i, 'ingredient_id', e.target.value)}>
                                             <option value="">- pilih -</option>
-                                            {Object.entries(ingredientGroups).map(([key, group]) =>
+                                            {Object.entries(filteredIngredientGroups).map(([key, group]) =>
                                                 group.items.length > 0 ? (
                                                     <optgroup key={key} label={group.label}>
                                                         {group.items.map((x) => (

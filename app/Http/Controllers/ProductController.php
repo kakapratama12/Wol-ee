@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as BaseResponse;
 
 class ProductController extends Controller
 {
@@ -88,10 +89,26 @@ class ProductController extends Controller
         return back()->with('success', 'Produk dihapus.');
     }
 
-    public function updateRecipe(UpdateRecipeRequest $request, Product $product): RedirectResponse
+    public function updateRecipe(UpdateRecipeRequest $request, Product $product): RedirectResponse|BaseResponse
     {
         $validated = $request->validated();
         $items = $validated['items'];
+
+        // Server-side guard: prep products must only use raw_material ingredients
+        if ($product->is_prep) {
+            $ingredientIds = array_column($items, 'ingredient_id');
+            $invalidIngredients = Ingredient::whereIn('id', $ingredientIds)
+                ->where('item_type', '!=', 'raw_material')
+                ->pluck('name')
+                ->all();
+
+            if (! empty($invalidIngredients)) {
+                $names = implode(', ', $invalidIngredients);
+                return back()->withErrors([
+                    'items' => "Produk prep hanya boleh menggunakan bahan baku. Bahan berikut tidak diizinkan: {$names}",
+                ])->withInput();
+            }
+        }
 
         DB::transaction(function () use ($product, $items, $validated) {
             $product->recipeItems()->delete();

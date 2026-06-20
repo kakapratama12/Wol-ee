@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Expense;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreExpenseRequest extends FormRequest
 {
@@ -17,7 +19,7 @@ class StoreExpenseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category' => ['required', 'string', 'max:100'],
+            'category' => ['required', 'string', Rule::in(array_keys(Expense::CATEGORIES))],
             'description' => ['nullable', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'gt:0'],
             'period_month' => ['required', 'integer', 'between:1,12'],

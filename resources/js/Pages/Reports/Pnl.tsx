@@ -19,6 +19,11 @@ interface Report {
     gross_margin: number;
     expenses: ExpenseRow[];
     total_expenses: number;
+    expenses_by_category: {
+        bahan_baku: number;
+        operasional: number;
+        overhead: number;
+    };
     net_profit: number;
     net_margin: number;
 }
@@ -83,7 +88,27 @@ export default function Pnl({ report, period, periodLabel }: Props) {
                     <Line label="Gross Profit" value={formatRupiah(report.gross_profit)} bold hint={`Margin ${formatPercent(report.gross_margin)}`} />
 
                     <div className="my-3 border-t border-border" />
-                    <p className="font-semibold">Expenses</p>
+
+                    {report.expenses_by_category.bahan_baku > 0 && (
+                        <>
+                            <p className="font-semibold text-blue-700">Bahan Baku</p>
+                            <Line label="  Biaya Bahan Baku" value={`(${formatRupiah(report.expenses_by_category.bahan_baku)})`} muted />
+                        </>
+                    )}
+                    {report.expenses_by_category.operasional > 0 && (
+                        <>
+                            <p className="font-semibold text-green-700">Operasional</p>
+                            <Line label="  Biaya Operasional" value={`(${formatRupiah(report.expenses_by_category.operasional)})`} muted />
+                        </>
+                    )}
+                    {report.expenses_by_category.overhead > 0 && (
+                        <>
+                            <p className="font-semibold text-orange-700">Overhead</p>
+                            <Line label="  Biaya Overhead" value={`(${formatRupiah(report.expenses_by_category.overhead)})`} muted />
+                        </>
+                    )}
+
+                    <p className="mt-2 font-semibold">Detail per Kategori</p>
                     {report.expenses.length === 0 ? (
                         <p className="py-1 text-muted-foreground">Belum ada biaya tercatat.</p>
                     ) : (

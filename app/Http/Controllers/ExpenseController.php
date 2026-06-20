@@ -36,6 +36,7 @@ class ExpenseController extends Controller
         return Inertia::render('Expenses/Index', [
             'expenses' => $expenses,
             'total' => round((float) $expenses->sum('amount'), 2),
+            'categories' => Expense::CATEGORIES,
             'period' => ['month' => $month, 'year' => $year],
             'periodLabel' => Carbon::create($year, $month)->translatedFormat('F Y'),
         ]);

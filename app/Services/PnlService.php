@@ -40,6 +40,21 @@ class PnlService
             ->all();
 
         $totalExpenses = round(array_sum(array_column($expenseRows, 'amount')), 2);
+
+        // Break down expenses by category
+        $bahanBaku = round(array_sum(array_column(
+            array_filter($expenseRows, fn ($r) => $r['category'] === Expense::CATEGORY_BAHAN_BAKU),
+            'amount'
+        )), 2);
+        $operasional = round(array_sum(array_column(
+            array_filter($expenseRows, fn ($r) => $r['category'] === Expense::CATEGORY_OPERASIONAL),
+            'amount'
+        )), 2);
+        $overhead = round(array_sum(array_column(
+            array_filter($expenseRows, fn ($r) => $r['category'] === Expense::CATEGORY_OVERHEAD),
+            'amount'
+        )), 2);
+
         $netProfit = round($grossProfit - $totalExpenses, 2);
 
         return [
@@ -51,6 +66,11 @@ class PnlService
             'gross_margin' => $revenue > 0 ? round(($grossProfit / $revenue) * 100, 2) : 0.0,
             'expenses' => $expenseRows,
             'total_expenses' => $totalExpenses,
+            'expenses_by_category' => [
+                'bahan_baku' => $bahanBaku,
+                'operasional' => $operasional,
+                'overhead' => $overhead,
+            ],
             'net_profit' => $netProfit,
             'net_margin' => $revenue > 0 ? round(($netProfit / $revenue) * 100, 2) : 0.0,
         ];
