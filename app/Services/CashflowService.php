@@ -40,13 +40,13 @@ class CashflowService
             ->sum('total');
 
         $biayaOperasional = (float) Expense::query()
-            ->whereBetween('period_month', $month)
+            ->where('period_month', $month)
             ->where('period_year', $year)
             ->whereIn('category', Expense::PNL_CATEGORIES)
             ->sum('amount');
 
         $diLuarUsaha = (float) Expense::query()
-            ->whereBetween('period_month', $month)
+            ->where('period_month', $month)
             ->where('period_year', $year)
             ->where('category', Expense::CATEGORY_NON_OPERASIONAL)
             ->sum('amount');
