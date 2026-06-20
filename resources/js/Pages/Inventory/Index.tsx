@@ -50,14 +50,8 @@ export default function InventoryIndex({ ingredients, itemType, counts, canManag
     const form = useForm<Record<string, string>>({ ...emptyForm });
     const adjustForm = useForm({ current_stock: '', note: '' });
 
-    const tabs = [
-        { key: 'raw_material', label: 'Bahan Dasar', count: counts.raw_material ?? 0 },
-        { key: 'finished_goods', label: 'Produk Jadi', count: counts.finished_goods ?? 0 },
-    ];
+    // No tabs — Inventory page only shows raw_material items
 
-    const switchTab = (type: string) => {
-        router.get('/inventory', { type }, { preserveState: true, replace: true });
-    };
 
     const openCreate = () => {
         setEditing(null);
@@ -114,31 +108,12 @@ export default function InventoryIndex({ ingredients, itemType, counts, canManag
             <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">{ingredients.length} item</p>
                 {canManage && (
-                    <Button onClick={openCreate} disabled={itemType === 'finished_goods'}>
+                    <Button onClick={openCreate}>
                         <Plus className="h-4 w-4" /> Tambah Bahan
                     </Button>
                 )}
             </div>
 
-            {/* Tabs */}
-            <div className="mb-4 flex gap-1 rounded-lg bg-muted p-1">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.key}
-                        onClick={() => switchTab(tab.key)}
-                        className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                            itemType === tab.key
-                                ? 'bg-background text-foreground shadow-sm'
-                                : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                    >
-                        {tab.label}
-                        <span className="ml-1.5 rounded-full bg-muted-foreground/20 px-1.5 py-0.5 text-xs">
-                            {tab.count}
-                        </span>
-                    </button>
-                ))}
-            </div>
 
             <Card>
                 <CardContent className="p-0">
