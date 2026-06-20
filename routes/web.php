@@ -4,6 +4,8 @@ use App\Http\Controllers\AgingReportController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\BotIntegrationController;
+use App\Http\Controllers\CashEntryController;
+use App\Http\Controllers\CashflowController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\IngredientController;
@@ -77,6 +79,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/pnl', [PnlController::class, 'index'])->name('pnl.index');
         Route::get('/pnl/export', [PnlController::class, 'export'])->name('pnl.export');
+
+        Route::get('/reports/cashflow', [CashflowController::class, 'index'])->name('reports.cashflow');
+        Route::post('/cash-entries', [CashEntryController::class, 'store'])->name('cash-entries.store');
+        Route::delete('/cash-entries/{cashEntry}', [CashEntryController::class, 'destroy'])->name('cash-entries.destroy');
 
         Route::get('/reports/aging', [AgingReportController::class, 'index'])->name('reports.aging');
 

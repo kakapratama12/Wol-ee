@@ -29,6 +29,7 @@ class PnlService
         $expenseRows = Expense::query()
             ->where('period_year', $year)
             ->where('period_month', $month)
+            ->whereIn('category', Expense::PNL_CATEGORIES)
             ->selectRaw('category, SUM(amount) as total')
             ->groupBy('category')
             ->orderByDesc('total')

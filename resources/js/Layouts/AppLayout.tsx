@@ -76,6 +76,7 @@ const navigation: (NavSingle | NavGroup)[] = [
         ownerOnly: true,
         children: [
             { label: 'Laporan P&L', href: '/pnl' },
+            { label: 'Laporan Cashflow', href: '/reports/cashflow' },
             { label: 'Tax Simulator', href: '/tax' },
             { label: 'Margin Protection', href: '/margin' },
             { label: 'Aging Report', href: '/reports/aging', hideIfNoInvoices: true },

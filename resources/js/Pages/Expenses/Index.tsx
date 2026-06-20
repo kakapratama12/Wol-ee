@@ -32,6 +32,7 @@ const categoryColors: Record<string, string> = {
     bahan_baku: 'bg-blue-100 text-blue-800',
     operasional: 'bg-green-100 text-green-800',
     overhead: 'bg-orange-100 text-orange-800',
+    non_operasional: 'bg-slate-100 text-slate-800',
 };
 
 const months = [
