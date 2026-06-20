@@ -40,7 +40,28 @@ class PnlExport
         $write('Gross Profit', (float) $report['gross_profit'], true);
         $row++;
 
-        $sheet->setCellValue("A{$row}", 'Expenses');
+        // Category breakdown
+        $expensesByCategory = $report['expenses_by_category'] ?? [];
+        if (($expensesByCategory['bahan_baku'] ?? 0) > 0) {
+            $sheet->setCellValue("A{$row}", 'Biaya Bahan Baku');
+            $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setColor(\PhpOffice\PhpSpreadsheet\Style\Color::getInstance('FF0000FF'));
+            $row++;
+            $write('  Bahan Baku', (float) $expensesByCategory['bahan_baku'], false, true);
+        }
+        if (($expensesByCategory['operasional'] ?? 0) > 0) {
+            $sheet->setCellValue("A{$row}", 'Biaya Operasional');
+            $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setColor(\PhpOffice\PhpSpreadsheet\Style\Color::getInstance('FF008000'));
+            $row++;
+            $write('  Operasional', (float) $expensesByCategory['operasional'], false, true);
+        }
+        if (($expensesByCategory['overhead'] ?? 0) > 0) {
+            $sheet->setCellValue("A{$row}", 'Biaya Overhead');
+            $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setColor(\PhpOffice\PhpSpreadsheet\Style\Color::getInstance('FFFF8C00'));
+            $row++;
+            $write('  Overhead', (float) $expensesByCategory['overhead'], false, true);
+        }
+
+        $sheet->setCellValue("A{$row}", 'Detail per Kategori');
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
         $row++;
 

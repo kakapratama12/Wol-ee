@@ -16,8 +16,14 @@ class Ingredient extends Model
     public const STATUS_LOW = 'menipis';
     public const STATUS_CRITICAL = 'kritis';
 
+    // Constants for item_type
+    const ITEM_RAW_MATERIAL = 'raw_material';
+    const ITEM_PREP = 'prep';
+    const ITEM_FINISHED_GOODS = 'finished_goods';
+
     protected $fillable = [
         'name',
+        'item_type',
         'unit_type',
         'base_unit',
         'unit_price',
@@ -60,6 +66,35 @@ class Ingredient extends Model
     public function priceHistories(): HasMany
     {
         return $this->hasMany(PriceHistory::class);
+    }
+
+    public function productionRunItems(): HasMany
+    {
+        return $this->hasMany(ProductionRunItem::class);
+    }
+
+    /**
+     * Check if this is a raw material (bahan baku)
+     */
+    public function isRawMaterial(): bool
+    {
+        return $this->item_type === self::ITEM_RAW_MATERIAL;
+    }
+
+    /**
+     * Check if this is a finished goods (produk jadi)
+     */
+    public function isFinishedGoods(): bool
+    {
+        return $this->item_type === self::ITEM_FINISHED_GOODS;
+    }
+
+    /**
+     * Check if this is a prep item (bahan setengah jadi)
+     */
+    public function isPrep(): bool
+    {
+        return $this->item_type === self::ITEM_PREP;
     }
 
     public function getStockStatusAttribute(): string

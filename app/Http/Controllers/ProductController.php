@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as BaseResponse;
 
 class ProductController extends Controller
 {
@@ -31,7 +32,10 @@ class ProductController extends Controller
                     'name' => $product->name,
                     'unit' => $product->unit,
                     'selling_price' => (float) $product->selling_price,
+                    'recipe_type' => $product->recipe_type ?? 'unit',
+                    'estimated_yield_per_batch' => $product->estimated_yield_per_batch,
                     'is_active' => $product->is_active,
+                    'is_prep' => $product->is_prep ?? false,
                     'cogs' => $cogsValue,
                     'margin' => $cogs->margin($product),
                     'recipe' => $product->recipeItems->map(fn (RecipeItem $item) => [
@@ -47,7 +51,9 @@ class ProductController extends Controller
 
         return Inertia::render('Products/Index', [
             'products' => $products,
-            'ingredients' => Ingredient::orderBy('name')->get(['id', 'name', 'base_unit', 'unit_price']),
+            'ingredients' => Ingredient::whereIn('item_type', ['raw_material', 'prep'])
+                ->orderBy('name')
+                ->get(['id', 'name', 'base_unit', 'unit_price', 'item_type']),
         ]);
     }
 
@@ -83,11 +89,28 @@ class ProductController extends Controller
         return back()->with('success', 'Produk dihapus.');
     }
 
-    public function updateRecipe(UpdateRecipeRequest $request, Product $product): RedirectResponse
+    public function updateRecipe(UpdateRecipeRequest $request, Product $product): RedirectResponse|BaseResponse
     {
-        $items = $request->validated()['items'];
+        $validated = $request->validated();
+        $items = $validated['items'];
 
-        DB::transaction(function () use ($product, $items) {
+        // Server-side guard: prep products must only use raw_material ingredients
+        if ($product->is_prep) {
+            $ingredientIds = array_column($items, 'ingredient_id');
+            $invalidIngredients = Ingredient::whereIn('id', $ingredientIds)
+                ->where('item_type', '!=', 'raw_material')
+                ->pluck('name')
+                ->all();
+
+            if (! empty($invalidIngredients)) {
+                $names = implode(', ', $invalidIngredients);
+                return back()->withErrors([
+                    'items' => "Produk prep hanya boleh menggunakan bahan baku. Bahan berikut tidak diizinkan: {$names}",
+                ])->withInput();
+            }
+        }
+
+        DB::transaction(function () use ($product, $items, $validated) {
             $product->recipeItems()->delete();
 
             foreach ($items as $item) {
@@ -95,6 +118,13 @@ class ProductController extends Controller
                     'product_id' => $product->id,
                     'ingredient_id' => $item['ingredient_id'],
                     'quantity' => $item['quantity'],
+                ]);
+            }
+
+            // Update estimated_yield_per_batch if provided (recipe-level setting)
+            if (array_key_exists('estimated_yield_per_batch', $validated)) {
+                $product->update([
+                    'estimated_yield_per_batch' => $validated['estimated_yield_per_batch'] ?? null,
                 ]);
             }
         });

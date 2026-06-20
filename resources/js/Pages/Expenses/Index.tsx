@@ -23,26 +23,33 @@ interface Expense {
 interface Props {
     expenses: Expense[];
     total: number;
+    categories: Record<string, string>;
     period: { month: number; year: number };
     periodLabel: string;
 }
 
-const categories = ['Listrik', 'Sewa', 'Internet', 'Gaji', 'Marketing', 'Lainnya'];
+const categoryColors: Record<string, string> = {
+    bahan_baku: 'bg-blue-100 text-blue-800',
+    operasional: 'bg-green-100 text-green-800',
+    overhead: 'bg-orange-100 text-orange-800',
+    non_operasional: 'bg-slate-100 text-slate-800',
+};
+
 const months = [
     'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
 ];
 
-export default function ExpensesIndex({ expenses, total, period, periodLabel }: Props) {
+export default function ExpensesIndex({ expenses, total, categories, period, periodLabel }: Props) {
     const form = useForm({
-        category: 'Listrik',
+        category: 'operasional',
         description: '',
         amount: '',
         period_month: period.month,
         period_year: period.year,
     });
     const editForm = useForm({
-        category: 'Listrik',
+        category: 'operasional',
         description: '',
         amount: '',
         period_month: period.month,
@@ -116,9 +123,9 @@ export default function ExpensesIndex({ expenses, total, period, periodLabel }: 
                             <div>
                                 <Label htmlFor="category">Kategori</Label>
                                 <Select id="category" value={form.data.category} onChange={(e) => form.setData('category', e.target.value)}>
-                                    {categories.map((c) => (
-                                        <option key={c} value={c}>
-                                            {c}
+                                    {Object.entries(categories).map(([key, label]) => (
+                                        <option key={key} value={key}>
+                                            {label}
                                         </option>
                                     ))}
                                 </Select>
@@ -148,7 +155,7 @@ export default function ExpensesIndex({ expenses, total, period, periodLabel }: 
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Kategori</TableHead>
+                                    <TableHead className="w-32">Kategori</TableHead>
                                     <TableHead>Deskripsi</TableHead>
                                     <TableHead>Jumlah</TableHead>
                                     <TableHead></TableHead>
@@ -164,7 +171,11 @@ export default function ExpensesIndex({ expenses, total, period, periodLabel }: 
                                 )}
                                 {expenses.map((e) => (
                                     <TableRow key={e.id}>
-                                        <TableCell className="font-medium">{e.category}</TableCell>
+                                        <TableCell className="font-medium">
+                                            <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${categoryColors[e.category] ?? 'bg-gray-100 text-gray-800'}`}>
+                                                {categories[e.category] ?? e.category}
+                                            </span>
+                                        </TableCell>
                                         <TableCell className="text-muted-foreground">{e.description ?? '-'}</TableCell>
                                         <TableCell>{formatRupiah(e.amount)}</TableCell>
                                         <TableCell className="text-right">
@@ -190,9 +201,9 @@ export default function ExpensesIndex({ expenses, total, period, periodLabel }: 
                     <div>
                         <Label>Kategori</Label>
                         <Select value={editForm.data.category} onChange={(e) => editForm.setData('category', e.target.value)}>
-                            {categories.map((c) => (
-                                <option key={c} value={c}>
-                                    {c}
+                            {Object.entries(categories).map(([key, label]) => (
+                                <option key={key} value={key}>
+                                    {label}
                                 </option>
                             ))}
                         </Select>

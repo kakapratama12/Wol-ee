@@ -4,6 +4,8 @@ use App\Http\Controllers\AgingReportController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\BotIntegrationController;
+use App\Http\Controllers\CashEntryController;
+use App\Http\Controllers\CashflowController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\IngredientController;
@@ -15,6 +17,9 @@ use App\Http\Controllers\Platform\PlatformController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\FinishedGoodsController;
+use App\Http\Controllers\PrepStockController;
+use App\Http\Controllers\ProductionRunController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -42,6 +47,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/sales/{sale}', [SaleController::class, 'update'])->name('sales.update');
     Route::delete('/sales/{sale}', [SaleController::class, 'destroy'])->name('sales.destroy');
 
+        Route::get("/production-runs", [ProductionRunController::class, "index"])->name("production-runs.index");
+        Route::post("/production-runs", [ProductionRunController::class, "store"])->name("production-runs.store");
+        Route::put("/production-runs/{productionRun}/yield", [ProductionRunController::class, "updateYield"])->name("production-runs.updateYield");
+        Route::put("/production-runs/{productionRun}/items", [ProductionRunController::class, "updateItems"])->name("production-runs.updateItems");
+        Route::delete("/production-runs/{productionRun}", [ProductionRunController::class, "destroy"])->name("production-runs.destroy");
+
+        Route::get("/finished-goods", [FinishedGoodsController::class, "index"])->name("finished-goods.index");
+        Route::post("/finished-goods/{product}/adjust", [FinishedGoodsController::class, "adjustStock"])->name("finished-goods.adjust");
+
+        Route::get("/prep-stocks", [PrepStockController::class, "index"])->name("prep-stocks.index");
+        Route::post("/prep-stocks/{ingredient}/adjust", [PrepStockController::class, "adjustStock"])->name("prep-stocks.adjust");
+
     Route::get('/partners', [PartnerController::class, 'index'])->name('partners.index');
     Route::get('/partners/{partner}', [PartnerController::class, 'show'])->name('partners.show');
 
@@ -62,6 +79,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/pnl', [PnlController::class, 'index'])->name('pnl.index');
         Route::get('/pnl/export', [PnlController::class, 'export'])->name('pnl.export');
+
+        Route::get('/reports/cashflow', [CashflowController::class, 'index'])->name('reports.cashflow');
+        Route::post('/cash-entries', [CashEntryController::class, 'store'])->name('cash-entries.store');
+        Route::delete('/cash-entries/{cashEntry}', [CashEntryController::class, 'destroy'])->name('cash-entries.destroy');
 
         Route::get('/reports/aging', [AgingReportController::class, 'index'])->name('reports.aging');
 

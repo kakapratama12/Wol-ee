@@ -201,6 +201,123 @@ Bot: Reply ke user: "✅ Pembelian tercatat. Stok tepung: 5.5 kg (aman)"
 
 ---
 
+## Sprint 6: Batch Model & Production Run
+
+> PRD v0.5 — Two-layer inventory, production run, waste tracking.
+
+### 6.1 Database Schema
+
+- [x] Add `recipe_type` field to `products` table (enum: `unit`, `batch`)
+- [x] Add `item_type` field to `ingredients` table (enum: `raw_material`, `finished_goods`)
+- [x] Create `production_runs` table:
+  - `id`, `tenant_id`, `recipe_id` (FK products), `batch_count`
+  - `yield_actual` (integer), `waste_count` (integer)
+  - `total_cost` (decimal, snapshot)
+  - `notes`, `produced_at`, `timestamps`
+- [x] Create `production_run_items` table (pivot):
+  - `id`, `production_run_id`, `ingredient_id`
+  - `quantity_used` (decimal), `unit_cost_snapshot` (decimal)
+- [x] Update `stock_movements` types: add `production_input`, `production_output`, `waste`
+- [x] Add `production_run_id` nullable FK to `stock_movements` (traceability)
+
+### 6.2 Models & Relations
+
+- [x] Update `Product` model: add `recipe_type` to fillable/casts
+- [x] Update `Ingredient` model: add `item_type` to fillable/casts
+- [x] Create `ProductionRun` model + relations (belongsTo Product, hasMany ProductionRunItems, hasMany StockMovements)
+- [x] Create `ProductionRunItem` model + relations
+- [x] Update `StockMovement` model: add new type constants
+
+### 6.3 Production Run Service
+
+- [x] `ProductionRunService::create($data)` — main orchestrator:
+  - Validate bahan cukup (hard validation)
+  - Snapshot harga bahan saat produksi
+  - Create production_run record
+  - Create production_run_items
+  - Deduct raw materials from stock (stock_movements: production_input)
+  - Add finished goods to stock (stock_movements: production_output)
+  - Record waste if any (stock_movements: waste)
+- [x] `ProductionRunService::reverse($id)` — pembatalan produksi
+- [x] Warning logic: yield deviation > 20% dari resep (soft warning, di service)
+
+### 6.4 API Endpoints
+
+- [x] `POST /api/production-runs` — create production run
+- [x] `GET /api/production-runs` — list production runs (filterable by date, recipe)
+- [x] `GET /api/production-runs/{id}` — detail production run
+- [x] `DELETE /api/production-runs/{id}` — reverse production run
+
+### 6.5 Dashboard UI
+
+- [x] Production Run list page (table: date, recipe, batch, yield, cost, waste)
+- [x] Production Run create page:
+  - Select recipe (auto-fill bahan dari resep)
+  - Input batch count
+  - Edit bahan terpakai (editable fields)
+  - Input yield aktual + waste
+  - Submit
+- [x] Update P&L report: tambah baris "Waste Expense" terpisah dari COGS
+
+### 6.6 Seeders & Testing
+
+- [ ] Seeder: tambah sample batch recipe (Croissant) + raw materials
+- [ ] Seeder: tambah sample finished goods (Croissant as finished_goods ingredient)
+- [ ] Test: production run deducts raw materials correctly
+- [ ] Test: production run adds finished goods correctly
+- [ ] Test: waste recorded as separate expense
+- [ ] Test: cost snapshot is historical (doesn't change with current price)
+
+**Sprint 6 Done Criteria:**
+- [ ] User bisa catat production run via dashboard
+- [ ] Stok bahan baku otomatis berkurang
+- [ ] Stok produk jadi otomatis bertambah
+- [ ] Waste tercatat terpisah di P&L
+- [ ] Cost snapshot stabil (historical COGS ga berubah)
+
+---
+
+## Sprint 7: Multi-Level BOM, Prep & Financial Reports
+
+### 7.1 Production Run Simplification
+- [x] Production run creation: auto-use recipe quantities (no manual ingredient input)
+- [x] Edit bahan button in production history (adjust actual quantities post-production)
+- [x] updateItems() handles stock diff + cost recalculation
+
+### 7.2 Prep Item Type
+- [x] Ingredient model: `is_prep` flag on products
+- [x] ProductionRunService: prep products create prep ingredients (`item_type=prep`)
+- [x] FinishedGoodsController: exclude prep products from finished goods page
+- [x] PrepStockController: dedicated page for prep items (card layout, stock movements)
+- [x] Sidebar: 3 inventory sections (Stok Bahan Dasar, Stok Prep, Stok Produk Jadi)
+- [x] Products page: Kategori dropdown (Produk Jadi / Prep) for batch products
+
+### 7.3 Recipe Restrictions
+- [x] Prep recipes: only allow raw_material ingredients
+- [x] Produk Jadi recipes: allow raw_material + prep ingredients
+- [x] Server-side + frontend validation
+
+### 7.4 Expense Categories
+- [x] Migration: add category column to expenses (bahan_baku, operasional, overhead, non_operasional)
+- [x] "Di Luar Usaha" category for cicilan, prive, beli aset
+- [x] P&L excludes non_operasional expenses
+- [x] Badge colors per category
+
+### 7.5 Cashflow Report
+- [x] CashEntry model + migration for modal/capital inflows
+- [x] CashflowService: derives cashflow from Sales, Transactions, Expenses, CashEntries
+- [x] Cashflow page with month/year picker, saldo display
+- [x] "Catat Kas Masuk" form for modal awal/tambahan
+- [x] Sidebar: "Laporan Cashflow" under Laporan group
+- [x] Saldo carry-forward otomatis
+
+### 7.6 UI Cleanup
+- [x] Sidebar: split Inventory (3 stock pages) and Produk (Resep + Produksi) groups
+- [x] Inventory page: removed tabs, only shows raw_material items
+- [x] Mobile-friendly card layout for production run ingredients
+
+---
+
 ## Notes
 
 - **Tenant ID is CRITICAL** — harus di Sprint 1, jangan ditunda
@@ -210,5 +327,5 @@ Bot: Reply ke user: "✅ Pembelian tercatat. Stok tepung: 5.5 kg (aman)"
 
 ---
 
-*Last updated: 17 June 2026*
+*Last updated: 19 June 2026*
 *Owner: Odi (kakapratama12)*

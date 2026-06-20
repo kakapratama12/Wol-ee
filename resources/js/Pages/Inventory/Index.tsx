@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { Plus, Pencil, SlidersHorizontal, Trash2 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import StockStatusBadge from '@/Components/StockStatusBadge';
@@ -15,6 +15,7 @@ import { formatRupiah, formatNumber } from '@/lib/format';
 interface Ingredient {
     id: number;
     name: string;
+    item_type: string;
     unit_type: string;
     base_unit: string;
     unit_price: number;
@@ -26,11 +27,14 @@ interface Ingredient {
 
 interface Props {
     ingredients: Ingredient[];
+    itemType: string;
+    counts: Record<string, number>;
     canManage: boolean;
 }
 
 const emptyForm = {
     name: '',
+    item_type: 'raw_material',
     unit_type: 'gramasi',
     base_unit: 'g',
     unit_price: '',
@@ -38,7 +42,7 @@ const emptyForm = {
     minimum_stock: '',
 };
 
-export default function InventoryIndex({ ingredients, canManage }: Props) {
+export default function InventoryIndex({ ingredients, itemType, counts, canManage }: Props) {
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState<Ingredient | null>(null);
     const [adjusting, setAdjusting] = useState<Ingredient | null>(null);
@@ -46,9 +50,12 @@ export default function InventoryIndex({ ingredients, canManage }: Props) {
     const form = useForm<Record<string, string>>({ ...emptyForm });
     const adjustForm = useForm({ current_stock: '', note: '' });
 
+    // No tabs — Inventory page only shows raw_material items
+
+
     const openCreate = () => {
         setEditing(null);
-        form.setData({ ...emptyForm });
+        form.setData({ ...emptyForm, item_type: itemType });
         form.clearErrors();
         setFormOpen(true);
     };
@@ -99,13 +106,14 @@ export default function InventoryIndex({ ingredients, canManage }: Props) {
             <Head title="Inventory" />
 
             <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">{ingredients.length} bahan terdaftar</p>
+                <p className="text-sm text-muted-foreground">{ingredients.length} item</p>
                 {canManage && (
                     <Button onClick={openCreate}>
                         <Plus className="h-4 w-4" /> Tambah Bahan
                     </Button>
                 )}
             </div>
+
 
             <Card>
                 <CardContent className="p-0">
@@ -172,6 +180,7 @@ export default function InventoryIndex({ ingredients, canManage }: Props) {
 
             <Modal open={formOpen} onClose={() => setFormOpen(false)} title={editing ? 'Edit Bahan' : 'Tambah Bahan'}>
                 <form onSubmit={submit} className="space-y-4">
+                    <input type="hidden" value={form.data.item_type} />
                     <div>
                         <Label htmlFor="name">Nama</Label>
                         <Input id="name" value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} />

@@ -12,6 +12,7 @@ import {
     Menu,
     X,
     ChevronDown,
+    Utensils,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PageProps } from '@/types';
@@ -55,8 +56,18 @@ const navigation: (NavSingle | NavGroup)[] = [
         label: 'Inventory',
         icon: <Boxes className="h-4 w-4" />,
         children: [
-            { label: 'Stok Bahan', href: '/inventory' },
-            { label: 'Produk & Resep', href: '/products', ownerOnly: true },
+            { label: 'Stok Bahan Dasar', href: '/inventory?type=raw_material' },
+            { label: 'Stok Prep', href: '/prep-stocks' },
+            { label: 'Stok Produk Jadi', href: '/finished-goods', ownerOnly: true },
+        ],
+    },
+    {
+        label: 'Produk',
+        icon: <Utensils className="h-4 w-4" />,
+        ownerOnly: true,
+        children: [
+            { label: 'Produk & Resep', href: '/products' },
+            { label: 'Produksi', href: '/production-runs' },
         ],
     },
     {
@@ -65,6 +76,7 @@ const navigation: (NavSingle | NavGroup)[] = [
         ownerOnly: true,
         children: [
             { label: 'Laporan P&L', href: '/pnl' },
+            { label: 'Laporan Cashflow', href: '/reports/cashflow' },
             { label: 'Tax Simulator', href: '/tax' },
             { label: 'Margin Protection', href: '/margin' },
             { label: 'Aging Report', href: '/reports/aging', hideIfNoInvoices: true },

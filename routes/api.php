@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\BotUsageController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\PartnerController;
+use App\Http\Controllers\Api\ProductionRunController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SaleController;
@@ -53,4 +54,10 @@ Route::middleware(['bot.token', 'throttle:bot'])->group(function () {
     Route::get('/invoices/{invoice}', [InvoiceController::class, 'show']);
     Route::put('/invoices/{invoice}', [InvoiceController::class, 'update']);
     Route::post('/invoices/{invoice}/pay', [InvoiceController::class, 'pay']);
+
+    // Production Runs
+    Route::get('/production-runs', [ProductionRunController::class, 'index']);
+    Route::post('/production-runs', [ProductionRunController::class, 'store']);
+    Route::get('/production-runs/{productionRun}', [ProductionRunController::class, 'show']);
+    Route::delete('/production-runs/{productionRun}', [ProductionRunController::class, 'destroy']);
 });

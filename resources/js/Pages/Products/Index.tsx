@@ -25,7 +25,10 @@ interface Product {
     name: string;
     unit: string;
     selling_price: number;
+    recipe_type: 'unit' | 'batch';
+    estimated_yield_per_batch: number | null;
     is_active: boolean;
+    is_prep: boolean;
     cogs: number;
     margin: number;
     recipe: RecipeRow[];
@@ -36,6 +39,7 @@ interface IngredientOption {
     name: string;
     base_unit: string;
     unit_price: number;
+    item_type: string;
 }
 
 interface Props {
@@ -49,23 +53,43 @@ interface EditableRow {
 }
 
 export default function ProductsIndex({ products, ingredients }: Props) {
+    // Group ingredients by item_type for the recipe dropdown
+    const ingredientGroups = useMemo(() => {
+        const groups: Record<string, { label: string; items: IngredientOption[] }> = {
+            raw_material: { label: 'Bahan Dasar', items: [] },
+            prep: { label: 'Prep', items: [] },
+        };
+        ingredients.forEach((ing) => {
+            if (groups[ing.item_type]) {
+                groups[ing.item_type].items.push(ing);
+            }
+        });
+        return groups;
+    }, [ingredients]);
+
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState<Product | null>(null);
     const [recipeProduct, setRecipeProduct] = useState<Product | null>(null);
 
-    const productForm = useForm({ name: '', unit: 'pcs', selling_price: '' });
-    const recipeForm = useForm<{ items: EditableRow[] }>({ items: [] });
+    // Filtered groups for prep products (only raw_material)
+    const filteredIngredientGroups = useMemo(() => {
+        if (!recipeProduct?.is_prep) return ingredientGroups;
+        return { raw_material: ingredientGroups.raw_material };
+    }, [recipeProduct, ingredientGroups]);
+
+    const productForm = useForm({ name: '', unit: 'pcs', selling_price: '', recipe_type: 'unit' as 'unit' | 'batch', is_prep: false });
+    const recipeForm = useForm<{ items: EditableRow[]; estimated_yield_per_batch: string }>({ items: [], estimated_yield_per_batch: '' });
 
     const openCreate = () => {
         setEditing(null);
-        productForm.setData({ name: '', unit: 'pcs', selling_price: '' });
+        productForm.setData({ name: '', unit: 'pcs', selling_price: '', recipe_type: 'unit', is_prep: false });
         productForm.clearErrors();
         setFormOpen(true);
     };
 
     const openEdit = (p: Product) => {
         setEditing(p);
-        productForm.setData({ name: p.name, unit: p.unit, selling_price: String(p.selling_price) });
+        productForm.setData({ name: p.name, unit: p.unit, selling_price: String(p.selling_price), recipe_type: p.recipe_type, is_prep: p.is_prep });
         productForm.clearErrors();
         setFormOpen(true);
     };
@@ -85,10 +109,10 @@ export default function ProductsIndex({ products, ingredients }: Props) {
 
     const openRecipe = (p: Product) => {
         setRecipeProduct(p);
-        recipeForm.setData(
-            'items',
-            p.recipe.map((r) => ({ ingredient_id: String(r.ingredient_id), quantity: String(r.quantity) })),
-        );
+        recipeForm.setData({
+            items: p.recipe.map((r) => ({ ingredient_id: String(r.ingredient_id), quantity: String(r.quantity) })),
+            estimated_yield_per_batch: String(p.estimated_yield_per_batch ?? ''),
+        });
         recipeForm.clearErrors();
     };
 
@@ -120,6 +144,7 @@ export default function ProductsIndex({ products, ingredients }: Props) {
             items: data.items
                 .filter((r) => r.ingredient_id && r.quantity)
                 .map((r) => ({ ingredient_id: Number(r.ingredient_id), quantity: Number(r.quantity) })),
+            estimated_yield_per_batch: data.estimated_yield_per_batch ? Number(data.estimated_yield_per_batch) : null,
         }));
         recipeForm.put(`/products/${recipeProduct.id}/recipe`, { onSuccess: () => setRecipeProduct(null) });
     };
@@ -140,10 +165,25 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                     <Card key={p.id}>
                         <CardHeader className="flex-row items-start justify-between space-y-0">
                             <div>
-                                <CardTitle>{p.name}</CardTitle>
+                                <CardTitle className="flex items-center gap-2">
+                                    {p.name}
+                                    <Badge variant={p.recipe_type === 'batch' ? 'default' : 'secondary'} className="text-xs">
+                                        {p.recipe_type === 'batch' ? 'Batch' : 'Unit'}
+                                    </Badge>
+                                    {p.is_prep && (
+                                        <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
+                                            Prep
+                                        </Badge>
+                                    )}
+                                </CardTitle>
                                 <p className="mt-1 text-sm text-muted-foreground">
                                     {formatRupiah(p.selling_price)} / {p.unit}
                                 </p>
+                                {p.recipe_type === 'batch' && p.estimated_yield_per_batch && (
+                                    <p className="mt-1 text-xs text-blue-600">
+                                        Estimasi: {p.estimated_yield_per_batch} pcs/batch
+                                    </p>
+                                )}
                             </div>
                             {!p.is_active && <Badge variant="secondary">Nonaktif</Badge>}
                         </CardHeader>
@@ -182,6 +222,30 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                         <Input id="name" value={productForm.data.name} onChange={(e) => productForm.setData('name', e.target.value)} />
                         {productForm.errors.name && <p className="mt-1 text-xs text-destructive">{productForm.errors.name}</p>}
                     </div>
+                    <div>
+                        <Label htmlFor="recipe_type">Tipe Resep</Label>
+                        <Select value={productForm.data.recipe_type} onChange={(e) => productForm.setData('recipe_type', e.target.value as 'unit' | 'batch')}>
+                            <option value="unit">Unit (per porsi)</option>
+                            <option value="batch">Batch (per produksi)</option>
+                        </Select>
+                        {productForm.errors.recipe_type && <p className="mt-1 text-xs text-destructive">{productForm.errors.recipe_type}</p>}
+                    </div>
+                    {productForm.data.recipe_type === 'batch' && (
+                        <div>
+                            <Label htmlFor="is_prep">Kategori</Label>
+                            <Select
+                                value={productForm.data.is_prep ? 'true' : 'false'}
+                                onChange={(e) => productForm.setData('is_prep', e.target.value === 'true')}
+                            >
+                                <option value="false">Produk Jadi</option>
+                                <option value="true">Prep - Bahan Setengah Jadi</option>
+                            </Select>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Prep akan masuk ke Stok Prep, bukan Stok Produk Jadi. Bisa jadi bahan resep produk lain.
+                            </p>
+                            {productForm.errors.is_prep && <p className="mt-1 text-xs text-destructive">{productForm.errors.is_prep}</p>}
+                        </div>
+                    )}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <Label htmlFor="unit">Satuan jual</Label>
@@ -211,6 +275,11 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                 className="max-w-2xl"
             >
                 <form onSubmit={saveRecipe} className="space-y-4">
+                    {recipeProduct?.is_prep && (
+                        <p className="rounded-md bg-orange-50 p-2 text-xs text-orange-700 border border-orange-200">
+                            Produk prep hanya boleh menggunakan bahan baku (raw material). Bahan prep lainnya tidak tersedia.
+                        </p>
+                    )}
                     <div className="space-y-2">
                         {recipeForm.data.items.map((row, i) => {
                             const ing = ingredients.find((x) => String(x.id) === row.ingredient_id);
@@ -221,11 +290,17 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                                         <Label className="text-xs">Bahan</Label>
                                         <Select value={row.ingredient_id} onChange={(e) => updateRow(i, 'ingredient_id', e.target.value)}>
                                             <option value="">- pilih -</option>
-                                            {ingredients.map((x) => (
-                                                <option key={x.id} value={x.id}>
-                                                    {x.name} ({x.base_unit})
-                                                </option>
-                                            ))}
+                                            {Object.entries(filteredIngredientGroups).map(([key, group]) =>
+                                                group.items.length > 0 ? (
+                                                    <optgroup key={key} label={group.label}>
+                                                        {group.items.map((x) => (
+                                                            <option key={x.id} value={x.id}>
+                                                                {x.name} ({x.base_unit})
+                                                            </option>
+                                                        ))}
+                                                    </optgroup>
+                                                ) : null
+                                            )}
                                         </Select>
                                     </div>
                                     <div className="w-28">
@@ -247,6 +322,23 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                     <Button type="button" variant="outline" size="sm" onClick={addRow}>
                         <Plus className="h-4 w-4" /> Tambah bahan
                     </Button>
+
+                    {recipeProduct?.recipe_type === 'batch' && (
+                        <div>
+                            <Label htmlFor="recipe_estimated_yield">Estimasi Yield per Batch (pcs)</Label>
+                            <Input
+                                id="recipe_estimated_yield"
+                                type="number"
+                                min="1"
+                                placeholder="Contoh: 40"
+                                value={recipeForm.data.estimated_yield_per_batch}
+                                onChange={(e) => recipeForm.setData('estimated_yield_per_batch', e.target.value)}
+                            />
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Berapa pcs yang dihasilkan dari 1 batch resep ini. Akan jadi panduan saat produksi.
+                            </p>
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/50 p-3">
                         <div>
