@@ -89,6 +89,76 @@ class InvoiceController extends Controller
         ]);
     }
 
+    public function edit(Invoice $invoice): Response
+    {
+        $invoice->load('partner', 'items');
+
+        $customers = Partner::query()
+            ->where('type', Partner::TYPE_CUSTOMER)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return Inertia::render('Invoices/Edit', [
+            'invoice' => [
+                'id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'partner_id' => $invoice->partner_id,
+                'partner' => $invoice->partner?->name,
+                'amount' => (float) $invoice->amount,
+                'paid_amount' => (float) $invoice->paid_amount,
+                'due_date' => $invoice->due_date->toDateString(),
+                'status' => $invoice->status,
+                'note' => $invoice->note,
+                'items' => $invoice->items->map(fn ($item) => [
+                    'id' => $item->id,
+                    'description' => $item->description,
+                    'quantity' => (float) $item->quantity,
+                    'unit_price' => (float) $item->unit_price,
+                    'total' => (float) $item->total,
+                ]),
+            ],
+            'customers' => $customers,
+        ]);
+    }
+
+    public function update(Request $request, Invoice $invoice): RedirectResponse
+    {
+        $validated = $request->validate([
+            'partner_id' => ['required', 'exists:partners,id'],
+            'due_date' => ['required', 'date'],
+            'note' => ['nullable', 'string'],
+            'amount' => ['nullable', 'numeric', 'min:0'],
+            'items' => ['nullable', 'array'],
+            'items.*.description' => ['required_with:items', 'string'],
+            'items.*.quantity' => ['required_with:items', 'numeric', 'gt:0'],
+            'items.*.unit_price' => ['required_with:items', 'numeric', 'min:0'],
+        ]);
+
+        // Validate partner is a customer
+        $partner = Partner::findOrFail($validated['partner_id']);
+        if ($partner->type !== Partner::TYPE_CUSTOMER) {
+            return back()->with('error', 'Invoice hanya untuk partner tipe customer.');
+        }
+
+        $invoice->update([
+            'partner_id' => $validated['partner_id'],
+            'due_date' => $validated['due_date'],
+            'note' => $validated['note'] ?? null,
+        ]);
+
+        // Update items if provided
+        if (!empty($validated['items']) && count($validated['items']) > 0) {
+            $this->invoices->updateItems($invoice, $validated['items']);
+        } elseif (isset($validated['amount'])) {
+            // If no items, update amount from request (only if no items were previously set)
+            $invoice->update(['amount' => round((float) $validated['amount'], 2)]);
+        }
+
+        return redirect()
+            ->route('invoices.show', $invoice)
+            ->with('success', 'Invoice diperbarui.');
+    }
+
     public function store(StoreInvoiceRequest $request): RedirectResponse
     {
         try {

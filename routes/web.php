@@ -105,6 +105,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/partners/{partner}', [PartnerController::class, 'update'])->name('partners.update');
         Route::delete('/partners/{partner}', [PartnerController::class, 'destroy'])->name('partners.destroy');
 
+        Route::get('/invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
+        Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
         Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
         Route::post('/invoices/{invoice}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
     });

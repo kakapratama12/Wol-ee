@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { ArrowLeft, Eye } from 'lucide-react';
+import { ArrowLeft, Eye, Pencil } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import InvoiceStatusBadge from '@/Components/InvoiceStatusBadge';
-import { Button } from '@/Components/ui/button';
+import { Button, buttonVariants } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { CurrencyInput } from '@/Components/ui/currency-input';
 import { Input } from '@/Components/ui/input';
@@ -109,6 +109,15 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                             <InvoiceStatusBadge status={invoice.status} />
                         </div>
                         <div className="flex gap-2">
+                            {isOwner && (
+                                <Link
+                                    href={`/invoices/${invoice.id}/edit`}
+                                    className={buttonVariants({ variant: 'outline', size: 'sm' })}
+                                >
+                                    <Pencil className="mr-1 h-4 w-4" />
+                                    Edit
+                                </Link>
+                            )}
                             <Button
                                 variant="outline"
                                 size="sm"
