@@ -57,7 +57,7 @@
                     $logoPath = public_path('storage/logos/' . $tenant->id . '/' . $tenant->logo);
                 @endphp
                 @if(file_exists($logoPath))
-                    <img src="{{ $logoPath }}" alt="Logo" style="height: 96px; width: auto; object-fit: contain;">
+                    <img src="{{ $logoPath }}" alt="Logo" style="height: 48px; width: auto; object-fit: contain;">
                 @endif
             @endif
             <div>
