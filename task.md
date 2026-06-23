@@ -328,8 +328,8 @@
 - [x] Button "Download PDF" di invoice detail
 
 ### 8.3 Inline Partner Creation
-- [ ] Buat CreatableCombobox component (reusable)
-- [ ] Apply ke form invoice (partner dropdown)
+- [x] Buat CreatableCombobox component (reusable)
+- [x] Apply ke form invoice (partner dropdown)
 - [ ] Minimal field: nama + type (auto-set customer)
 
 ### 8.4 Bahan Baku — Volume + Harga Auto-Calc
