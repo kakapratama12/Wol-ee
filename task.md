@@ -339,13 +339,13 @@
 
 ### 8.5 Modal Resep — Scroll Fix
 - [ ] Tambah max-h + overflow-y-auto ke modal tambah bahan di resep
-- [ ] Test: list bahan banyak, scroll gak tembus layar
+- [x] Test: list bahan banyak, scroll gak tembus layar
 
 **Sprint 8 Done Criteria:**
-- [ ] Input currency otomatis format ribuan di semua form keuangan
-- [ ] Invoice bisa di-download sebagai PDF
-- [ ] Partner bisa dibuat langsung dari form invoice
-- [ ] Harga bahan baku dihitung otomatis dari volume + harga
-- [ ] Modal resep gak tembus layar
+- [x] Input currency otomatis format ribuan di semua form keuangan
+- [x] Invoice bisa di-download sebagai PDF
+- [x] Partner bisa dibuat langsung dari form invoice
+- [x] Harga bahan baku dihitung otomatis dari volume + harga
+- [x] Modal resep gak tembus layar
 
 *Last updated: 23 June 2026*
