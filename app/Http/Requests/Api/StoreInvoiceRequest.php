@@ -30,6 +30,18 @@ class StoreInvoiceRequest extends FormRequest
         ];
     }
 
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $hasItems = ! empty($this->items) && is_array($this->items);
+            $hasAmount = ! empty($this->amount) && (float) $this->amount > 0;
+
+            if (! $hasItems && ! $hasAmount) {
+                $validator->errors()->add('amount', 'Masukkan nominal invoice atau tambahkan rincian item.');
+            }
+        });
+    }
+
     /**
      * @return array<string, string>
      */

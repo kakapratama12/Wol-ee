@@ -28,12 +28,21 @@ interface Payment {
     amount: number;
 }
 
+interface InvoiceItem {
+    id: number;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    total: number;
+}
+
 interface Props {
-    invoice: Invoice;
+    invoice: Invoice & { items?: InvoiceItem[] };
     payments: Payment[];
 }
 
 export default function InvoicesShow({ invoice, payments }: Props) {
+    const items = invoice.items ?? [];
     const { props } = usePage<PageProps>();
     const isOwner = props.auth.user.role === 'owner';
     const canPay = isOwner && invoice.status !== 'paid';
@@ -58,6 +67,36 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                     Kembali ke daftar
                 </Link>
             </div>
+
+            {items.length > 0 && (
+                <Card className="mt-6">
+                    <CardHeader>
+                        <CardTitle>Rincian Item</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Deskripsi</TableHead>
+                                    <TableHead className="text-right">Qty</TableHead>
+                                    <TableHead className="text-right">Harga Satuan</TableHead>
+                                    <TableHead className="text-right">Total</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {items.map((item) => (
+                                    <TableRow key={item.id}>
+                                        <TableCell>{item.description}</TableCell>
+                                        <TableCell className="text-right">{item.quantity}</TableCell>
+                                        <TableCell className="text-right">{formatRupiah(item.unit_price)}</TableCell>
+                                        <TableCell className="text-right">{formatRupiah(item.total)}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            )}
 
             <div className="grid gap-6 lg:grid-cols-3">
                 <Card className="lg:col-span-2">

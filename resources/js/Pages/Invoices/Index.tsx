@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { FileText, Plus } from 'lucide-react';
+import { FileText, Plus, Trash2 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import InvoiceStatusBadge from '@/Components/InvoiceStatusBadge';
 import Modal from '@/Components/ui/modal';
@@ -43,12 +43,35 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
     const [formOpen, setFormOpen] = useState(false);
     const [customers, setCustomers] = useState(initialCustomers);
 
-    const form = useForm({
+    const form = useForm<{
+        partner_id: string;
+        amount: string;
+        due_date: string;
+        note: string;
+        items: { description: string; quantity: string; unit_price: string }[];
+    }>({
         partner_id: '',
         amount: '',
         due_date: '',
         note: '',
+        items: [],
     });
+
+    const [useItems, setUseItems] = useState(false);
+
+    const addItem = () => {
+        form.setData('items', [...form.data.items, { description: '', quantity: '1', unit_price: '' }]);
+    };
+    const removeItem = (i: number) => {
+        form.setData('items', form.data.items.filter((_, idx) => idx !== i));
+    };
+    const updateItem = (i: number, key: string, value: string) => {
+        form.setData('items', form.data.items.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)));
+    };
+
+    const subtotal = form.data.items.reduce((sum, row) => {
+        return sum + (parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0);
+    }, 0);
 
     const setFilter = (status: string) => {
         router.get('/invoices', status ? { status } : {}, { preserveState: true });
@@ -56,7 +79,13 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        form.post('/invoices', { onSuccess: () => setFormOpen(false) });
+        if (useItems && form.data.items.length > 0) {
+            form.setData('amount', '');
+        }
+        form.post('/invoices', { onSuccess: () => {
+            setFormOpen(false);
+            setUseItems(false);
+        }});
     };
 
     return (

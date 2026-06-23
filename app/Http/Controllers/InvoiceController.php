@@ -54,7 +54,7 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice): Response
     {
-        $invoice->load('partner');
+        $invoice->load('partner', 'items');
 
         $payments = [];
         if ((float) $invoice->paid_amount > 0) {
@@ -79,6 +79,13 @@ class InvoiceController extends Controller
                 'paid_at' => $invoice->paid_at?->toDateString(),
             ],
             'payments' => $payments,
+            'items' => $invoice->items->map(fn ($item) => [
+                'id' => $item->id,
+                'description' => $item->description,
+                'quantity' => (float) $item->quantity,
+                'unit_price' => (float) $item->unit_price,
+                'total' => (float) $item->total,
+            ]),
         ]);
     }
 
@@ -97,7 +104,7 @@ class InvoiceController extends Controller
 
     public function pdf(Invoice $invoice)
     {
-        $invoice->load('partner');
+        $invoice->load('partner', 'items');
         $tenant = $invoice->partner->tenant ?? auth()->user()->tenant;
 
         $pdf = Pdf::loadView('invoices.pdf', [
