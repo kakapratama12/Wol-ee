@@ -311,3 +311,41 @@
 
 *Last updated: 19 June 2026*
 *Owner: Odi (kakapratama12)*
+
+---
+
+## Sprint 8: UX Improvement — Currency, PDF Invoice, Inline Partner, Resep Scroll
+
+### 8.1 Currency Input Component (Global)
+- [ ] Buat reusable CurrencyInput component (auto-format ribuan)
+- [ ] Apply ke: invoice, expense, pembelian, penjualan
+- [ ] Backend terima raw number
+
+### 8.2 PDF Invoice
+- [ ] Install DomPDF
+- [ ] Template: header usaha, data partner, line items, total, jatuh tempo
+- [ ] Route: GET /invoices/{id}/pdf
+- [ ] Button "Download PDF" di invoice detail
+
+### 8.3 Inline Partner Creation
+- [ ] Buat CreatableCombobox component (reusable)
+- [ ] Apply ke form invoice (partner dropdown)
+- [ ] Minimal field: nama + type (auto-set customer)
+
+### 8.4 Bahan Baku — Volume + Harga Auto-Calc
+- [ ] Form tambah bahan: ganti unit_price jadi input volume + satuan + harga_total
+- [ ] Auto-calculate: unit_price = harga_total / volume
+- [ ] Backend: IngredientController store handle kalkulasi
+
+### 8.5 Modal Resep — Scroll Fix
+- [ ] Tambah max-h + overflow-y-auto ke modal tambah bahan di resep
+- [ ] Test: list bahan banyak, scroll gak tembus layar
+
+**Sprint 8 Done Criteria:**
+- [ ] Input currency otomatis format ribuan di semua form keuangan
+- [ ] Invoice bisa di-download sebagai PDF
+- [ ] Partner bisa dibuat langsung dari form invoice
+- [ ] Harga bahan baku dihitung otomatis dari volume + harga
+- [ ] Modal resep gak tembus layar
+
+*Last updated: 23 June 2026*
