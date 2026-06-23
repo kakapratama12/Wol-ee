@@ -221,9 +221,9 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Deskripsi</TableHead>
-                                        <TableHead className="w-20">Qty</TableHead>
-                                        <TableHead className="w-48">Harga Satuan</TableHead>
+                                        <TableHead className="w-1/3">Deskripsi</TableHead>
+                                        <TableHead className="w-24">Qty</TableHead>
+                                        <TableHead className="w-44">Harga Satuan</TableHead>
                                         <TableHead className="w-10"></TableHead>
                                     </TableRow>
                                 </TableHeader>
