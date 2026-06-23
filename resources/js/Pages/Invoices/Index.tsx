@@ -191,11 +191,92 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                         />
                         {form.errors.partner_id && <p className="mt-1 text-xs text-destructive">{form.errors.partner_id}</p>}
                     </div>
-                    <div>
-                        <Label htmlFor="amount">Nominal (Rp)</Label>
-                        <CurrencyInput id="amount" value={form.data.amount} onChange={(v) => form.setData('amount', v)} />
-                        {form.errors.amount && <p className="mt-1 text-xs text-destructive">{form.errors.amount}</p>}
+                    <div className="flex items-center gap-2">
+                        <input
+                            id="useItems"
+                            type="checkbox"
+                            checked={useItems}
+                            onChange={(e) => {
+                                setUseItems(e.target.checked);
+                                if (e.target.checked) {
+                                    form.setData('amount', '');
+                                    if (form.data.items.length === 0) addItem();
+                                } else {
+                                    form.setData('items', []);
+                                }
+                            }}
+                            className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <Label htmlFor="useItems">Rincian item</Label>
                     </div>
+                    {!useItems && (
+                        <div>
+                            <Label htmlFor="amount">Nominal (Rp)</Label>
+                            <CurrencyInput id="amount" value={form.data.amount} onChange={(v) => form.setData('amount', v)} />
+                            {form.errors.amount && <p className="mt-1 text-xs text-destructive">{form.errors.amount}</p>}
+                        </div>
+                    )}
+                    {useItems && (
+                        <div className="space-y-3">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Deskripsi</TableHead>
+                                        <TableHead className="w-24">Qty</TableHead>
+                                        <TableHead className="w-36">Harga Satuan</TableHead>
+                                        <TableHead className="w-12"></TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {form.data.items.map((row, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell>
+                                                <Input
+                                                    value={row.description}
+                                                    onChange={(e) => updateItem(i, 'description', e.target.value)}
+                                                    placeholder="Deskripsi item"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    type="number"
+                                                    min="1"
+                                                    value={row.quantity}
+                                                    onChange={(e) => updateItem(i, 'quantity', e.target.value)}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <CurrencyInput
+                                                    value={row.unit_price}
+                                                    onChange={(v) => updateItem(i, 'unit_price', v)}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => removeItem(i)}
+                                                    disabled={form.data.items.length <= 1}
+                                                >
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                            <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                                <Plus className="mr-1 h-4 w-4" />
+                                Tambah Item
+                            </Button>
+                            {subtotal > 0 && (
+                                <div className="flex justify-end text-sm font-medium">
+                                    Subtotal: {formatRupiah(subtotal)}
+                                </div>
+                            )}
+                        </div>
+                    )}
                     <div>
                         <Label htmlFor="due_date">Jatuh Tempo</Label>
                         <Input id="due_date" type="date" value={form.data.due_date} onChange={(e) => form.setData('due_date', e.target.value)} />

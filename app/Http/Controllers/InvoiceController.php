@@ -77,15 +77,15 @@ class InvoiceController extends Controller
                 'status' => $invoice->status,
                 'note' => $invoice->note,
                 'paid_at' => $invoice->paid_at?->toDateString(),
+                'items' => $invoice->items->map(fn ($item) => [
+                    'id' => $item->id,
+                    'description' => $item->description,
+                    'quantity' => (float) $item->quantity,
+                    'unit_price' => (float) $item->unit_price,
+                    'total' => (float) $item->total,
+                ]),
             ],
             'payments' => $payments,
-            'items' => $invoice->items->map(fn ($item) => [
-                'id' => $item->id,
-                'description' => $item->description,
-                'quantity' => (float) $item->quantity,
-                'unit_price' => (float) $item->unit_price,
-                'total' => (float) $item->total,
-            ]),
         ]);
     }
 
@@ -125,7 +125,7 @@ class InvoiceController extends Controller
             'tenant' => $tenant,
         ]);
 
-        return $pdf->inline($invoice->invoice_number . '.pdf');
+        return $pdf->stream($invoice->invoice_number . '.pdf');
     }
 
     public function kuitansi(Invoice $invoice)

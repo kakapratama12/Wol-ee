@@ -52,7 +52,16 @@
 <body>
     <div class="header">
         <div class="company-info">
-            <div class="company-name">{{ $tenant->name }}</div>
+            <div class="company-name">{{ $tenant->name ?? '' }}</div>
+            @isset($tenant->address)
+                <div class="company-detail">{{ $tenant->address }}</div>
+            @endisset
+            @isset($tenant->phone)
+                <div class="company-detail">Telp: {{ $tenant->phone }}</div>
+            @endisset
+            @isset($tenant->email)
+                <div class="company-detail">{{ $tenant->email }}</div>
+            @endisset
         </div>
         <div class="invoice-right">
             <div class="invoice-title">Invoice</div>
@@ -75,7 +84,10 @@
             <div class="bill-to-detail">{{ $invoice->partner->address }}</div>
         @endif
         @if($invoice->partner?->contact || $invoice->partner?->phone)
-            <div class="bill-to-detail">{{ $invoice->partner->contact }}{{ $invoice->partner->contact && $invoice->partner->phone ? ' \xb7 ' : '' }}{{ $invoice->partner->phone }}</div>
+            <div class="bill-to-detail">{{ $invoice->partner->contact }}{!! $invoice->partner->contact && $invoice->partner->phone ? ' · ' : '' !!}{{ $invoice->partner->phone }}</div>
+        @endif
+        @if($invoice->partner?->email)
+            <div class="bill-to-detail">{{ $invoice->partner->email }}</div>
         @endif
     </div>
 

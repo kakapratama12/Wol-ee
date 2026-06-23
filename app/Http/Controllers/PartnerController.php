@@ -9,6 +9,7 @@ use App\Models\Partner;
 use App\Services\AgingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -89,6 +90,24 @@ class PartnerController extends Controller
         Partner::create($request->validated());
 
         return back()->with('success', 'Partner ditambahkan.');
+    }
+
+    public function storeJson(Request $request)
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', Rule::in([Partner::TYPE_CUSTOMER, Partner::TYPE_SUPPLIER])],
+        ]);
+
+        $partner = Partner::create([
+            'name' => $request->input('name'),
+            'type' => $request->input('type'),
+        ]);
+
+        return response()->json([
+            'id' => $partner->id,
+            'name' => $partner->name,
+        ]);
     }
 
     public function update(UpdatePartnerRequest $request, Partner $partner): RedirectResponse

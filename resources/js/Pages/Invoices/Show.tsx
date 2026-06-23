@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import InvoiceStatusBadge from '@/Components/InvoiceStatusBadge';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { CurrencyInput } from '@/Components/ui/currency-input';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
@@ -154,13 +155,11 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                             <form onSubmit={submit} className="space-y-4">
                                 <div>
                                     <Label htmlFor="amount">Jumlah (Rp)</Label>
-                                    <Input
+                                    <CurrencyInput
                                         id="amount"
-                                        type="number"
-                                        max={invoice.remaining}
                                         value={form.data.amount}
-                                        onChange={(e) => form.setData('amount', e.target.value)}
-                                        placeholder={`Maks ${invoice.remaining}`}
+                                        onChange={(v) => form.setData('amount', v)}
+                                        placeholder={`Maks ${formatRupiah(invoice.remaining)}`}
                                     />
                                     {form.errors.amount && <p className="mt-1 text-xs text-destructive">{form.errors.amount}</p>}
                                 </div>
