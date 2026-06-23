@@ -20,6 +20,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\FinishedGoodsController;
 use App\Http\Controllers\PrepStockController;
 use App\Http\Controllers\ProductionRunController;
+use App\Http\Controllers\CompanySettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -99,6 +100,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/settings/bot', [BotIntegrationController::class, 'index'])->name('settings.bot');
         Route::post('/settings/bot/token', [BotIntegrationController::class, 'generate'])->name('settings.bot.generate');
+
+        Route::get('/settings/company', [CompanySettingsController::class, 'edit'])->name('settings.company');
+        Route::put('/settings/company', [CompanySettingsController::class, 'update'])->name('settings.company.update');
 
         Route::post('/partners', [PartnerController::class, 'store'])->name('partners.store');
         Route::post('/partners/json', [PartnerController::class, 'storeJson'])->name('partners.store-json');

@@ -94,7 +94,10 @@ const navigation: (NavSingle | NavGroup)[] = [
         label: 'Settings',
         icon: <Settings className="h-4 w-4" />,
         ownerOnly: true,
-        children: [{ label: 'Bot Integration', href: '/settings/bot' }],
+        children: [
+            { label: 'Bot Integration', href: '/settings/bot' },
+            { label: 'Perusahaan', href: '/settings/company' },
+        ],
     },
     {
         label: 'Platform',

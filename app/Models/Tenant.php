@@ -23,6 +23,13 @@ class Tenant extends Model
         'plan',
         'status',
         'bot_token',
+        'address',
+        'phone',
+        'email',
+        'bank_name',
+        'bank_account',
+        'bank_account_name',
+        'logo',
     ];
 
     protected $hidden = [

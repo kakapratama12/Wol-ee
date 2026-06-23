@@ -134,7 +134,16 @@
 
     <div class="payment-info">
         <div class="payment-title">Informasi pembayaran</div>
-        <div class="payment-detail">Mohon cantumkan nomor invoice {{ $invoice->invoice_number }} sebagai keterangan transfer.</div>
+        @isset($tenant->bank_name)
+            <div class="payment-detail"><strong>{{ $tenant->bank_name }}</strong></div>
+        @endisset
+        @isset($tenant->bank_account)
+            <div class="payment-detail">No. Rekening: {{ $tenant->bank_account }}</div>
+        @endisset
+        @isset($tenant->bank_account_name)
+            <div class="payment-detail">Atas Nama: {{ $tenant->bank_account_name }}</div>
+        @endisset
+        <div class="payment-detail" style="margin-top: 6px;">Mohon cantumkan nomor invoice {{ $invoice->invoice_number }} sebagai keterangan transfer.</div>
     </div>
 
     <div class="footer">Terima kasih atas kepercayaan Anda.</div>
