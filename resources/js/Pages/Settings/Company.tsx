@@ -1,11 +1,12 @@
 import { Head, useForm } from '@inertiajs/react';
-import { Building2, Save } from 'lucide-react';
+import { Building2, Save, Upload, X } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import InputError from '@/Components/InputError';
+import { useState, useRef } from 'react';
 
 interface TenantData {
     name: string;
@@ -15,6 +16,8 @@ interface TenantData {
     bank_name: string | null;
     bank_account: string | null;
     bank_account_name: string | null;
+    logo: string | null;
+    logo_url: string | null;
 }
 
 interface Props {
@@ -22,6 +25,9 @@ interface Props {
 }
 
 export default function Company({ tenant }: Props) {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
     const { data, setData, put, processing, errors } = useForm({
         name: tenant.name ?? '',
         address: tenant.address ?? '',
@@ -30,12 +36,39 @@ export default function Company({ tenant }: Props) {
         bank_name: tenant.bank_name ?? '',
         bank_account: tenant.bank_account ?? '',
         bank_account_name: tenant.bank_account_name ?? '',
+        logo: null as File | null,
+        remove_logo: '',
     });
+
+    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setData('logo', file);
+            setData('remove_logo', '');
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                setPreviewUrl(ev.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRemoveLogo = () => {
+        setData('logo', null);
+        setData('remove_logo', '1');
+        setPreviewUrl(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         put('/settings/company');
     };
+
+    const showCurrentLogo = tenant.logo_url && !previewUrl && data.remove_logo !== '1';
+    const showPreview = previewUrl && data.remove_logo !== '1';
 
     return (
         <AppLayout title="Pengaturan Perusahaan">
@@ -43,6 +76,91 @@ export default function Company({ tenant }: Props) {
 
             <div className="mx-auto max-w-2xl space-y-6">
                 <form onSubmit={submit} className="space-y-6">
+                    {/* Logo Section */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Upload className="h-5 w-5" />
+                                Logo Perusahaan
+                            </CardTitle>
+                            <CardDescription>
+                                Logo perusahaan yang ditampilkan pada invoice. Maks 2MB (JPG, PNG, SVG).
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {/* Current Logo */}
+                            {showCurrentLogo && tenant.logo_url && (
+                                <div className="space-y-2">
+                                    <Label>Logo Saat Ini</Label>
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-20 w-20 rounded-lg border bg-muted flex items-center justify-center overflow-hidden">
+                                            <img
+                                                src={tenant.logo_url}
+                                                alt="Logo perusahaan"
+                                                className="h-full w-full object-contain"
+                                            />
+                                        </div>
+                                        <div className="text-sm text-muted-foreground">
+                                            {tenant.logo}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Preview of new logo */}
+                            {showPreview && previewUrl && (
+                                <div className="space-y-2">
+                                    <Label>Logo Baru</Label>
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-20 w-20 rounded-lg border bg-muted flex items-center justify-center overflow-hidden">
+                                            <img
+                                                src={previewUrl}
+                                                alt="Preview logo"
+                                                className="h-full w-full object-contain"
+                                            />
+                                        </div>
+                                        <div className="text-sm text-muted-foreground">
+                                            {data.logo?.name}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* File Input */}
+                            <div className="space-y-2">
+                                <Label htmlFor="logo">Upload Logo Baru</Label>
+                                <Input
+                                    ref={fileInputRef}
+                                    id="logo"
+                                    type="file"
+                                    accept=".jpg,.jpeg,.png,.svg"
+                                    onChange={handleLogoChange}
+                                    className="file:mr-2 file:border-0 file:bg-transparent file:text-sm file:font-medium"
+                                />
+                                <InputError message={errors.logo} />
+                            </div>
+
+                            {/* Remove Logo */}
+                            {(tenant.logo_url || showPreview) && (
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveLogo}
+                                        className="inline-flex items-center gap-1 text-sm text-destructive hover:text-destructive/80"
+                                    >
+                                        <X className="h-4 w-4" />
+                                        {showPreview ? 'Batal Upload' : 'Hapus Logo'}
+                                    </button>
+                                    {data.remove_logo === '1' && (
+                                        <span className="text-sm text-muted-foreground">
+                                            (Logo akan dihapus saat disimpan)
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
                     {/* Company Info */}
                     <Card>
                         <CardHeader>

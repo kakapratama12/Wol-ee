@@ -51,17 +51,27 @@
 </head>
 <body>
     <div class="header">
-        <div class="company-info">
-            <div class="company-name">{{ $tenant->name ?? '' }}</div>
-            @isset($tenant->address)
-                <div class="company-detail">{{ $tenant->address }}</div>
-            @endisset
-            @isset($tenant->phone)
-                <div class="company-detail">Telp: {{ $tenant->phone }}</div>
-            @endisset
-            @isset($tenant->email)
-                <div class="company-detail">{{ $tenant->email }}</div>
-            @endisset
+        <div class="company-info" style="display: flex; align-items: flex-start; gap: 12px;">
+            @if($tenant->logo)
+                @php
+                    $logoPath = public_path('storage/logos/' . $tenant->id . '/' . $tenant->logo);
+                @endphp
+                @if(file_exists($logoPath))
+                    <img src="{{ $logoPath }}" alt="Logo" style="height: 48px; width: auto; object-fit: contain;">
+                @endif
+            @endif
+            <div>
+                <div class="company-name">{{ $tenant->name ?? '' }}</div>
+                @isset($tenant->address)
+                    <div class="company-detail">{{ $tenant->address }}</div>
+                @endisset
+                @isset($tenant->phone)
+                    <div class="company-detail">Telp: {{ $tenant->phone }}</div>
+                @endisset
+                @isset($tenant->email)
+                    <div class="company-detail">{{ $tenant->email }}</div>
+                @endisset
+            </div>
         </div>
         <div class="invoice-right">
             <div class="invoice-title">Invoice</div>

@@ -16,6 +16,8 @@ class UpdateCompanySettingsRequest extends FormRequest
             'bank_name' => ['nullable', 'string', 'max:255'],
             'bank_account' => ['nullable', 'string', 'max:50'],
             'bank_account_name' => ['nullable', 'string', 'max:255'],
+            'logo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,svg', 'max:2048'],
+            'remove_logo' => ['nullable', 'string'],
         ];
     }
 
