@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import InvoiceStatusBadge from '@/Components/InvoiceStatusBadge';
 import Modal from '@/Components/ui/modal';
 import { Button } from '@/Components/ui/button';
+import { CurrencyInput } from '@/Components/ui/currency-input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -149,7 +150,7 @@ export default function InvoicesIndex({ invoices, customers, filters }: Props) {
                     </div>
                     <div>
                         <Label htmlFor="amount">Nominal (Rp)</Label>
-                        <Input id="amount" type="number" value={form.data.amount} onChange={(e) => form.setData('amount', e.target.value)} />
+                        <CurrencyInput id="amount" value={form.data.amount} onChange={(v) => form.setData('amount', v)} />
                         {form.errors.amount && <p className="mt-1 text-xs text-destructive">{form.errors.amount}</p>}
                     </div>
                     <div>
