@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
+import { CurrencyInput } from '@/Components/ui/currency-input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -125,7 +126,7 @@ export default function Cashflow({ report, period, periodLabel }: Props) {
                             </div>
                             <div>
                                 <Label>Jumlah (Rp)</Label>
-                                <Input type="number" step="1" value={form.data.amount} onChange={(e) => form.setData('amount', e.target.value)} className="w-40" />
+                                <CurrencyInput value={form.data.amount} onChange={(v) => form.setData('amount', v)} className="w-40" />
                                 {form.errors.amount && <p className="mt-1 text-xs text-destructive">{form.errors.amount}</p>}
                             </div>
                             <div>

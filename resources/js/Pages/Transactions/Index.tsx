@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import Modal from '@/Components/ui/modal';
 import Pagination from '@/Components/Pagination';
 import { Button } from '@/Components/ui/button';
+import { CurrencyInput } from '@/Components/ui/currency-input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -47,7 +48,7 @@ function toDatetimeLocal(iso: string | null): string {
 export default function TransactionsIndex({ transactions, ingredients: initialIngredients }: Props) {
     const [ingredients, setIngredients] = useState(initialIngredients);
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [newIngredient, setNewIngredient] = useState({ name: '', unit_type: 'gramasi', base_unit: '', unit_price: '', minimum_stock: '0' });
+    const [newIngredient, setNewIngredient] = useState({ name: '', unit_type: 'gramasi', base_unit: '', volume: '', harga_total: '', minimum_stock: '0' });
     const [creating, setCreating] = useState(false);
     const [createError, setCreateError] = useState('');
 
@@ -119,7 +120,7 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
             setIngredients(updated);
             form.setData('ingredient_id', String(data.id));
             setShowCreateModal(false);
-            setNewIngredient({ name: '', unit_type: 'gramasi', base_unit: '', unit_price: '', minimum_stock: '0' });
+            setNewIngredient({ name: '', unit_type: 'gramasi', base_unit: '', volume: '', harga_total: '', minimum_stock: '0' });
         } catch {
             setCreateError('Terjadi kesalahan');
         } finally {
@@ -157,7 +158,7 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                             </div>
                             <div>
                                 <Label htmlFor="total">Total harga (Rp)</Label>
-                                <Input id="total" type="number" step="1" value={form.data.total} onChange={(e) => form.setData('total', e.target.value)} />
+                                <CurrencyInput id="total" value={form.data.total} onChange={(v) => form.setData('total', v)} />
                                 {form.errors.total && <p className="mt-1 text-xs text-destructive">{form.errors.total}</p>}
                             </div>
                             <div>
@@ -245,7 +246,7 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                         </div>
                         <div>
                             <Label>Total harga (Rp)</Label>
-                            <Input type="number" step="1" value={editForm.data.total} onChange={(e) => editForm.setData('total', e.target.value)} />
+                            <CurrencyInput value={editForm.data.total} onChange={(v) => editForm.setData('total', v)} />
                         </div>
                         <div>
                             <Label>Catatan</Label>
@@ -273,12 +274,21 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <Label htmlFor="ing-unit">Satuan</Label>
-                            <Input id="ing-unit" value={newIngredient.base_unit} onChange={(e) => setNewIngredient({ ...newIngredient, base_unit: e.target.value })} placeholder="kg, liter, pcs" required />
+                            <Input id="ing-unit" value={newIngredient.base_unit} onChange={(e) => setNewIngredient({ ...newIngredient, base_unit: e.target.value })} placeholder="gr, ml, pcs" required />
                         </div>
                         <div>
-                            <Label htmlFor="ing-price">Harga / satuan (Rp)</Label>
-                            <Input id="ing-price" type="number" step="1" value={newIngredient.unit_price} onChange={(e) => setNewIngredient({ ...newIngredient, unit_price: e.target.value })} required />
+                            <Label htmlFor="ing-volume">Volume dibeli</Label>
+                            <Input id="ing-volume" type="number" step="0.0001" value={newIngredient.volume} onChange={(e) => setNewIngredient({ ...newIngredient, volume: e.target.value })} placeholder="1000" required />
                         </div>
+                    </div>
+                    <div>
+                        <Label htmlFor="ing-harga">Harga total (Rp)</Label>
+                        <CurrencyInput id="ing-harga" value={newIngredient.harga_total} onChange={(v) => setNewIngredient({ ...newIngredient, harga_total: v })} required />
+                        {newIngredient.volume && newIngredient.harga_total && (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                = {new Intl.NumberFormat('id-ID').format(Math.round((parseFloat(newIngredient.harga_total) || 0) / (parseFloat(newIngredient.volume) || 1)))} Rp/{newIngredient.base_unit || 'satuan'}
+                            </p>
+                        )}
                     </div>
                     <div>
                         <Label htmlFor="ing-type">Tipe</Label>

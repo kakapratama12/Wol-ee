@@ -64,6 +64,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+    Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
 
     // Owner only
     Route::middleware('owner')->group(function () {
@@ -98,6 +99,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/settings/bot/token', [BotIntegrationController::class, 'generate'])->name('settings.bot.generate');
 
         Route::post('/partners', [PartnerController::class, 'store'])->name('partners.store');
+        Route::post('/partners/json', [PartnerController::class, 'storeJson'])->name('partners.store-json');
         Route::put('/partners/{partner}', [PartnerController::class, 'update'])->name('partners.update');
         Route::delete('/partners/{partner}', [PartnerController::class, 'destroy'])->name('partners.destroy');
 

@@ -4,6 +4,7 @@ import { Pencil, Plus, Trash2 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import Modal from '@/Components/ui/modal';
 import { Button } from '@/Components/ui/button';
+import { CurrencyInput } from '@/Components/ui/currency-input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -136,7 +137,7 @@ export default function ExpensesIndex({ expenses, total, categories, period, per
                             </div>
                             <div>
                                 <Label htmlFor="amount">Jumlah (Rp)</Label>
-                                <Input id="amount" type="number" step="1" value={form.data.amount} onChange={(e) => form.setData('amount', e.target.value)} />
+                                <CurrencyInput id="amount" value={form.data.amount} onChange={(v) => form.setData('amount', v)} />
                                 {form.errors.amount && <p className="mt-1 text-xs text-destructive">{form.errors.amount}</p>}
                             </div>
                             <Button type="submit" className="w-full" disabled={form.processing}>
@@ -214,7 +215,7 @@ export default function ExpensesIndex({ expenses, total, categories, period, per
                     </div>
                     <div>
                         <Label>Jumlah (Rp)</Label>
-                        <Input type="number" step="1" value={editForm.data.amount} onChange={(e) => editForm.setData('amount', e.target.value)} />
+                        <CurrencyInput value={editForm.data.amount} onChange={(v) => editForm.setData('amount', v)} />
                         {editForm.errors.amount && <p className="mt-1 text-xs text-destructive">{editForm.errors.amount}</p>}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
