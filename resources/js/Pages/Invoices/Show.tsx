@@ -71,8 +71,9 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                 </Link>
             </div>
 
+            <div className="space-y-8">
             {items.length > 0 && (
-                <Card className="mt-6">
+                <Card>
                     <CardHeader>
                         <CardTitle>Rincian Item</CardTitle>
                     </CardHeader>
@@ -191,7 +192,7 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                 )}
             </div>
 
-            <Card className="mt-6">
+            <Card>
                 <CardHeader>
                     <CardTitle>Riwayat Pembayaran</CardTitle>
                 </CardHeader>
@@ -222,6 +223,7 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                     </Table>
                 </CardContent>
             </Card>
+            </div>
 
             {previewOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
