@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import Modal from '@/Components/ui/modal';
 import Pagination from '@/Components/Pagination';
 import { Button } from '@/Components/ui/button';
+import { CurrencyInput } from '@/Components/ui/currency-input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -158,13 +159,11 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                             </div>
                             <div>
                                 <Label htmlFor="unit_price">Harga jual / unit (opsional)</Label>
-                                <Input
+                                <CurrencyInput
                                     id="unit_price"
-                                    type="number"
-                                    step="1"
                                     placeholder={selected ? String(selected.selling_price) : 'pakai harga produk'}
                                     value={form.data.unit_price}
-                                    onChange={(e) => form.setData('unit_price', e.target.value)}
+                                    onChange={(v) => form.setData('unit_price', v)}
                                 />
                             </div>
                             <Button type="submit" className="w-full" disabled={form.processing}>
@@ -248,7 +247,7 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                         </div>
                         <div>
                             <Label>Harga jual / unit</Label>
-                            <Input type="number" step="1" placeholder={editSelected ? String(editSelected.selling_price) : ''} value={editForm.data.unit_price} onChange={(e) => editForm.setData('unit_price', e.target.value)} />
+                            <CurrencyInput placeholder={editSelected ? String(editSelected.selling_price) : ''} value={editForm.data.unit_price} onChange={(v) => editForm.setData('unit_price', v)} />
                         </div>
                         <div>
                             <Label>Catatan</Label>
@@ -280,7 +279,7 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                         </div>
                         <div>
                             <Label htmlFor="prod-price">Harga Jual (Rp)</Label>
-                            <Input id="prod-price" type="number" step="1" value={newProduct.selling_price} onChange={(e) => setNewProduct({ ...newProduct, selling_price: e.target.value })} required />
+                            <CurrencyInput id="prod-price" value={newProduct.selling_price} onChange={(v) => setNewProduct({ ...newProduct, selling_price: v })} required />
                         </div>
                     </div>
                     {createError && <p className="text-sm text-destructive">{createError}</p>}

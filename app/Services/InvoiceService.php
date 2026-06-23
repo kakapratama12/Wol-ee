@@ -32,7 +32,7 @@ class InvoiceService
     }
 
     /**
-     * @param  array{partner_id: int, amount: float|int|string, due_date: string, note?: ?string}  $data
+     * @param  array{partner_id: int, amount?: float|int|string, due_date: string, note?: ?string, items?: array}  $data
      */
     public function create(array $data): Invoice
     {
@@ -42,15 +42,20 @@ class InvoiceService
             throw new InvalidArgumentException('Invoice hanya untuk partner tipe customer.');
         }
 
-        $amount = round((float) $data['amount'], 2);
         $tenantId = $partner->tenant_id;
+        $items = $data['items'] ?? [];
 
-        return DB::transaction(function () use ($data, $amount, $tenantId, $partner) {
+        // Calculate amount from line items if provided, otherwise use manual amount
+        $amount = count($items) > 0
+            ? round(array_sum(array_map(fn ($item) => (float) $item['quantity'] * (float) $item['unit_price'], $items)), 2)
+            : round((float) ($data['amount'] ?? 0), 2);
+
+        return DB::transaction(function () use ($data, $amount, $tenantId, $partner, $items) {
             $attempts = 0;
 
             while ($attempts < 3) {
                 try {
-                    return Invoice::create([
+                    $invoice = Invoice::create([
                         'tenant_id' => $tenantId,
                         'partner_id' => $partner->id,
                         'invoice_number' => $this->generateInvoiceNumber($tenantId),
@@ -60,6 +65,19 @@ class InvoiceService
                         'status' => Invoice::STATUS_OUTSTANDING,
                         'note' => $data['note'] ?? null,
                     ]);
+
+                    // Create line items if provided
+                    foreach ($items as $item) {
+                        $itemTotal = round((float) $item['quantity'] * (float) $item['unit_price'], 2);
+                        $invoice->items()->create([
+                            'description' => $item['description'],
+                            'quantity' => $item['quantity'],
+                            'unit_price' => $item['unit_price'],
+                            'total' => $itemTotal,
+                        ]);
+                    }
+
+                    return $invoice;
                 } catch (QueryException $e) {
                     if (! $this->isUniqueViolation($e)) {
                         throw $e;
@@ -113,6 +131,34 @@ class InvoiceService
                 'invoice' => $invoice->fresh(['partner']),
                 'remaining' => $this->remainingAmount($invoice->fresh()),
             ];
+        });
+    }
+
+    /**
+     * Update invoice line items and recalculate amount.
+     */
+    public function updateItems(Invoice $invoice, array $items): Invoice
+    {
+        return DB::transaction(function () use ($invoice, $items) {
+            // Delete existing items
+            $invoice->items()->delete();
+
+            // Create new items
+            foreach ($items as $item) {
+                $itemTotal = round((float) $item['quantity'] * (float) $item['unit_price'], 2);
+                $invoice->items()->create([
+                    'description' => $item['description'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'total' => $itemTotal,
+                ]);
+            }
+
+            // Recalculate amount
+            $newAmount = $invoice->items()->sum('total');
+            $invoice->update(['amount' => $newAmount]);
+
+            return $invoice->fresh(['items', 'partner']);
         });
     }
 

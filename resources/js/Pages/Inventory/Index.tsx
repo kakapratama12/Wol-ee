@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, useForm, router, usePage } from '@inertiajs/react';
-import { Plus, Pencil, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { Plus, Pencil, SlidersHorizontal, Trash2, Calculator } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import StockStatusBadge from '@/Components/StockStatusBadge';
 import Modal from '@/Components/ui/modal';
@@ -46,6 +46,9 @@ export default function InventoryIndex({ ingredients, itemType, counts, canManag
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState<Ingredient | null>(null);
     const [adjusting, setAdjusting] = useState<Ingredient | null>(null);
+    const [calcOpen, setCalcOpen] = useState(false);
+    const [calcQty, setCalcQty] = useState('');
+    const [calcHarga, setCalcHarga] = useState('');
 
     const form = useForm<Record<string, string>>({ ...emptyForm });
     const adjustForm = useForm({ current_stock: '', note: '' });
@@ -202,7 +205,19 @@ export default function InventoryIndex({ ingredients, itemType, counts, canManag
                     </div>
                     <div>
                         <Label htmlFor="unit_price">Harga per satuan dasar (Rp)</Label>
-                        <Input id="unit_price" type="number" step="0.0001" value={form.data.unit_price} onChange={(e) => form.setData('unit_price', e.target.value)} />
+                        <div className="flex gap-2">
+                            <Input id="unit_price" type="number" step="0.0001" value={form.data.unit_price} onChange={(e) => form.setData('unit_price', e.target.value)} className="flex-1" />
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                title="Kalkulator harga"
+                                disabled={!form.data.base_unit}
+                                onClick={() => { setCalcQty(''); setCalcHarga(''); setCalcOpen(true); }}
+                            >
+                                <Calculator className="h-4 w-4" />
+                            </Button>
+                        </div>
                         {form.errors.unit_price && <p className="mt-1 text-xs text-destructive">{form.errors.unit_price}</p>}
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -255,6 +270,44 @@ export default function InventoryIndex({ ingredients, itemType, counts, canManag
                         </Button>
                     </div>
                 </form>
+            </Modal>
+
+            <Modal open={calcOpen} onClose={() => setCalcOpen(false)} title="Kalkulator Harga Satuan">
+                <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                        Masukkan jumlah yang dibeli (dalam <strong>{form.data.base_unit || 'satuan'}</strong>) dan harga belinya.
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <Label>Jumlah dibeli ({form.data.base_unit || '...'})</Label>
+                            <Input type="number" step="0.0001" value={calcQty} onChange={(e) => setCalcQty(e.target.value)} placeholder="misal: 5000" />
+                        </div>
+                        <div>
+                            <Label>Harga beli (Rp)</Label>
+                            <Input type="number" step="1" value={calcHarga} onChange={(e) => setCalcHarga(e.target.value)} placeholder="misal: 50000" />
+                        </div>
+                    </div>
+                    {parseFloat(calcQty) > 0 && parseFloat(calcHarga) > 0 && (
+                        <div className="rounded-md bg-muted p-3 text-center">
+                            <p className="text-sm text-muted-foreground">Estimasi harga per {form.data.base_unit || 'satuan'}:</p>
+                            <p className="text-lg font-bold">{new Intl.NumberFormat('id-ID').format(Math.round(parseFloat(calcHarga) / parseFloat(calcQty)))} Rp/{form.data.base_unit || 'satuan'}</p>
+                        </div>
+                    )}
+                    <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={() => setCalcOpen(false)}>Batal</Button>
+                        <Button
+                            type="button"
+                            disabled={!calcQty || !calcHarga || parseFloat(calcQty) <= 0}
+                            onClick={() => {
+                                const result = parseFloat(calcHarga) / parseFloat(calcQty);
+                                form.setData('unit_price', String(Math.round(result)));
+                                setCalcOpen(false);
+                            }}
+                        >
+                            Gunakan
+                        </Button>
+                    </div>
+                </div>
             </Modal>
         </AppLayout>
     );

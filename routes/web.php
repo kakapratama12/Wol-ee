@@ -20,6 +20,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\FinishedGoodsController;
 use App\Http\Controllers\PrepStockController;
 use App\Http\Controllers\ProductionRunController;
+use App\Http\Controllers\CompanySettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -64,6 +65,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+    Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
+    Route::get('/invoices/{invoice}/pdf/preview', [InvoiceController::class, 'pdfPreview'])->name('invoices.pdf-preview');
+    Route::get('/invoices/{invoice}/kuitansi', [InvoiceController::class, 'kuitansi'])->name('invoices.kuitansi');
 
     // Owner only
     Route::middleware('owner')->group(function () {
@@ -97,10 +101,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/settings/bot', [BotIntegrationController::class, 'index'])->name('settings.bot');
         Route::post('/settings/bot/token', [BotIntegrationController::class, 'generate'])->name('settings.bot.generate');
 
+        Route::get('/settings/company', [CompanySettingsController::class, 'edit'])->name('settings.company');
+        Route::put('/settings/company', [CompanySettingsController::class, 'update'])->name('settings.company.update');
+
         Route::post('/partners', [PartnerController::class, 'store'])->name('partners.store');
+        Route::post('/partners/json', [PartnerController::class, 'storeJson'])->name('partners.store-json');
         Route::put('/partners/{partner}', [PartnerController::class, 'update'])->name('partners.update');
         Route::delete('/partners/{partner}', [PartnerController::class, 'destroy'])->name('partners.destroy');
 
+        Route::get('/invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
+        Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
         Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
         Route::post('/invoices/{invoice}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
     });

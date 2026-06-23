@@ -6,10 +6,17 @@ interface ModalProps {
     open: boolean;
     onClose: () => void;
     title?: string;
+    size?: 'default' | 'lg' | 'xl';
     className?: string;
 }
 
-export default function Modal({ open, onClose, title, className, children }: PropsWithChildren<ModalProps>) {
+export default function Modal({ open, onClose, title, size = 'default', className, children }: PropsWithChildren<ModalProps>) {
+    const sizeClass = {
+        default: 'max-w-lg',
+        lg: 'max-w-3xl',
+        xl: 'max-w-5xl',
+    }[size];
+
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onClose();
@@ -23,7 +30,7 @@ export default function Modal({ open, onClose, title, className, children }: Pro
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-            <div className={cn('relative z-10 w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-xl', className)}>
+            <div className={cn('relative z-10 w-full rounded-xl border border-border bg-card p-6 shadow-xl', sizeClass, className)}>
                 <div className="mb-4 flex items-center justify-between">
                     <h2 className="text-base font-semibold">{title}</h2>
                     <button onClick={onClose} className="rounded-md p-1 text-muted-foreground hover:bg-accent">

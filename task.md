@@ -318,6 +318,43 @@ Bot: Reply ke user: "✅ Pembelian tercatat. Stok tepung: 5.5 kg (aman)"
 
 ---
 
+
+---
+
+## Sprint 9: Invoice Enhancement — Line Items, PDF, Kuitansi
+
+### 9.1 Line Items — Database + Model + Service
+- [x] Migration: create `invoice_items` table (invoice_id, description, qty, unit_price, total)
+- [x] InvoiceItem model + relationship
+- [ ] Update Invoice model: hasMany InvoiceItems, amount auto-calc
+- [x] Update InvoiceService: handle line items, backward compatible
+
+### 9.2 Invoice Form — Support Line Items
+- [x] Form create: optional "Tambah rincian" toggle → tabel line items
+- [x] Form edit: update line items
+- [x] Amount = sum(line items) kalau ada, manual kalau gak
+- [x] Bot API tetap kompatibel (amount langsung)
+
+### 9.3 PDF Template — Format Standar
+- [x] Update blade template sesuai contoh (header, bill-to, line items table, subtotal, total, footer)
+- [x] Tampilkan line items kalau ada, single amount kalau gak
+
+### 9.4 PDF Preview — Modal Sebelum Download
+- [x] Preview PDF di browser (iframe/embed) sebelum download
+- [x] Tombol "Download" di preview
+
+### 9.5 Kuitansi — Proof of Payment
+- [x] Template kuitansi (bukti lunas)
+- [x] Route + controller
+- [x] Tombol "Kuitansi" muncul kalau status = paid
+
+**Sprint 9 Done Criteria:**
+- [x] Invoice bisa punya line items (rincian per item)
+- [x] PDF sesuai format standar
+- [x] Bisa preview PDF sebelum download
+- [x] Invoice lunas bisa generate kuitansi
+
+*Last updated: 23 June 2026*
 ## Notes
 
 - **Tenant ID is CRITICAL** — harus di Sprint 1, jangan ditunda
@@ -329,3 +366,41 @@ Bot: Reply ke user: "✅ Pembelian tercatat. Stok tepung: 5.5 kg (aman)"
 
 *Last updated: 19 June 2026*
 *Owner: Odi (kakapratama12)*
+
+---
+
+## Sprint 8: UX Improvement — Currency, PDF Invoice, Inline Partner, Resep Scroll
+
+### 8.1 Currency Input Component (Global)
+- [x] Buat reusable CurrencyInput component (auto-format ribuan)
+- [x] Apply ke: invoice, expense, pembelian, penjualan
+- [x] Backend terima raw number
+
+### 8.2 PDF Invoice
+- [x] Install DomPDF
+- [x] Template: header usaha, data partner, line items, total, jatuh tempo
+- [x] Route: GET /invoices/{id}/pdf
+- [x] Button "Download PDF" di invoice detail
+
+### 8.3 Inline Partner Creation
+- [x] Buat CreatableCombobox component (reusable)
+- [x] Apply ke form invoice (partner dropdown)
+- [ ] Minimal field: nama + type (auto-set customer)
+
+### 8.4 Bahan Baku — Volume + Harga Auto-Calc
+- [ ] Form tambah bahan: ganti unit_price jadi input volume + satuan + harga_total
+- [ ] Auto-calculate: unit_price = harga_total / volume
+- [ ] Backend: IngredientController store handle kalkulasi
+
+### 8.5 Modal Resep — Scroll Fix
+- [ ] Tambah max-h + overflow-y-auto ke modal tambah bahan di resep
+- [x] Test: list bahan banyak, scroll gak tembus layar
+
+**Sprint 8 Done Criteria:**
+- [x] Input currency otomatis format ribuan di semua form keuangan
+- [x] Invoice bisa di-download sebagai PDF
+- [x] Partner bisa dibuat langsung dari form invoice
+- [x] Harga bahan baku dihitung otomatis dari volume + harga
+- [x] Modal resep gak tembus layar
+
+*Last updated: 23 June 2026*

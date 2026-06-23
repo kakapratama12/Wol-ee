@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import Modal from '@/Components/ui/modal';
 import Pagination from '@/Components/Pagination';
 import { Button } from '@/Components/ui/button';
+import { CurrencyInput } from '@/Components/ui/currency-input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -157,7 +158,7 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                             </div>
                             <div>
                                 <Label htmlFor="total">Total harga (Rp)</Label>
-                                <Input id="total" type="number" step="1" value={form.data.total} onChange={(e) => form.setData('total', e.target.value)} />
+                                <CurrencyInput id="total" value={form.data.total} onChange={(v) => form.setData('total', v)} />
                                 {form.errors.total && <p className="mt-1 text-xs text-destructive">{form.errors.total}</p>}
                             </div>
                             <div>
@@ -245,7 +246,7 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                         </div>
                         <div>
                             <Label>Total harga (Rp)</Label>
-                            <Input type="number" step="1" value={editForm.data.total} onChange={(e) => editForm.setData('total', e.target.value)} />
+                            <CurrencyInput value={editForm.data.total} onChange={(v) => editForm.setData('total', v)} />
                         </div>
                         <div>
                             <Label>Catatan</Label>
@@ -277,7 +278,7 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                         </div>
                         <div>
                             <Label htmlFor="ing-price">Harga / satuan (Rp)</Label>
-                            <Input id="ing-price" type="number" step="1" value={newIngredient.unit_price} onChange={(e) => setNewIngredient({ ...newIngredient, unit_price: e.target.value })} required />
+                            <CurrencyInput id="ing-price" value={newIngredient.unit_price} onChange={(v) => setNewIngredient({ ...newIngredient, unit_price: v })} required />
                         </div>
                     </div>
                     <div>
