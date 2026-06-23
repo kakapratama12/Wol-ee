@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Barryvdh\DomPDF\Facade\Pdf;
 use InvalidArgumentException;
 
 class InvoiceController extends Controller
@@ -92,6 +93,19 @@ class InvoiceController extends Controller
         return redirect()
             ->route('invoices.show', $invoice)
             ->with('success', 'Invoice dibuat.');
+    }
+
+    public function pdf(Invoice $invoice)
+    {
+        $invoice->load('partner');
+        $tenant = $invoice->partner->tenant ?? auth()->user()->tenant;
+
+        $pdf = Pdf::loadView('invoices.pdf', [
+            'invoice' => $invoice,
+            'tenant' => $tenant,
+        ]);
+
+        return $pdf->download($invoice->invoice_number . '.pdf');
     }
 
     public function pay(PayInvoiceRequest $request, Invoice $invoice): RedirectResponse
