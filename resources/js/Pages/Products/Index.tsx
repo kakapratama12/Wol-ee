@@ -280,7 +280,7 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                             Produk prep hanya boleh menggunakan bahan baku (raw material). Bahan prep lainnya tidak tersedia.
                         </p>
                     )}
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
                         {recipeForm.data.items.map((row, i) => {
                             const ing = ingredients.find((x) => String(x.id) === row.ingredient_id);
                             const cost = ing ? ing.unit_price * (parseFloat(row.quantity) || 0) : 0;
