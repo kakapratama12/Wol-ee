@@ -165,7 +165,7 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                 </CardContent>
             </Card>
 
-            <Modal open={formOpen} onClose={() => setFormOpen(false)} title="Buat Invoice" size="lg">
+            <Modal open={formOpen} onClose={() => setFormOpen(false)} title="Buat Invoice" size="xl">
                 <form onSubmit={submit} className="space-y-4">
                     <div>
                         <Label htmlFor="partner_id">Customer</Label>
@@ -222,7 +222,7 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Deskripsi</TableHead>
-                                        <TableHead className="w-16">Qty</TableHead>
+                                        <TableHead className="w-20">Qty</TableHead>
                                         <TableHead className="w-48">Harga Satuan</TableHead>
                                         <TableHead className="w-10"></TableHead>
                                     </TableRow>
