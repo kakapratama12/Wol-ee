@@ -9,14 +9,15 @@
         
         /* Header */
         .header { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
-        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .header-row-details { display: flex; justify-content: space-between; align-items: flex-start; }
-        .company-info { display: flex; align-items: center; gap: 12px; }
-        .company-name { font-size: 22px; font-weight: 500; }
+        .header-table { width: 100%; border-collapse: collapse; }
+        .header-table td { vertical-align: top; padding: 0; }
+        .header-table td:first-child { width: 50%; }
+        .header-table td:last-child { width: 50%; text-align: right; }
+        .company-name { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
         .company-detail { font-size: 13px; color: #6b7280; margin: 2px 0; }
-        .invoice-title { font-size: 18px; font-weight: 500; text-align: right; }
-        .invoice-meta { font-size: 13px; color: #6b7280; margin: 2px 0; text-align: right; }
-        .status-badge { display: inline-block; margin-top: 4px; padding: 3px 10px; border-radius: 4px; font-size: 12px; }
+        .invoice-title { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+        .invoice-meta { font-size: 13px; color: #6b7280; margin: 2px 0; }
+        .status-badge { display: inline-block; margin-top: 8px; padding: 3px 10px; border-radius: 4px; font-size: 12px; }
         .status-outstanding { background: #fef3c7; color: #92400e; }
         .status-partial { background: #dbeafe; color: #1e40af; }
         .status-paid { background: #d1fae5; color: #065f46; }
@@ -28,7 +29,7 @@
         .bill-to-detail { font-size: 13px; color: #6b7280; margin: 2px 0; }
         
         /* Table */
-        table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+        table.items { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
         thead th { text-align: left; padding: 8px 0; font-weight: 500; color: #6b7280; border-bottom: 1px solid #e5e7eb; font-size: 12px; }
         thead th:last-child, thead th:nth-child(2), thead th:nth-child(3) { text-align: right; }
         tbody td { padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
@@ -52,47 +53,46 @@
 </head>
 <body>
     <div class="header">
-        <!-- Row 1: Company Name (left) + Invoice Title (right) -->
-        <div class="header-row">
-            <div class="company-info">
-                @if($tenant->logo)
-                    @php
-                        $logoPath = public_path('storage/logos/' . $tenant->id . '/' . $tenant->logo);
-                    @endphp
-                    @if(file_exists($logoPath))
-                        <img src="{{ $logoPath }}" alt="Logo" style="height: 48px; width: auto; object-fit: contain;">
+        <table class="header-table">
+            <tr>
+                {{-- Kiri: Logo + Nama + Detail --}}
+                <td>
+                    @if($tenant->logo)
+                        @php
+                            $logoPath = public_path('storage/logos/' . $tenant->id . '/' . $tenant->logo);
+                        @endphp
+                        @if(file_exists($logoPath))
+                            <div style="margin-bottom: 8px;">
+                                <img src="{{ $logoPath }}" alt="Logo" style="height: 48px; width: auto; object-fit: contain;">
+                            </div>
+                        @endif
                     @endif
-                @endif
-                <div class="company-name">{{ $tenant->name ?? '' }}</div>
-            </div>
-            <div class="invoice-title">Invoice</div>
-        </div>
-        
-        <!-- Row 2: Company Details (left) + Invoice Details (right) -->
-        <div class="header-row-details">
-            <div>
-                @isset($tenant->address)
-                    <div class="company-detail">{{ $tenant->address }}</div>
-                @endisset
-                @isset($tenant->phone)
-                    <div class="company-detail">Telp: {{ $tenant->phone }}</div>
-                @endisset
-                @isset($tenant->email)
-                    <div class="company-detail">{{ $tenant->email }}</div>
-                @endisset
-            </div>
-            <div>
-                <div class="invoice-meta"># {{ $invoice->invoice_number }}</div>
-                <div class="invoice-meta">Tanggal: {{ $invoice->created_at->format('d M Y') }}</div>
-                <div class="invoice-meta">Jatuh tempo: {{ $invoice->due_date->format('d M Y') }}</div>
-                <span class="status-badge status-{{ $invoice->status }}">
-                    @if($invoice->status === 'outstanding') Belum dibayar
-                    @elseif($invoice->status === 'partial') Sebagian
-                    @else Lunas
-                    @endif
-                </span>
-            </div>
-        </div>
+                    <div class="company-name">{{ $tenant->name ?? '' }}</div>
+                    @isset($tenant->address)
+                        <div class="company-detail">{{ $tenant->address }}</div>
+                    @endisset
+                    @isset($tenant->phone)
+                        <div class="company-detail">Telp: {{ $tenant->phone }}</div>
+                    @endisset
+                    @isset($tenant->email)
+                        <div class="company-detail">{{ $tenant->email }}</div>
+                    @endisset
+                </td>
+                {{-- Kanan: Invoice + Detail --}}
+                <td>
+                    <div class="invoice-title">Invoice</div>
+                    <div class="invoice-meta"># {{ $invoice->invoice_number }}</div>
+                    <div class="invoice-meta" style="margin-top: 8px;">Tanggal: {{ $invoice->created_at->format('d M Y') }}</div>
+                    <div class="invoice-meta">Jatuh tempo: {{ $invoice->due_date->format('d M Y') }}</div>
+                    <span class="status-badge status-{{ $invoice->status }}">
+                        @if($invoice->status === 'outstanding') Belum dibayar
+                        @elseif($invoice->status === 'partial') Sebagian
+                        @else Lunas
+                        @endif
+                    </span>
+                </td>
+            </tr>
+        </table>
     </div>
 
     <div class="bill-to">
@@ -110,7 +110,7 @@
     </div>
 
     @if($invoice->items->count() > 0)
-    <table>
+    <table class="items">
         <thead>
             <tr>
                 <th>Deskripsi</th>
