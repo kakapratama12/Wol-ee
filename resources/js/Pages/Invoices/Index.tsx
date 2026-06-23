@@ -6,6 +6,7 @@ import InvoiceStatusBadge from '@/Components/InvoiceStatusBadge';
 import Modal from '@/Components/ui/modal';
 import { Button } from '@/Components/ui/button';
 import { CurrencyInput } from '@/Components/ui/currency-input';
+import CreatableCombobox from '@/Components/CreatableCombobox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -36,10 +37,11 @@ interface Props {
     filters: { status: string };
 }
 
-export default function InvoicesIndex({ invoices, customers, filters }: Props) {
+export default function InvoicesIndex({ invoices, customers: initialCustomers, filters }: Props) {
     const { props } = usePage<PageProps>();
     const isOwner = props.auth.user.role === 'owner';
     const [formOpen, setFormOpen] = useState(false);
+    const [customers, setCustomers] = useState(initialCustomers);
 
     const form = useForm({
         partner_id: '',
@@ -138,14 +140,26 @@ export default function InvoicesIndex({ invoices, customers, filters }: Props) {
                 <form onSubmit={submit} className="space-y-4">
                     <div>
                         <Label htmlFor="partner_id">Customer</Label>
-                        <Select id="partner_id" value={form.data.partner_id} onChange={(e) => form.setData('partner_id', e.target.value)}>
-                            <option value="">- Pilih customer -</option>
-                            {customers.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name}
-                                </option>
-                            ))}
-                        </Select>
+                        <CreatableCombobox
+                            options={customers}
+                            value={form.data.partner_id}
+                            onChange={(v) => form.setData('partner_id', String(v))}
+                            placeholder="- Pilih atau buat customer baru -"
+                            onCreate={async (name) => {
+                                const res = await fetch('/partners/json', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest',
+                                        'X-XSRF-TOKEN': decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? ''),
+                                    },
+                                    body: JSON.stringify({ name, type: 'customer' }),
+                                });
+                                const data = await res.json();
+                                setCustomers((prev) => [...prev, { id: data.id, name: data.name }]);
+                                return { id: data.id, name: data.name };
+                            }}
+                        />
                         {form.errors.partner_id && <p className="mt-1 text-xs text-destructive">{form.errors.partner_id}</p>}
                     </div>
                     <div>
