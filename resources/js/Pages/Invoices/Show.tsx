@@ -72,36 +72,6 @@ export default function InvoicesShow({ invoice, payments }: Props) {
             </div>
 
             <div className="space-y-8">
-            {items.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Rincian Item</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Deskripsi</TableHead>
-                                    <TableHead className="text-right">Qty</TableHead>
-                                    <TableHead className="text-right">Harga Satuan</TableHead>
-                                    <TableHead className="text-right">Total</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {items.map((item) => (
-                                    <TableRow key={item.id}>
-                                        <TableCell>{item.description}</TableCell>
-                                        <TableCell className="text-right">{item.quantity}</TableCell>
-                                        <TableCell className="text-right">{formatRupiah(item.unit_price)}</TableCell>
-                                        <TableCell className="text-right">{formatRupiah(item.total)}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
-            )}
-
             <div className="grid gap-6 lg:grid-cols-3">
                 <Card className="lg:col-span-2">
                     <CardHeader className="flex flex-row items-center justify-between">
@@ -191,6 +161,34 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                     </Card>
                 )}
             </div>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Rincian Item</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Deskripsi</TableHead>
+                                    <TableHead className="text-right">Qty</TableHead>
+                                    <TableHead className="text-right">Harga Satuan</TableHead>
+                                    <TableHead className="text-right">Total</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {items.map((item) => (
+                                    <TableRow key={item.id}>
+                                        <TableCell>{item.description}</TableCell>
+                                        <TableCell className="text-right">{item.quantity}</TableCell>
+                                        <TableCell className="text-right">{formatRupiah(item.unit_price)}</TableCell>
+                                        <TableCell className="text-right">{formatRupiah(item.total)}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
 
             <Card>
                 <CardHeader>
