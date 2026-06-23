@@ -63,7 +63,7 @@
                         @endphp
                         @if(file_exists($logoPath))
                             <div style="margin-bottom: 8px;">
-                                <img src="{{ $logoPath }}" alt="Logo" style="height: 48px; width: auto; object-fit: contain;">
+                                <img src="{{ $logoPath }}" alt="Logo" style="height: 96px; width: auto; object-fit: contain;">
                             </div>
                         @endif
                     @endif
@@ -80,6 +80,12 @@
                 </td>
                 {{-- Kanan: Invoice + Detail --}}
                 <td>
+                    @if($tenant->logo)
+                        @php $logoPath2 = public_path('storage/logos/' . $tenant->id . '/' . $tenant->logo); @endphp
+                        @if(file_exists($logoPath2))
+                            <div style="height: 96px;"></div>
+                        @endif
+                    @endif
                     <div class="invoice-title">Invoice</div>
                     <div class="invoice-meta"># {{ $invoice->invoice_number }}</div>
                     <div class="invoice-meta" style="margin-top: 8px;">Tanggal: {{ $invoice->created_at->format('d M Y') }}</div>
