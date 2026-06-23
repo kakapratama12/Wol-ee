@@ -322,10 +322,10 @@
 - [x] Backend terima raw number
 
 ### 8.2 PDF Invoice
-- [ ] Install DomPDF
-- [ ] Template: header usaha, data partner, line items, total, jatuh tempo
-- [ ] Route: GET /invoices/{id}/pdf
-- [ ] Button "Download PDF" di invoice detail
+- [x] Install DomPDF
+- [x] Template: header usaha, data partner, line items, total, jatuh tempo
+- [x] Route: GET /invoices/{id}/pdf
+- [x] Button "Download PDF" di invoice detail
 
 ### 8.3 Inline Partner Creation
 - [ ] Buat CreatableCombobox component (reusable)
