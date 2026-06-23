@@ -317,9 +317,9 @@
 ## Sprint 8: UX Improvement — Currency, PDF Invoice, Inline Partner, Resep Scroll
 
 ### 8.1 Currency Input Component (Global)
-- [ ] Buat reusable CurrencyInput component (auto-format ribuan)
-- [ ] Apply ke: invoice, expense, pembelian, penjualan
-- [ ] Backend terima raw number
+- [x] Buat reusable CurrencyInput component (auto-format ribuan)
+- [x] Apply ke: invoice, expense, pembelian, penjualan
+- [x] Backend terima raw number
 
 ### 8.2 PDF Invoice
 - [ ] Install DomPDF
