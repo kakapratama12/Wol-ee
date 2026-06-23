@@ -128,6 +128,19 @@ class InvoiceController extends Controller
         return $pdf->inline($invoice->invoice_number . '.pdf');
     }
 
+    public function kuitansi(Invoice $invoice)
+    {
+        $invoice->load('partner', 'items');
+        $tenant = $invoice->partner->tenant ?? auth()->user()->tenant;
+
+        $pdf = Pdf::loadView('invoices.kuitansi', [
+            'invoice' => $invoice,
+            'tenant' => $tenant,
+        ]);
+
+        return $pdf->download('Kuitansi-' . $invoice->invoice_number . '.pdf');
+    }
+
     public function pay(PayInvoiceRequest $request, Invoice $invoice): RedirectResponse
     {
         if ($invoice->status === Invoice::STATUS_PAID) {

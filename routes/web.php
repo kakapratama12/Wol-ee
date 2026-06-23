@@ -66,6 +66,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
     Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
     Route::get('/invoices/{invoice}/pdf/preview', [InvoiceController::class, 'pdfPreview'])->name('invoices.pdf-preview');
+    Route::get('/invoices/{invoice}/kuitansi', [InvoiceController::class, 'kuitansi'])->name('invoices.kuitansi');
 
     // Owner only
     Route::middleware('owner')->group(function () {
