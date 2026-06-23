@@ -165,7 +165,7 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                 </CardContent>
             </Card>
 
-            <Modal open={formOpen} onClose={() => setFormOpen(false)} title="Buat Invoice">
+            <Modal open={formOpen} onClose={() => setFormOpen(false)} title="Buat Invoice" size="lg">
                 <form onSubmit={submit} className="space-y-4">
                     <div>
                         <Label htmlFor="partner_id">Customer</Label>
