@@ -306,35 +306,35 @@
 ## Sprint 9: Invoice Enhancement — Line Items, PDF, Kuitansi
 
 ### 9.1 Line Items — Database + Model + Service
-- [ ] Migration: create `invoice_items` table (invoice_id, description, qty, unit_price, total)
-- [ ] InvoiceItem model + relationship
+- [x] Migration: create `invoice_items` table (invoice_id, description, qty, unit_price, total)
+- [x] InvoiceItem model + relationship
 - [ ] Update Invoice model: hasMany InvoiceItems, amount auto-calc
-- [ ] Update InvoiceService: handle line items, backward compatible
+- [x] Update InvoiceService: handle line items, backward compatible
 
 ### 9.2 Invoice Form — Support Line Items
-- [ ] Form create: optional "Tambah rincian" toggle → tabel line items
-- [ ] Form edit: update line items
-- [ ] Amount = sum(line items) kalau ada, manual kalau gak
-- [ ] Bot API tetap kompatibel (amount langsung)
+- [x] Form create: optional "Tambah rincian" toggle → tabel line items
+- [x] Form edit: update line items
+- [x] Amount = sum(line items) kalau ada, manual kalau gak
+- [x] Bot API tetap kompatibel (amount langsung)
 
 ### 9.3 PDF Template — Format Standar
-- [ ] Update blade template sesuai contoh (header, bill-to, line items table, subtotal, total, footer)
-- [ ] Tampilkan line items kalau ada, single amount kalau gak
+- [x] Update blade template sesuai contoh (header, bill-to, line items table, subtotal, total, footer)
+- [x] Tampilkan line items kalau ada, single amount kalau gak
 
 ### 9.4 PDF Preview — Modal Sebelum Download
-- [ ] Preview PDF di browser (iframe/embed) sebelum download
-- [ ] Tombol "Download" di preview
+- [x] Preview PDF di browser (iframe/embed) sebelum download
+- [x] Tombol "Download" di preview
 
 ### 9.5 Kuitansi — Proof of Payment
-- [ ] Template kuitansi (bukti lunas)
-- [ ] Route + controller
-- [ ] Tombol "Kuitansi" muncul kalau status = paid
+- [x] Template kuitansi (bukti lunas)
+- [x] Route + controller
+- [x] Tombol "Kuitansi" muncul kalau status = paid
 
 **Sprint 9 Done Criteria:**
-- [ ] Invoice bisa punya line items (rincian per item)
-- [ ] PDF sesuai format standar
-- [ ] Bisa preview PDF sebelum download
-- [ ] Invoice lunas bisa generate kuitansi
+- [x] Invoice bisa punya line items (rincian per item)
+- [x] PDF sesuai format standar
+- [x] Bisa preview PDF sebelum download
+- [x] Invoice lunas bisa generate kuitansi
 
 *Last updated: 23 June 2026*
 ## Notes
