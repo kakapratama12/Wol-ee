@@ -300,6 +300,43 @@
 
 ---
 
+
+---
+
+## Sprint 9: Invoice Enhancement — Line Items, PDF, Kuitansi
+
+### 9.1 Line Items — Database + Model + Service
+- [ ] Migration: create `invoice_items` table (invoice_id, description, qty, unit_price, total)
+- [ ] InvoiceItem model + relationship
+- [ ] Update Invoice model: hasMany InvoiceItems, amount auto-calc
+- [ ] Update InvoiceService: handle line items, backward compatible
+
+### 9.2 Invoice Form — Support Line Items
+- [ ] Form create: optional "Tambah rincian" toggle → tabel line items
+- [ ] Form edit: update line items
+- [ ] Amount = sum(line items) kalau ada, manual kalau gak
+- [ ] Bot API tetap kompatibel (amount langsung)
+
+### 9.3 PDF Template — Format Standar
+- [ ] Update blade template sesuai contoh (header, bill-to, line items table, subtotal, total, footer)
+- [ ] Tampilkan line items kalau ada, single amount kalau gak
+
+### 9.4 PDF Preview — Modal Sebelum Download
+- [ ] Preview PDF di browser (iframe/embed) sebelum download
+- [ ] Tombol "Download" di preview
+
+### 9.5 Kuitansi — Proof of Payment
+- [ ] Template kuitansi (bukti lunas)
+- [ ] Route + controller
+- [ ] Tombol "Kuitansi" muncul kalau status = paid
+
+**Sprint 9 Done Criteria:**
+- [ ] Invoice bisa punya line items (rincian per item)
+- [ ] PDF sesuai format standar
+- [ ] Bisa preview PDF sebelum download
+- [ ] Invoice lunas bisa generate kuitansi
+
+*Last updated: 23 June 2026*
 ## Notes
 
 - **Tenant ID is CRITICAL** — harus di Sprint 1, jangan ditunda
