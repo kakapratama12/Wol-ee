@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
-import { Search, ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import { Search, ChevronDown, ChevronRight, Plus, Pencil } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -44,6 +44,7 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
     const [search, setSearch] = useState('');
     const [expandedTenant, setExpandedTenant] = useState<number | null>(null);
     const [showAdd, setShowAdd] = useState(false);
+    const [editingTenant, setEditingTenant] = useState<TenantRow | null>(null);
 
     const addForm = useForm({
         name: '',
@@ -54,6 +55,11 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
         pengelola_password_confirmation: '',
     });
 
+    const editForm = useForm({
+        name: '',
+        slug: '',
+    });
+
     const handleAdd = (e: React.FormEvent) => {
         e.preventDefault();
         addForm.post(route('platform.tenants.store'), {
@@ -62,6 +68,34 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                 setShowAdd(false);
             },
         });
+    };
+
+    const handleEdit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingTenant) return;
+        editForm.put(route('platform.tenants.update', editingTenant.id), {
+            onSuccess: () => {
+                setEditingTenant(null);
+                editForm.reset();
+            },
+        });
+    };
+
+    const openEdit = (tenant: TenantRow) => {
+        setEditingTenant(tenant);
+        editForm.setData({
+            name: tenant.name,
+            slug: tenant.slug,
+        });
+    };
+
+    const generateSlug = (name: string) => {
+        return name
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/--+/g, '-')
+            .replace(/^-+|-+$/g, '');
     };
 
     const filteredTenants = tenants.filter(
@@ -249,6 +283,7 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                 <TableHead>AI Hari Ini</TableHead>
                                 <TableHead>Feedback</TableHead>
                                 <TableHead>Dibuat</TableHead>
+                                <TableHead className="w-10"></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -294,6 +329,16 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                         <TableCell>{formatNumber(tenant.feedback_count)}</TableCell>
                                         <TableCell className="text-muted-foreground">
                                             {formatDate(tenant.created_at)}
+                                        </TableCell>
+                                        <TableCell>
+                                            <button
+                                                type="button"
+                                                onClick={() => openEdit(tenant)}
+                                                className="rounded p-1 hover:bg-accent"
+                                                title="Edit nama usaha"
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </button>
                                         </TableCell>
                                     </TableRow>
                                     {expandedTenant === tenant.id && (
@@ -341,6 +386,76 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                     </Table>
                 </CardContent>
             </Card>
+
+            {/* Edit Usaha Modal */}
+            {editingTenant && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <Card className="w-full max-w-md">
+                        <CardHeader>
+                            <CardTitle>Edit Usaha</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={handleEdit} className="space-y-4">
+                                <div>
+                                    <Label htmlFor="edit-name">Nama Usaha *</Label>
+                                    <Input
+                                        id="edit-name"
+                                        value={editForm.data.name}
+                                        onChange={(e) => {
+                                            editForm.setData('name', e.target.value);
+                                            editForm.setData('slug', generateSlug(e.target.value));
+                                        }}
+                                        placeholder="Nama usaha"
+                                        className="mt-1"
+                                    />
+                                    {editForm.errors.name && (
+                                        <p className="mt-1 text-xs text-destructive">
+                                            {editForm.errors.name}
+                                        </p>
+                                    )}
+                                </div>
+                                <div>
+                                    <Label htmlFor="edit-slug">Slug (URL) *</Label>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-sm text-muted-foreground whitespace-nowrap">
+                                            wolee.my.id/
+                                        </span>
+                                        <Input
+                                            id="edit-slug"
+                                            value={editForm.data.slug}
+                                            onChange={(e) =>
+                                                editForm.setData('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/--+/g, '-'))
+                                            }
+                                            placeholder="nama-toko"
+                                            className="flex-1"
+                                        />
+                                    </div>
+                                    {editForm.errors.slug && (
+                                        <p className="mt-1 text-xs text-destructive">
+                                            {editForm.errors.slug}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button type="submit" disabled={editForm.processing}>
+                                        Simpan
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        onClick={() => {
+                                            setEditingTenant(null);
+                                            editForm.reset();
+                                        }}
+                                    >
+                                        Batal
+                                    </Button>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
         </AppLayout>
     );
 }

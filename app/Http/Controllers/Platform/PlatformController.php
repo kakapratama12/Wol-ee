@@ -118,6 +118,18 @@ class PlatformController extends Controller
         return redirect()->route('platform.tenants')->with('success', 'Usaha berhasil dibuat.');
     }
 
+    public function updateTenant(Request $request, Tenant $tenant): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'slug' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('tenants', 'slug')->ignore($tenant->id)],
+        ]);
+
+        $tenant->update($data);
+
+        return redirect()->route('platform.tenants')->with('success', 'Usaha berhasil diperbarui.');
+    }
+
     public function feedback(Request $request): Response
     {
         $status = $request->string('status')->toString();

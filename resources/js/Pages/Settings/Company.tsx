@@ -10,7 +10,6 @@ import { useState, useRef } from 'react';
 
 interface TenantData {
     name: string;
-    slug: string;
     address: string | null;
     phone: string | null;
     email: string | null;
@@ -28,20 +27,9 @@ interface Props {
 export default function Company({ tenant }: Props) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const [slugEdited, setSlugEdited] = useState(false);
-
-    const generateSlug = (name: string) => {
-        return name
-            .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/--+/g, '-')
-            .replace(/^-+|-+$/g, '');
-    };
 
     const { data, setData, put, processing, errors } = useForm({
         name: tenant.name ?? '',
-        slug: tenant.slug ?? '',
         address: tenant.address ?? '',
         phone: tenant.phone ?? '',
         email: tenant.email ?? '',
@@ -192,38 +180,10 @@ export default function Company({ tenant }: Props) {
                                 <Input
                                     id="name"
                                     value={data.name}
-                                    onChange={(e) => {
-                                        setData('name', e.target.value);
-                                        if (!slugEdited) {
-                                            setData('slug', generateSlug(e.target.value));
-                                        }
-                                    }}
+                                    onChange={(e) => setData('name', e.target.value)}
                                     placeholder="Masukkan nama usaha"
                                 />
                                 <InputError message={errors.name} />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="slug">Slug (URL)</Label>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm text-muted-foreground whitespace-nowrap">
-                                        wolee.my.id/
-                                    </span>
-                                    <Input
-                                        id="slug"
-                                        value={data.slug}
-                                        onChange={(e) => {
-                                            setSlugEdited(true);
-                                            setData('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/--+/g, '-'));
-                                        }}
-                                        placeholder="nama-toko"
-                                        className="flex-1"
-                                    />
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                    URL dashboard kamu. Auto-generate dari nama, tapi bisa diubah manual.
-                                </p>
-                                <InputError message={errors.slug} />
                             </div>
 
                             <div className="space-y-2">

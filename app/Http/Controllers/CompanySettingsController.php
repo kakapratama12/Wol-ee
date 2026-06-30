@@ -18,7 +18,6 @@ class CompanySettingsController extends Controller
         return Inertia::render('Settings/Company', [
             'tenant' => [
                 'name' => $tenant->name,
-                'slug' => $tenant->slug,
                 'address' => $tenant->address,
                 'phone' => $tenant->phone,
                 'email' => $tenant->email,

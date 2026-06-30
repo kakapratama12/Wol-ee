@@ -123,6 +123,7 @@ Route::middleware(['auth', 'verified', 'super_admin'])
         Route::get('/', [PlatformController::class, 'overview'])->name('overview');
         Route::get('/tenants', [PlatformController::class, 'tenants'])->name('tenants');
         Route::post('/tenants', [PlatformController::class, 'storeTenant'])->name('tenants.store');
+        Route::put('/tenants/{tenant}', [PlatformController::class, 'updateTenant'])->name('tenants.update');
         Route::get('/feedback', [PlatformController::class, 'feedback'])->name('feedback');
         Route::put('/feedback/{feedback}', [PlatformController::class, 'updateFeedback'])->name('feedback.update');
         Route::get('/ai-usage', [PlatformController::class, 'aiUsage'])->name('ai-usage');
