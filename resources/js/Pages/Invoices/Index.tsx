@@ -159,8 +159,8 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                                             </Link>
                                         </TableCell>
                                         <TableCell>{invoice.partner ?? '-'}</TableCell>
-                                        <TableCell className="text-right">{formatRupiah(invoice.amount)}</TableCell>
-                                        <TableCell className="text-right">{formatRupiah(invoice.remaining)}</TableCell>
+                                        <TableCell className="text-right text-number">{formatRupiah(invoice.amount)}</TableCell>
+                                        <TableCell className="text-right text-number">{formatRupiah(invoice.remaining)}</TableCell>
                                         <TableCell>{formatDate(invoice.due_date)}</TableCell>
                                         <TableCell>
                                             <InvoiceStatusBadge status={invoice.status} />

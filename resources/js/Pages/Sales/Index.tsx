@@ -179,11 +179,11 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                                     <TableRow key={s.id}>
                                         <TableCell className="text-sm">{formatDate(s.occurred_at)}</TableCell>
                                         <TableCell className="font-medium">{s.product}</TableCell>
-                                        <TableCell>{s.quantity}</TableCell>
-                                        <TableCell>{formatRupiah(s.revenue)}</TableCell>
-                                        <TableCell>{formatRupiah(s.cogs)}</TableCell>
-                                        <TableCell>{formatRupiah(s.profit)}</TableCell>
-                                        <TableCell>{formatPercent(s.margin)}</TableCell>
+                                        <TableCell className="text-number">{s.quantity}</TableCell>
+                                        <TableCell className="text-number">{formatRupiah(s.revenue)}</TableCell>
+                                        <TableCell className="text-number">{formatRupiah(s.cogs)}</TableCell>
+                                        <TableCell className="text-number">{formatRupiah(s.profit)}</TableCell>
+                                        <TableCell className="text-number">{formatPercent(s.margin)}</TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-1">
                                                 <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>

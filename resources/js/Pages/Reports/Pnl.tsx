@@ -225,7 +225,7 @@ function CollapsibleRow({
                     {label}
                     <span className="text-xs text-muted-foreground">({count})</span>
                 </span>
-                <span className={cn(muted ? 'text-muted-foreground' : '')}>{value}</span>
+                <span className={cn('text-number', muted ? 'text-muted-foreground' : '')}>{value}</span>
             </button>
             {expanded && <div className="ml-2 mt-1 space-y-0.5">{children}</div>}
         </div>
@@ -254,13 +254,14 @@ function Line({
             <span className={muted ? 'text-muted-foreground' : ''}>{label}</span>
             <span
                 className={cn(
+                    'text-number',
                     bold && 'font-bold',
-                    big && 'text-lg',
+                    big && 'text-number-lg',
                     negative ? 'text-destructive' : big ? 'text-success' : '',
                 )}
             >
                 {value}
-                {hint && <span className="ml-2 text-xs font-normal text-muted-foreground">{hint}</span>}
+                {hint && <span className="ml-2 text-caption">{hint}</span>}
             </span>
         </div>
     );

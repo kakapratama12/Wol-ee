@@ -175,8 +175,8 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                                     <TableRow key={t.id}>
                                         <TableCell className="text-sm">{formatDate(t.occurred_at)}</TableCell>
                                         <TableCell className="font-medium">{t.ingredient}</TableCell>
-                                        <TableCell>{formatNumber(t.quantity)} {t.base_unit}</TableCell>
-                                        <TableCell>{formatRupiah(t.total)}</TableCell>
+                                        <TableCell className="text-number">{formatNumber(t.quantity)} {t.base_unit}</TableCell>
+                                        <TableCell className="text-number">{formatRupiah(t.total)}</TableCell>
                                         <TableCell>
                                             <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
                                                 {t.source}

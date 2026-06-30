@@ -89,10 +89,14 @@
     }
 
     .text-number {
-        @apply font-mono text-sm tabular-nums;
+        @apply font-mono text-sm tabular-nums tracking-wide;
     }
 
     .text-number-sm {
-        @apply font-mono text-xs tabular-nums;
+        @apply font-mono text-xs tabular-nums tracking-wide;
+    }
+
+    .text-number-lg {
+        @apply font-mono text-base font-semibold tabular-nums tracking-wide;
     }
 }

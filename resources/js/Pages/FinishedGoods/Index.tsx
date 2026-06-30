@@ -121,7 +121,7 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-headline">
-                                                {formatNumber(product.current_stock)} <span className="text-sm font-normal text-muted-foreground">{product.unit}</span>
+                                                <span className="text-number-lg">{formatNumber(product.current_stock)}</span> <span className="text-sm font-normal text-muted-foreground">{product.unit}</span>
                                             </p>
                                             <p className="text-xs text-muted-foreground">
                                                 Stok saat ini
@@ -133,11 +133,11 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                     <div className="grid grid-cols-3 gap-4 rounded-lg bg-muted/50 p-3 mb-3">
                                         <div>
                                             <p className="text-xs text-muted-foreground">Harga Jual</p>
-                                            <p className="font-semibold">{formatRupiah(product.selling_price)}</p>
+                                            <p className="font-semibold text-number">{formatRupiah(product.selling_price)}</p>
                                         </div>
                                         <div>
                                             <p className="text-xs text-muted-foreground">COGS Rata-rata</p>
-                                            <p className="font-semibold">{formatRupiah(product.avg_cogs)}</p>
+                                            <p className="font-semibold text-number">{formatRupiah(product.avg_cogs)}</p>
                                         </div>
                                         <div>
                                             <p className="text-xs text-muted-foreground">Margin</p>

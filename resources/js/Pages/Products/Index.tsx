@@ -198,12 +198,12 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                             <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/50 p-3">
                                 <div>
                                     <p className="text-xs text-muted-foreground">COGS</p>
-                                    <p className="font-semibold">{formatRupiah(p.cogs)}</p>
+                                    <p className="font-semibold text-number">{formatRupiah(p.cogs)}</p>
                                 </div>
                                 {!p.is_prep && (
                                     <div>
                                         <p className="text-xs text-muted-foreground">Margin</p>
-                                        <p className="font-semibold text-success">{formatPercent(p.margin)}</p>
+                                        <p className="font-semibold text-success text-number">{formatPercent(p.margin)}</p>
                                     </div>
                                 )}
                             </div>
@@ -354,12 +354,12 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                     <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/50 p-3">
                         <div>
                             <p className="text-xs text-muted-foreground">COGS / porsi</p>
-                            <p className="text-lg font-bold">{formatRupiah(preview.cogs)}</p>
+                            <p className="text-number-lg font-bold">{formatRupiah(preview.cogs)}</p>
                         </div>
                         {!recipeProduct?.is_prep && (
                             <div>
                                 <p className="text-xs text-muted-foreground">Margin (harga {formatRupiah(recipeProduct?.selling_price ?? 0)})</p>
-                                <p className="text-lg font-bold text-success">{formatPercent(preview.margin)}</p>
+                                <p className="text-number-lg font-bold text-success">{formatPercent(preview.margin)}</p>
                             </div>
                         )}
                     </div>
