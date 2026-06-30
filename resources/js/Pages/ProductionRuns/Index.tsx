@@ -52,9 +52,18 @@ interface ProductionRun {
     items: RunItem[];
 }
 
+interface Ingredient {
+    id: number;
+    name: string;
+    base_unit: string;
+    unit_price: number;
+    current_stock: number;
+}
+
 interface Props {
     runs: ProductionRun[];
     batchProducts: BatchProduct[];
+    ingredients: Ingredient[];
 }
 
 interface EditItemRow {
@@ -65,7 +74,7 @@ interface EditItemRow {
     unit_price: number;
 }
 
-export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
+export default function ProductionRunsIndex({ runs, batchProducts, ingredients }: Props) {
     const [showForm, setShowForm] = useState(false);
     const [editingRun, setEditingRun] = useState<ProductionRun | null>(null);
     const [editingItemsRun, setEditingItemsRun] = useState<ProductionRun | null>(null);
@@ -141,6 +150,27 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
         const items = [...itemsForm.data.items];
         items[index] = { ...items[index], quantity_used: value };
         itemsForm.setData('items', items);
+    };
+
+    const [addIngredientId, setAddIngredientId] = useState<string>('');
+
+    const addExtraIngredient = () => {
+        if (!addIngredientId) return;
+        const ing = ingredients.find((i) => i.id === Number(addIngredientId));
+        if (!ing) return;
+        // Check if already in list
+        if (itemsForm.data.items.some((item) => item.ingredient_id === ing.id)) return;
+        itemsForm.setData('items', [
+            ...itemsForm.data.items,
+            {
+                ingredient_id: ing.id,
+                ingredient: ing.name,
+                base_unit: ing.base_unit,
+                quantity_used: '1',
+                unit_price: ing.unit_price,
+            },
+        ]);
+        setAddIngredientId('');
     };
 
     const editItemsTotalCost = useMemo(() => {
@@ -423,6 +453,31 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                                 <p className="text-xs text-muted-foreground mt-1">{item.base_unit}</p>
                             </div>
                         ))}
+
+                    {/* Add Extra Ingredient */}
+                    <div className="flex items-end gap-2 rounded-lg border border-dashed p-3">
+                        <div className="flex-1">
+                            <Label className="text-xs text-muted-foreground">Tambah Bahan</Label>
+                            <select
+                                className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                value={addIngredientId}
+                                onChange={(e) => setAddIngredientId(e.target.value)}
+                            >
+                                <option value="">Pilih bahan dari inventory...</option>
+                                {ingredients
+                                    .filter((ing) => !itemsForm.data.items.some((item) => item.ingredient_id === ing.id))
+                                    .map((ing) => (
+                                        <option key={ing.id} value={ing.id}>
+                                            {ing.name} ({ing.base_unit}) — Stok: {formatNumber(ing.current_stock)}
+                                        </option>
+                                    ))}
+                            </select>
+                        </div>
+                        <Button type="button" variant="outline" size="sm" onClick={addExtraIngredient} disabled={!addIngredientId}>
+                            <Plus className="mr-1 h-4 w-4" />
+                            Tambah
+                        </Button>
+                    </div>
                     </div>
 
                     <div className="flex justify-end rounded-lg bg-muted/50 p-3">

@@ -68,9 +68,15 @@ class ProductionRunController extends Controller
                 ])->values(),
             ]);
 
+        // All ingredients for "Tambah Bahan" dropdown
+        $ingredients = Ingredient::query()
+            ->orderBy('name')
+            ->get(['id', 'name', 'base_unit', 'unit_price', 'current_stock']);
+
         return Inertia::render('ProductionRuns/Index', [
             'runs' => $runs,
             'batchProducts' => $batchProducts,
+            'ingredients' => $ingredients,
         ]);
     }
 
