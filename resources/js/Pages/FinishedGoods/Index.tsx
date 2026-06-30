@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
-import { Package, ChevronDown, ChevronUp, Pencil, Factory } from 'lucide-react';
+import { Head, useForm, router, Link } from '@inertiajs/react';
+import { Package, ChevronDown, ChevronUp, Pencil, Factory, Plus } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -80,6 +80,14 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                             {batchProducts.length} produk batch
                         </p>
                     </div>
+                    {batchProducts.length > 0 && (
+                        <Link href="/production-runs">
+                            <Button>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Tambah Produksi
+                            </Button>
+                        </Link>
+                    )}
                 </div>
 
                 {batchProducts.length === 0 ? (

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import { ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
+import { Head, useForm, Link } from '@inertiajs/react';
+import { ChevronDown, ChevronUp, SlidersHorizontal, Plus } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import StockStatusBadge from '@/Components/StockStatusBadge';
 import Modal from '@/Components/ui/modal';
@@ -83,6 +83,12 @@ export default function PrepStockIndex({ prepItems, canManage }: Props) {
                             {prepItems.length} bahan prep
                         </p>
                     </div>
+                    <Link href="/production-runs">
+                        <Button>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Tambah Produksi
+                        </Button>
+                    </Link>
                 </div>
 
                 {prepItems.length === 0 ? (

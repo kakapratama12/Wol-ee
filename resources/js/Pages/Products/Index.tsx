@@ -257,7 +257,7 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                     )}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <Label htmlFor="unit">Satuan jual</Label>
+                            <Label htmlFor="unit">Satuan</Label>
                             <Input id="unit" value={productForm.data.unit} onChange={(e) => productForm.setData('unit', e.target.value)} placeholder="pcs, cup, porsi" />
                         </div>
                         {!productForm.data.is_prep && (

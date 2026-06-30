@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { useState, useMemo, useEffect } from 'react';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { Trash2, Plus, Factory, AlertTriangle, Pencil, FlaskConical } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
@@ -75,6 +75,7 @@ interface EditItemRow {
 }
 
 export default function ProductionRunsIndex({ runs, batchProducts, ingredients }: Props) {
+    const { url } = usePage();
     const [showForm, setShowForm] = useState(false);
     const [editingRun, setEditingRun] = useState<ProductionRun | null>(null);
     const [editingItemsRun, setEditingItemsRun] = useState<ProductionRun | null>(null);
@@ -84,6 +85,16 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
         batch_count: '1',
         notes: '',
     });
+
+    // Auto-open form when navigated with ?produce=<product_id>
+    useEffect(() => {
+        const params = new URLSearchParams(url.split('?')[1] || '');
+        const produceId = params.get('produce');
+        if (produceId && batchProducts.some((p) => p.id === Number(produceId))) {
+            setShowForm(true);
+            form.setData('product_id', produceId);
+        }
+    }, []);
 
     const yieldForm = useForm({
         yield_actual: '',
