@@ -1,11 +1,14 @@
-import { Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Banknote, TrendingUp, Percent, PackageMinus } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import StatCard from '@/Components/StatCard';
 import StockStatusBadge from '@/Components/StockStatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import { Input } from '@/Components/ui/input';
 import { formatRupiah, formatPercent, formatNumber, formatDate } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 interface Metrics {
     revenue: number;
@@ -53,7 +56,10 @@ interface MonthlyChartPoint {
 }
 
 interface Props {
-    month: string;
+    period: string;
+    periodLabel: string;
+    startDate: string;
+    endDate: string;
     metrics: Metrics;
     lowStock: LowStock[];
     recentSales: RecentSale[];
@@ -61,14 +67,81 @@ interface Props {
     monthlyChart: MonthlyChartPoint[];
 }
 
-export default function Dashboard({ month, metrics, lowStock, recentSales, recentPurchases, monthlyChart }: Props) {
+const periodOptions = [
+    { value: 'this_week', label: 'Minggu Ini' },
+    { value: 'this_month', label: 'Bulan Ini' },
+    { value: 'last_3_months', label: '3 Bulan' },
+    { value: 'custom', label: 'Custom' },
+];
+
+export default function Dashboard({ period, periodLabel, startDate, endDate, metrics, lowStock, recentSales, recentPurchases, monthlyChart }: Props) {
     const maxChartValue = Math.max(1, ...monthlyChart.flatMap((point) => [point.revenue, point.expense]));
+    const [activePeriod, setActivePeriod] = useState(period);
+    const [customStart, setCustomStart] = useState(startDate);
+    const [customEnd, setCustomEnd] = useState(endDate);
+
+    const changePeriod = (newPeriod: string) => {
+        setActivePeriod(newPeriod);
+        if (newPeriod !== 'custom') {
+            router.get('/dashboard', { period: newPeriod }, { preserveState: true, preserveScroll: true });
+        }
+    };
+
+    const applyCustom = () => {
+        router.get('/dashboard', { period: 'custom', start_date: customStart, end_date: customEnd }, { preserveState: true, preserveScroll: true });
+    };
 
     return (
         <AppLayout title="Dashboard">
             <Head title="Dashboard" />
 
-            <p className="mb-4 text-sm text-muted-foreground">Ringkasan bisnis - {month}</p>
+            {/* Period Filter */}
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+                <div className="flex gap-1 rounded-lg border border-border p-1">
+                    {periodOptions.map((opt) => (
+                        <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => changePeriod(opt.value)}
+                            className={cn(
+                                'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                                activePeriod === opt.value
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'text-muted-foreground hover:bg-muted',
+                            )}
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
+                </div>
+
+                {activePeriod === 'custom' && (
+                    <div className="flex items-center gap-2">
+                        <Input
+                            type="date"
+                            value={customStart}
+                            onChange={(e) => setCustomStart(e.target.value)}
+                            className="w-40"
+                        />
+                        <span className="text-muted-foreground">s/d</span>
+                        <Input
+                            type="date"
+                            value={customEnd}
+                            onChange={(e) => setCustomEnd(e.target.value)}
+                            className="w-40"
+                        />
+                        <button
+                            type="button"
+                            onClick={applyCustom}
+                            className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                        >
+                            Terapkan
+                        </button>
+                    </div>
+                )}
+
+                <span className="text-sm text-muted-foreground ml-auto">{periodLabel}</span>
+            </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <StatCard label="Omset" value={formatRupiah(metrics.revenue)} icon={<Banknote className="h-5 w-5" />} />
@@ -81,7 +154,7 @@ export default function Dashboard({ month, metrics, lowStock, recentSales, recen
                     icon={<TrendingUp className="h-5 w-5" />}
                 />
                 <StatCard
-                    label="Laba (Rugi) bersih"
+                    label="Laba Bersih"
                     value={formatRupiah(metrics.net_profit)}
                     accent={metrics.net_profit < 0 ? 'danger' : 'success'}
                     icon={<Percent className="h-5 w-5" />}

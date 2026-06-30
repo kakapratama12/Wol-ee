@@ -11,13 +11,11 @@ import { cn } from '@/lib/utils';
 interface RevenueItem {
     product: string;
     revenue: number;
-    quantity: number;
 }
 
 interface CogsItem {
     product: string;
     cogs: number;
-    quantity: number;
 }
 
 interface ExpenseItem {
@@ -132,7 +130,7 @@ export default function Pnl({ report, period, periodLabel }: Props) {
                         {report.revenue_by_product.map((item) => (
                             <div key={item.product} className="flex items-center justify-between py-0.5 pl-4">
                                 <span className="text-muted-foreground">{item.product}</span>
-                                <span>{formatRupiah(item.revenue)} <span className="text-xs text-muted-foreground">({item.quantity} pcs)</span></span>
+                                <span>{formatRupiah(item.revenue)}</span>
                             </div>
                         ))}
                     </CollapsibleRow>
@@ -140,32 +138,35 @@ export default function Pnl({ report, period, periodLabel }: Props) {
                     {/* COGS Section */}
                     <CollapsibleRow
                         label="COGS"
-                        value={`(${formatRupiah(report.cogs)})`}
+                        value={formatRupiah(report.cogs)}
                         expanded={showCogs}
                         onToggle={() => setShowCogs(!showCogs)}
                         count={report.cogs_by_product.length}
-                        muted
                     >
                         {report.cogs_by_product.map((item) => (
                             <div key={item.product} className="flex items-center justify-between py-0.5 pl-4">
                                 <span className="text-muted-foreground">{item.product}</span>
-                                <span className="text-muted-foreground">({formatRupiah(item.cogs)}) <span className="text-xs">({item.quantity} pcs)</span></span>
+                                <span>{formatRupiah(item.cogs)}</span>
                             </div>
                         ))}
                     </CollapsibleRow>
 
-                    <Line label="Gross Profit" value={formatRupiah(report.gross_profit)} bold hint={`Margin ${formatPercent(report.gross_margin)}`} />
+                    <Line
+                        label="Laba Kotor"
+                        value={formatRupiah(report.gross_profit)}
+                        bold
+                        hint={`Margin ${formatPercent(report.gross_margin)}`}
+                    />
 
                     <div className="my-3 border-t border-border" />
 
                     {/* Expenses Section */}
                     <CollapsibleRow
                         label="Expenses"
-                        value={`(${formatRupiah(report.total_expenses)})`}
+                        value={formatRupiah(report.total_expenses)}
                         expanded={showExpenses}
                         onToggle={() => setShowExpenses(!showExpenses)}
                         count={report.expenses.length}
-                        muted
                     >
                         {Object.entries(expensesByCategory).map(([category, items]) => (
                             <div key={category} className="mt-2">
@@ -175,15 +176,17 @@ export default function Pnl({ report, period, periodLabel }: Props) {
                                 {items.map((item, idx) => (
                                     <div key={idx} className="flex items-center justify-between py-0.5 pl-4">
                                         <span className="text-muted-foreground">{item.description}</span>
-                                        <span className="text-muted-foreground">({formatRupiah(item.amount)})</span>
+                                        <span>{formatRupiah(item.amount)}</span>
                                     </div>
                                 ))}
                             </div>
                         ))}
                     </CollapsibleRow>
 
+                    <div className="my-3 border-t border-border" />
+
                     <Line
-                        label="Laba (Rugi) bersih"
+                        label="Laba Bersih"
                         value={formatRupiah(report.net_profit)}
                         bold
                         hint={`Margin ${formatPercent(report.net_margin)}`}
@@ -202,7 +205,6 @@ function CollapsibleRow({
     expanded,
     onToggle,
     count,
-    muted,
     children,
 }: {
     label: string;
@@ -210,7 +212,6 @@ function CollapsibleRow({
     expanded: boolean;
     onToggle: () => void;
     count: number;
-    muted?: boolean;
     children: React.ReactNode;
 }) {
     return (
@@ -220,12 +221,12 @@ function CollapsibleRow({
                 onClick={onToggle}
                 className="flex w-full items-center justify-between py-0.5 hover:bg-muted/50 rounded"
             >
-                <span className={cn(muted ? 'text-muted-foreground' : '', 'flex items-center gap-1')}>
+                <span className="flex items-center gap-1">
                     {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                     {label}
                     <span className="text-xs text-muted-foreground">({count})</span>
                 </span>
-                <span className={cn('text-number', muted ? 'text-muted-foreground' : '')}>{value}</span>
+                <span className="text-number">{value}</span>
             </button>
             {expanded && <div className="ml-2 mt-1 space-y-0.5">{children}</div>}
         </div>
@@ -236,7 +237,6 @@ function Line({
     label,
     value,
     bold,
-    muted,
     big,
     hint,
     negative,
@@ -244,14 +244,13 @@ function Line({
     label: string;
     value: string;
     bold?: boolean;
-    muted?: boolean;
     big?: boolean;
     hint?: string;
     negative?: boolean;
 }) {
     return (
         <div className="flex items-center justify-between py-0.5">
-            <span className={muted ? 'text-muted-foreground' : ''}>{label}</span>
+            <span>{label}</span>
             <span
                 className={cn(
                     'text-number',

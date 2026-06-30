@@ -19,14 +19,12 @@ class PnlService
             ->whereYear('occurred_at', $year)
             ->whereMonth('occurred_at', $month)
             ->join('products', 'sales.product_id', '=', 'products.id')
-            ->selectRaw('products.name as product, SUM(sales.revenue) as revenue, SUM(sales.quantity) as quantity')
             ->groupBy('products.name')
             ->orderByDesc('revenue')
             ->get()
             ->map(fn ($row) => [
                 'product' => $row->product,
                 'revenue' => round((float) $row->revenue, 2),
-                'quantity' => (int) $row->quantity,
             ])
             ->all();
 
@@ -35,14 +33,12 @@ class PnlService
             ->whereYear('occurred_at', $year)
             ->whereMonth('occurred_at', $month)
             ->join('products', 'sales.product_id', '=', 'products.id')
-            ->selectRaw('products.name as product, SUM(sales.cogs) as cogs, SUM(sales.quantity) as quantity')
             ->groupBy('products.name')
             ->orderByDesc('cogs')
             ->get()
             ->map(fn ($row) => [
                 'product' => $row->product,
                 'cogs' => round((float) $row->cogs, 2),
-                'quantity' => (int) $row->quantity,
             ])
             ->all();
 

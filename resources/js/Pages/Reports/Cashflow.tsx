@@ -165,10 +165,10 @@ export default function Cashflow({ report, period, periodLabel }: Props) {
 
                     {/* Kas Keluar */}
                     <SectionTitle title="Kas Keluar" color="text-red-700" />
-                    <Line label="Pembelian Bahan" value={`(${formatRupiah(report.kas_keluar.pembelian)})`} />
-                    <Line label="Biaya Operasional" value={`(${formatRupiah(report.kas_keluar.biaya_operasional)})`} />
-                    <Line label="Di Luar Usaha" value={`(${formatRupiah(report.kas_keluar.di_luar_usaha)})`} muted />
-                    <Line label="Total Kas Keluar" value={`(${formatRupiah(report.total_kas_keluar)})`} bold />
+                    <Line label="Pembelian Bahan" value={formatRupiah(report.kas_keluar.pembelian)} />
+                    <Line label="Biaya Operasional" value={formatRupiah(report.kas_keluar.biaya_operasional)} />
+                    <Line label="Di Luar Usaha" value={formatRupiah(report.kas_keluar.di_luar_usaha)} muted />
+                    <Line label="Total Kas Keluar" value={formatRupiah(report.total_kas_keluar)} bold />
 
                     <div className="border-t border-border" />
 
