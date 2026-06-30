@@ -10,7 +10,7 @@ class InvoiceFee extends Model
 {
     use HasFactory;
 
-    protected \ = [
+    protected $fillable = [
         'invoice_id',
         'name',
         'type',
@@ -18,13 +18,13 @@ class InvoiceFee extends Model
         'amount',
     ];
 
-    protected \ = [
+    protected $casts = [
         'value' => 'decimal:4',
         'amount' => 'decimal:4',
     ];
 
     public function invoice(): BelongsTo
     {
-        return \->belongsTo(Invoice::class);
+        return $this->belongsTo(Invoice::class);
     }
 }
