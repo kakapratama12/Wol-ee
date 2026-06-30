@@ -299,7 +299,7 @@ class PlatformController extends Controller
 
     public function users(): Response
     {
-         = User::query()
+        $users = User::query()
             ->with('tenant:id,name')
             ->where('role', '!=', User::ROLE_SUPER_ADMIN)
             ->orderBy('name')
@@ -325,9 +325,9 @@ class PlatformController extends Controller
         ]);
     }
 
-    public function storeUser(Request ): RedirectResponse
+    public function storeUser(Request $request): RedirectResponse
     {
-         = ->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
@@ -336,39 +336,39 @@ class PlatformController extends Controller
         ]);
 
         User::create([
-            'name' => ['name'],
-            'email' => ['email'],
-            'password' => ['password'],
-            'role' => ['role'],
-            'tenant_id' => ['tenant_id'],
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => $data['password'],
+            'role' => $data['role'],
+            'tenant_id' => $data['tenant_id'],
         ]);
 
         return back()->with('success', 'User berhasil dibuat.');
     }
 
-    public function updateUser(Request , User ): RedirectResponse
+    public function updateUser(Request $request, User $user): RedirectResponse
     {
-         = ->validate([
+        $data = $request->validate([
             'role' => ['required', 'in:owner,admin'],
             'tenant_id' => ['required', 'exists:tenants,id'],
         ]);
 
-        ->update([
-            'role' => ['role'],
-            'tenant_id' => ['tenant_id'],
+        $user->update([
+            'role' => $data['role'],
+            'tenant_id' => $data['tenant_id'],
         ]);
 
         return back()->with('success', 'User berhasil diperbarui.');
     }
 
-    public function resetPassword(Request , User ): RedirectResponse
+    public function resetPassword(Request $request, User $user): RedirectResponse
     {
-         = ->validate([
+        $data = $request->validate([
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        ->update([
-            'password' => ['password'],
+        $user->update([
+            'password' => $data['password'],
         ]);
 
         return back()->with('success', 'Password berhasil direset.');
