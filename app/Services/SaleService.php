@@ -29,6 +29,7 @@ class SaleService
         ?string $note = null,
         ?CarbonInterface $occurredAt = null,
         bool $dispatchSaleRecorded = true,
+        ?string $idempotencyKey = null,
     ): Sale {
         $sale = DB::transaction(function () use ($product, $quantity, $unitPrice, $source, $userId, $note, $occurredAt) {
             return $this->persistSale(
@@ -39,6 +40,7 @@ class SaleService
                 userId: $userId,
                 note: $note,
                 occurredAt: $occurredAt ?? Carbon::now(),
+                idempotencyKey: $idempotencyKey,
             );
         });
 
@@ -94,6 +96,7 @@ class SaleService
         ?int $userId,
         ?string $note,
         CarbonInterface $occurredAt,
+        ?string $idempotencyKey = null,
     ): Sale {
         $product->loadMissing('recipeItems.ingredient');
 
@@ -114,6 +117,7 @@ class SaleService
         $margin = $revenue > 0 ? round(($profit / $revenue) * 100, 2) : 0.0;
 
         $sale = Sale::create([
+            'idempotency_key' => $idempotencyKey,
             'user_id' => $userId,
             'product_id' => $product->id,
             'quantity' => $quantity,

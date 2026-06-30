@@ -12,6 +12,7 @@ class Transaction extends Model
     use BelongsToTenant, HasFactory;
 
     protected $fillable = [
+        'idempotency_key',
         'user_id',
         'ingredient_id',
         'quantity',

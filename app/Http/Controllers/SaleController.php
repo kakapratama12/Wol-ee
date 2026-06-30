@@ -47,6 +47,8 @@ class SaleController extends Controller
         $data = $request->validated();
         $product = Product::findOrFail($data['product_id']);
 
+        $idempotencyKey = $data['idempotency_key'] ?? null;
+
         $sales->record(
             product: $product,
             quantity: (int) $data['quantity'],
@@ -55,6 +57,7 @@ class SaleController extends Controller
             userId: $request->user()->id,
             note: $data['note'] ?? null,
             occurredAt: $request->date('occurred_at'),
+            idempotencyKey: $idempotencyKey,
         );
 
         return back()->with('success', 'Penjualan tercatat & stok dikurangi.');

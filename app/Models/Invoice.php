@@ -17,6 +17,7 @@ class Invoice extends Model
     public const STATUS_PAID = 'paid';
 
     protected $fillable = [
+        'idempotency_key',
         'tenant_id',
         'partner_id',
         'invoice_number',

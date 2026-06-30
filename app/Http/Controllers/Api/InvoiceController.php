@@ -45,8 +45,22 @@ class InvoiceController extends Controller
 
     public function store(StoreInvoiceRequest $request): JsonResponse
     {
+        // Idempotency check
+        if ($idempotencyKey = $request->header('X-Idempotency-Key')) {
+            $existing = Invoice::where('idempotency_key', $idempotencyKey)->first();
+            if ($existing) {
+                return response()->json([
+                    'message' => 'Invoice sudah tercatat.',
+                    'invoice' => $this->invoiceResource($existing->load('partner')),
+                    'idempotent_replay' => true,
+                ]);
+            }
+        }
+
         try {
-            $invoice = $this->invoices->create($request->validated());
+            $data = $request->validated();
+            $data['idempotency_key'] = $idempotencyKey;
+            $invoice = $this->invoices->create($data);
         } catch (InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }

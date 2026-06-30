@@ -49,6 +49,20 @@ class TransactionController extends Controller
 
     public function store(StoreTransactionRequest $request): JsonResponse
     {
+        // Idempotency check
+        if ($idempotencyKey = $request->header('X-Idempotency-Key')) {
+            $existing = Transaction::where('idempotency_key', $idempotencyKey)->first();
+            if ($existing) {
+                return ApiResponse::success('Pembelian sudah tercatat.', [
+                    'id' => $existing->id,
+                    'ingredient' => $existing->ingredient?->name,
+                    'quantity' => (float) $existing->quantity,
+                    'total' => (float) $existing->total,
+                    'idempotent_replay' => true,
+                ]);
+            }
+        }
+
         $searchName = trim((string) $request->input('ingredient', ''));
         $ingredient = $this->resolveIngredient($request);
 
@@ -74,6 +88,7 @@ class TransactionController extends Controller
             userId: $request->user()?->id,
             note: $request->input('note'),
             occurredAt: $request->date('occurred_at'),
+            idempotencyKey: $idempotencyKey,
         );
 
         $ingredient->refresh();

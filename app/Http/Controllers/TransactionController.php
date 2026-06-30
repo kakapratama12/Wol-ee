@@ -47,6 +47,7 @@ class TransactionController extends Controller
 
         $quantity = (float) $data['quantity'];
         $unitPrice = round((float) $data['total'] / max($quantity, 1e-9), 4);
+        $idempotencyKey = $data['idempotency_key'] ?? null;
 
         $inventory->recordPurchase(
             ingredient: $ingredient,
@@ -56,6 +57,7 @@ class TransactionController extends Controller
             userId: $request->user()->id,
             note: $data['note'] ?? null,
             occurredAt: $request->date('occurred_at'),
+            idempotencyKey: $idempotencyKey,
         );
 
         return back()->with('success', 'Pembelian tercatat & stok diperbarui.');

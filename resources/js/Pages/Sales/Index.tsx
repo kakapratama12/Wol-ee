@@ -55,7 +55,7 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     const defaultDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    const form = useForm({ product_id: '', quantity: '', unit_price: '', note: '', occurred_at: defaultDate });
+    const form = useForm({ product_id: '', quantity: '', unit_price: '', note: '', occurred_at: defaultDate, idempotency_key: '' });
     const editForm = useForm({
         product_id: '',
         quantity: '',
@@ -70,6 +70,7 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+        form.setData('idempotency_key', crypto.randomUUID());
         form.post('/sales', { onSuccess: () => form.reset() });
     };
 

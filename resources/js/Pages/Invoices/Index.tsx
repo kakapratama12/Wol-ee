@@ -48,6 +48,7 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
         amount: string;
         due_date: string;
         note: string;
+        idempotency_key: string;
         items: { description: string; quantity: string; unit_price: string }[];
         fees: FeeRow[];
     }>({
@@ -55,6 +56,7 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
         amount: '',
         due_date: '',
         note: '',
+        idempotency_key: '',
         items: [],
         fees: [],
     });
@@ -90,6 +92,7 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
         if (useItems && form.data.items.length > 0) {
             form.setData('amount', '');
         }
+        form.setData('idempotency_key', crypto.randomUUID());
         form.post('/invoices', { onSuccess: () => {
             setFormOpen(false);
             setUseItems(false);

@@ -52,6 +52,22 @@ class SaleController extends Controller
 
     public function store(StoreSaleRequest $request): JsonResponse
     {
+        // Idempotency check
+        if ($idempotencyKey = $request->header('X-Idempotency-Key')) {
+            $existing = Sale::where('idempotency_key', $idempotencyKey)->first();
+            if ($existing) {
+                return ApiResponse::success('Penjualan sudah tercatat.', [
+                    'id' => $existing->id,
+                    'product' => $existing->product?->name,
+                    'quantity' => $existing->quantity,
+                    'revenue' => (float) $existing->revenue,
+                    'cogs' => (float) $existing->cogs,
+                    'profit' => (float) $existing->profit,
+                    'idempotent_replay' => true,
+                ]);
+            }
+        }
+
         $searchName = trim((string) $request->input('product', ''));
         $product = $this->resolveProduct($request);
 
@@ -77,6 +93,7 @@ class SaleController extends Controller
             userId: $request->user()?->id,
             note: $request->input('note'),
             occurredAt: $request->date('occurred_at'),
+            idempotencyKey: $idempotencyKey,
         );
 
         return ApiResponse::success('Penjualan tercatat.', [

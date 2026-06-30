@@ -53,7 +53,7 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     const defaultDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    const form = useForm({ ingredient_id: '', quantity: '', total: '', note: '', occurred_at: defaultDate });
+    const form = useForm({ ingredient_id: '', quantity: '', total: '', note: '', occurred_at: defaultDate, idempotency_key: '' });
     const editForm = useForm({
         ingredient_id: '',
         quantity: '',
@@ -68,6 +68,7 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+        form.setData('idempotency_key', crypto.randomUUID());
         form.post('/transactions', { onSuccess: () => form.reset() });
     };
 

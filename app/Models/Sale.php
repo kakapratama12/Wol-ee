@@ -12,6 +12,7 @@ class Sale extends Model
     use BelongsToTenant, HasFactory;
 
     protected $fillable = [
+        'idempotency_key',
         'user_id',
         'product_id',
         'quantity',
