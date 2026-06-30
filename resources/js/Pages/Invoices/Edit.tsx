@@ -1,16 +1,15 @@
 import { useState } from 'react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { buttonVariants } from '@/Components/ui/button';
 import { CurrencyInput } from '@/Components/ui/currency-input';
 import CreatableCombobox from '@/Components/CreatableCombobox';
+import InvoiceFormFields, { type FeeRow } from '@/Components/InvoiceFormFields';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
-import { formatRupiah } from '@/lib/format';
 import type { PageProps } from '@/types';
 
 interface Customer {
@@ -25,6 +24,13 @@ interface InvoiceItem {
     unit_price: string;
 }
 
+interface InvoiceFee {
+    id?: number;
+    name: string;
+    type: 'fixed' | 'percentage';
+    value: string;
+}
+
 interface Invoice {
     id: number;
     invoice_number: string;
@@ -36,6 +42,7 @@ interface Invoice {
     status: string;
     note: string | null;
     items: InvoiceItem[];
+    fees: InvoiceFee[];
 }
 
 interface Props {
@@ -54,6 +61,7 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
         due_date: string;
         note: string;
         items: { description: string; quantity: string; unit_price: string }[];
+        fees: FeeRow[];
     }>({
         partner_id: String(invoice.partner_id),
         amount: hasItems ? '' : String(invoice.amount),
@@ -63,6 +71,11 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
             description: item.description,
             quantity: String(item.quantity),
             unit_price: String(item.unit_price),
+        })),
+        fees: (invoice.fees ?? []).map((fee) => ({
+            name: fee.name,
+            type: fee.type,
+            value: String(fee.value),
         })),
     });
 
@@ -76,9 +89,15 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
         form.setData('items', form.data.items.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)));
     };
 
-    const subtotal = form.data.items.reduce((sum, row) => {
-        return sum + (parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0);
-    }, 0);
+    const addFee = () => {
+        form.setData('fees', [...form.data.fees, { name: '', type: 'fixed', value: '' }]);
+    };
+    const removeFee = (i: number) => {
+        form.setData('fees', form.data.fees.filter((_, idx) => idx !== i));
+    };
+    const updateFee = (i: number, key: keyof FeeRow, value: string) => {
+        form.setData('fees', form.data.fees.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)));
+    };
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -142,6 +161,7 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
                                         if (form.data.items.length === 0) addItem();
                                     } else {
                                         form.setData('items', []);
+                                        form.setData('fees', []);
                                     }
                                 }}
                                 className="h-4 w-4 rounded border-gray-300"
@@ -158,65 +178,16 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
                         )}
 
                         {useItems && (
-                            <div className="space-y-3">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-1/3">Deskripsi</TableHead>
-                                            <TableHead className="w-24">Qty</TableHead>
-                                            <TableHead className="w-44">Harga Satuan</TableHead>
-                                            <TableHead className="w-10"></TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {form.data.items.map((row, i) => (
-                                            <TableRow key={i}>
-                                                <TableCell>
-                                                    <Input
-                                                        value={row.description}
-                                                        onChange={(e) => updateItem(i, 'description', e.target.value)}
-                                                        placeholder="Deskripsi item"
-                                                    />
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Input
-                                                        type="number"
-                                                        min="1"
-                                                        value={row.quantity}
-                                                        onChange={(e) => updateItem(i, 'quantity', e.target.value)}
-                                                    />
-                                                </TableCell>
-                                                <TableCell>
-                                                    <CurrencyInput
-                                                        value={row.unit_price}
-                                                        onChange={(v) => updateItem(i, 'unit_price', v)}
-                                                    />
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => removeItem(i)}
-                                                        disabled={form.data.items.length <= 1}
-                                                    >
-                                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                                <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                                    <Plus className="mr-1 h-4 w-4" />
-                                    Tambah Item
-                                </Button>
-                                {subtotal > 0 && (
-                                    <div className="flex justify-end text-sm font-medium">
-                                        Subtotal: {formatRupiah(subtotal)}
-                                    </div>
-                                )}
-                            </div>
+                            <InvoiceFormFields
+                                items={form.data.items}
+                                fees={form.data.fees}
+                                onUpdateItem={updateItem}
+                                onAddItem={addItem}
+                                onRemoveItem={removeItem}
+                                onUpdateFee={updateFee}
+                                onAddFee={addFee}
+                                onRemoveFee={removeFee}
+                            />
                         )}
 
                         <div>
@@ -229,7 +200,6 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
                             <Label htmlFor="note">Catatan</Label>
                             <Input id="note" value={form.data.note} onChange={(e) => form.setData('note', e.target.value)} />
                         </div>
-
                         <div className="flex justify-end gap-2">
                             <Link href="/invoices" className={buttonVariants({ variant: 'outline' })}>
                                 Batal

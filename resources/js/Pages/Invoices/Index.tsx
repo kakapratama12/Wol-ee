@@ -1,16 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { FileText, Plus, Trash2 } from 'lucide-react';
+import { FileText, Plus } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import InvoiceStatusBadge from '@/Components/InvoiceStatusBadge';
 import Modal from '@/Components/ui/modal';
 import { Button } from '@/Components/ui/button';
 import { CurrencyInput } from '@/Components/ui/currency-input';
 import CreatableCombobox from '@/Components/CreatableCombobox';
+import InvoiceFormFields, { type FeeRow } from '@/Components/InvoiceFormFields';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
-import { Select } from '@/Components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { formatDate, formatRupiah } from '@/lib/format';
 import type { PageProps } from '@/types';
@@ -35,12 +35,6 @@ interface Props {
     invoices: Invoice[];
     customers: Customer[];
     filters: { status: string };
-}
-
-interface FeeRow {
-    name: string;
-    type: 'fixed' | 'percentage';
-    value: string;
 }
 
 export default function InvoicesIndex({ invoices, customers: initialCustomers, filters }: Props) {
@@ -86,20 +80,6 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
     const updateFee = (i: number, key: keyof FeeRow, value: string) => {
         form.setData('fees', form.data.fees.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)));
     };
-
-    const subtotal = form.data.items.reduce((sum, row) => {
-        return sum + (parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0);
-    }, 0);
-
-    const totalFees = form.data.fees.reduce((sum, fee) => {
-        const val = parseFloat(fee.value) || 0;
-        if (fee.type === 'percentage') {
-            return sum + (subtotal * val / 100);
-        }
-        return sum + val;
-    }, 0);
-
-    const total = subtotal + totalFees;
 
     const setFilter = (status: string) => {
         router.get('/invoices', status ? { status } : {}, { preserveState: true });
@@ -245,134 +225,16 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                         </div>
                     )}
                     {useItems && (
-                        <div className="space-y-3">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-1/3">Deskripsi</TableHead>
-                                        <TableHead className="w-24">Qty</TableHead>
-                                        <TableHead className="w-44">Harga Satuan</TableHead>
-                                        <TableHead className="w-10"></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {form.data.items.map((row, i) => (
-                                        <TableRow key={i}>
-                                            <TableCell>
-                                                <Input
-                                                    value={row.description}
-                                                    onChange={(e) => updateItem(i, 'description', e.target.value)}
-                                                    placeholder="Deskripsi item"
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input
-                                                    type="number"
-                                                    min="1"
-                                                    value={row.quantity}
-                                                    onChange={(e) => updateItem(i, 'quantity', e.target.value)}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <CurrencyInput
-                                                    value={row.unit_price}
-                                                    onChange={(v) => updateItem(i, 'unit_price', v)}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => removeItem(i)}
-                                                    disabled={form.data.items.length <= 1}
-                                                >
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                            <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                                <Plus className="mr-1 h-4 w-4" />
-                                Tambah Item
-                            </Button>
-                            {subtotal > 0 && (
-                                <div className="flex justify-end text-sm font-medium">
-                                    Subtotal: {formatRupiah(subtotal)}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Extra Charges / Fees */}
-                    {useItems && (
-                        <div className="space-y-3 border-t pt-4">
-                            <div className="flex items-center justify-between">
-                                <Label>Biaya Tambahan</Label>
-                                <Button type="button" variant="outline" size="sm" onClick={addFee}>
-                                    <Plus className="mr-1 h-4 w-4" />
-                                    Tambah Biaya
-                                </Button>
-                            </div>
-                            {form.data.fees.length > 0 && (
-                                <div className="space-y-2">
-                                    {form.data.fees.map((fee, i) => (
-                                        <div key={i} className="flex items-end gap-2">
-                                            <div className="flex-1">
-                                                <Label className="text-xs">Nama</Label>
-                                                <Input
-                                                    value={fee.name}
-                                                    onChange={(e) => updateFee(i, 'name', e.target.value)}
-                                                    placeholder="Delivery Fee, PPN, dll"
-                                                />
-                                            </div>
-                                            <div className="w-32">
-                                                <Label className="text-xs">Tipe</Label>
-                                                <Select
-                                                    value={fee.type}
-                                                    onChange={(e) => updateFee(i, 'type', e.target.value as 'fixed' | 'percentage')}
-                                                >
-                                                    <option value="fixed">Nominal (Rp)</option>
-                                                    <option value="percentage">Persen (%)</option>
-                                                </Select>
-                                            </div>
-                                            <div className="w-36">
-                                                <Label className="text-xs">{fee.type === 'percentage' ? 'Persen' : 'Nominal'}</Label>
-                                                <CurrencyInput
-                                                    value={fee.value}
-                                                    onChange={(v) => updateFee(i, 'value', v)}
-                                                />
-                                            </div>
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeFee(i)}>
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                            </Button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Total */}
-                    {useItems && subtotal > 0 && (
-                        <div className="space-y-2 border-t pt-4">
-                            <div className="flex justify-end text-sm">
-                                <span className="text-muted-foreground">Subtotal:</span>
-                                <span className="ml-4 font-medium">{formatRupiah(subtotal)}</span>
-                            </div>
-                            {totalFees > 0 && (
-                                <div className="flex justify-end text-sm">
-                                    <span className="text-muted-foreground">Biaya Tambahan:</span>
-                                    <span className="ml-4 font-medium">{formatRupiah(totalFees)}</span>
-                                </div>
-                            )}
-                            <div className="flex justify-end text-base font-bold">
-                                <span>Total:</span>
-                                <span className="ml-4">{formatRupiah(total)}</span>
-                            </div>
-                        </div>
+                        <InvoiceFormFields
+                            items={form.data.items}
+                            fees={form.data.fees}
+                            onUpdateItem={updateItem}
+                            onAddItem={addItem}
+                            onRemoveItem={removeItem}
+                            onUpdateFee={updateFee}
+                            onAddFee={addFee}
+                            onRemoveFee={removeFee}
+                        />
                     )}
 
                     <div>
