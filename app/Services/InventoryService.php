@@ -59,6 +59,7 @@ class InventoryService
 
             StockMovement::create([
                 'ingredient_id' => $ingredient->id,
+                'user_id' => $userId,
                 'type' => StockMovement::TYPE_PURCHASE,
                 'quantity' => $quantity,
                 'stock_after' => $ingredient->current_stock,
@@ -91,6 +92,7 @@ class InventoryService
         ?int $sourceId = null,
         ?string $note = null,
         ?CarbonInterface $occurredAt = null,
+        ?int $userId = null,
     ): StockMovement {
         $occurredAt = $occurredAt ?? Carbon::now();
 
@@ -100,6 +102,7 @@ class InventoryService
 
         return StockMovement::create([
             'ingredient_id' => $ingredient->id,
+            'user_id' => $userId,
             'type' => StockMovement::TYPE_USAGE,
             'quantity' => -1 * $quantity,
             'stock_after' => $ingredient->current_stock,
@@ -113,15 +116,16 @@ class InventoryService
     /**
      * Setel stok ke nilai absolut (koreksi manual). Atomic.
      */
-    public function adjustStock(Ingredient $ingredient, float $newStock, ?string $note = null): StockMovement
+    public function adjustStock(Ingredient $ingredient, float $newStock, ?string $note = null, ?int $userId = null): StockMovement
     {
-        return DB::transaction(function () use ($ingredient, $newStock, $note) {
+        return DB::transaction(function () use ($ingredient, $newStock, $note, $userId) {
             $delta = $newStock - (float) $ingredient->current_stock;
             $ingredient->current_stock = $newStock;
             $ingredient->save();
 
             return StockMovement::create([
                 'ingredient_id' => $ingredient->id,
+                'user_id' => $userId,
                 'type' => StockMovement::TYPE_ADJUSTMENT,
                 'quantity' => $delta,
                 'stock_after' => $newStock,
@@ -134,7 +138,7 @@ class InventoryService
     /**
      * Batalkan efek pembelian pada stok (tanpa menghapus row transaksi).
      */
-    public function reversePurchase(Transaction $transaction): void
+    public function reversePurchase(Transaction $transaction, ?int $userId = null): void
     {
         $ingredient = $transaction->ingredient ?? Ingredient::find($transaction->ingredient_id);
 
@@ -156,6 +160,7 @@ class InventoryService
 
         StockMovement::create([
             'ingredient_id' => $ingredient->id,
+            'user_id' => $userId,
             'type' => StockMovement::TYPE_REVERSAL,
             'quantity' => -1 * $quantity,
             'stock_after' => $ingredient->current_stock,
@@ -239,6 +244,7 @@ class InventoryService
         int $quantity,
         Sale $sale,
         ?CarbonInterface $occurredAt = null,
+        ?int $userId = null,
     ): void {
         $occurredAt = $occurredAt ?? Carbon::now();
 
@@ -270,6 +276,7 @@ class InventoryService
 
         StockMovement::create([
             'ingredient_id' => $finishedGoods->id,
+            'user_id' => $userId,
             'type' => StockMovement::TYPE_USAGE,
             'quantity' => -$quantity,
             'stock_after' => $newStock,

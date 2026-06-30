@@ -130,7 +130,7 @@ class SaleService
         // Deduct stock based on product type
         if ($product->isBatch()) {
             // For batch products: deduct from finished goods stock
-            $this->inventory->deductFinishedGoods($product, $quantity, $sale, $occurredAt);
+            $this->inventory->deductFinishedGoods($product, $quantity, $sale, $occurredAt, $userId);
         } else {
             // For unit products: deduct from raw materials based on recipe
             foreach ($product->recipeItems as $item) {
@@ -145,6 +145,7 @@ class SaleService
                     $sale->id,
                     null,
                     $occurredAt,
+                    $userId,
                 );
             }
         }

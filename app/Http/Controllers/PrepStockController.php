@@ -59,6 +59,7 @@ class PrepStockController extends Controller
             $ingredient,
             (float) $validated['current_stock'],
             $validated['note'],
+            $request->user()->id,
         );
 
         return back()->with('success', 'Stok prep disesuaikan.');

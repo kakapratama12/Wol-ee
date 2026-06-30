@@ -12,12 +12,12 @@ class PurchaseService
 {
     public function __construct(private readonly InventoryService $inventory) {}
 
-    public function void(Transaction $transaction): void
+    public function void(Transaction $transaction, ?int $userId = null): void
     {
-        DB::transaction(function () use ($transaction) {
+        DB::transaction(function () use ($transaction, $userId) {
             $ingredient = $transaction->ingredient ?? Ingredient::findOrFail($transaction->ingredient_id);
 
-            $this->inventory->reversePurchase($transaction);
+            $this->inventory->reversePurchase($transaction, $userId);
             $transaction->delete();
             $this->inventory->recalculateWeightedAverage($ingredient->fresh());
         });
@@ -35,7 +35,7 @@ class PurchaseService
         return DB::transaction(function () use ($transaction, $ingredient, $quantity, $unitPrice, $note, $occurredAt, $userId) {
             $oldIngredient = $transaction->ingredient ?? Ingredient::findOrFail($transaction->ingredient_id);
 
-            $this->inventory->reversePurchase($transaction);
+            $this->inventory->reversePurchase($transaction, $userId);
             $transaction->delete();
             $this->inventory->recalculateWeightedAverage($oldIngredient->fresh());
 
