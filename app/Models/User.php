@@ -20,7 +20,7 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     public const ROLE_PENGELOLA = 'pengelola';
-    public const ROLE_ADMIN = 'admin';
+    public const ROLE_STAFF = 'staff';
     public const ROLE_SUPER_ADMIN = 'super_admin';
 
     /**
@@ -39,9 +39,9 @@ class User extends Authenticatable
         return $this->role === self::ROLE_PENGELOLA;
     }
 
-    public function isAdmin(): bool
+    public function isStaff(): bool
     {
-        return $this->role === self::ROLE_ADMIN;
+        return $this->role === self::ROLE_STAFF;
     }
 
     public function isSuperAdmin(): bool

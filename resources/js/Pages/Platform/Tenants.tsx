@@ -12,7 +12,7 @@ interface TenantRow {
     status: string;
     users_count: number;
     pengelola_count: number;
-    admin_count: number;
+    staff_count: number;
     has_bot_token: boolean;
     ai_usage_today: number;
     feedback_count: number;
@@ -53,7 +53,7 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                     <TableCell className="uppercase text-xs text-muted-foreground">{tenant.status}</TableCell>
                                     <TableCell>
                                         {formatNumber(tenant.users_count)}
-                                        <span className="ml-1 text-xs text-muted-foreground">({tenant.pengelola_count} pengelola, {tenant.admin_count} admin)</span>
+                                        <span className="ml-1 text-xs text-muted-foreground">({tenant.pengelola_count} pengelola, {tenant.staff_count} staff)</span>
                                     </TableCell>
                                     <TableCell>{tenant.has_bot_token ? 'Aktif' : '-'}</TableCell>
                                     <TableCell>{formatNumber(tenant.ai_usage_today)}</TableCell>

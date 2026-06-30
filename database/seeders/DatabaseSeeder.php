@@ -50,7 +50,7 @@ class DatabaseSeeder extends Seeder
 
         User::updateOrCreate(
             ['email' => 'admin@wol-ee.local', 'tenant_id' => $tenant->id],
-            ['name' => 'Admin Staff', 'password' => Hash::make('password'), 'role' => User::ROLE_ADMIN],
+            ['name' => 'Staff', 'password' => Hash::make('password'), 'role' => User::ROLE_STAFF],
         );
     }
 

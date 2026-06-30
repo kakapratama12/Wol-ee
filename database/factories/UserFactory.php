@@ -32,7 +32,7 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'tenant_id' => Tenant::factory(),
-            'role' => User::ROLE_ADMIN,
+            'role' => User::ROLE_STAFF,
         ];
     }
 
