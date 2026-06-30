@@ -78,32 +78,32 @@ export default function CreateProductModal({
     };
 
     return (
-        <Modal open={open} onClose={handleClose} title=Produk Baru>
-            <form onSubmit={handleSubmit} className=space-y-4>
+        <Modal open={open} onClose={handleClose} title="Produk Baru">
+            <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <Label htmlFor=prod-name>Nama Produk</Label>
+                    <Label htmlFor="prod-name">Nama Produk</Label>
                     <Input
-                        id=prod-name
+                        id="prod-name"
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
                         required
                     />
                 </div>
-                <div className=grid grid-cols-2 gap-3>
+                <div className="grid grid-cols-2 gap-3">
                     <div>
-                        <Label htmlFor=prod-unit>Satuan</Label>
+                        <Label htmlFor="prod-unit">Satuan</Label>
                         <Input
-                            id=prod-unit
+                            id="prod-unit"
                             value={form.unit}
                             onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                            placeholder=pcs, porsi, gelas
+                            placeholder="pcs, porsi, gelas"
                             required
                         />
                     </div>
                     <div>
-                        <Label htmlFor=prod-price>Harga Jual (Rp)</Label>
+                        <Label htmlFor="prod-price">Harga Jual (Rp)</Label>
                         <CurrencyInput
-                            id=prod-price
+                            id="prod-price"
                             value={form.selling_price}
                             onChange={(v) => setForm({ ...form, selling_price: v })}
                             required
@@ -111,23 +111,23 @@ export default function CreateProductModal({
                     </div>
                 </div>
                 <div>
-                    <Label htmlFor=prod-recipe-type>Tipe Resep</Label>
+                    <Label htmlFor="prod-recipe-type">Tipe Resep</Label>
                     <select
-                        id=prod-recipe-type
-                        className=flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm
+                        id="prod-recipe-type"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                         value={form.recipe_type}
                         onChange={(e) => setForm({ ...form, recipe_type: e.target.value as 'unit' | 'batch' })}
                     >
-                        <option value=unit>Unit (per porsi)</option>
-                        <option value=batch>Batch (per produksi)</option>
+                        <option value="unit">Unit (per porsi)</option>
+                        <option value="batch">Batch (per produksi)</option>
                     </select>
                 </div>
-                {error && <p className=text-sm text-destructive>{error}</p>}
-                <div className=flex justify-end gap-2>
-                    <Button type=button variant=outline onClick={handleClose}>
+                {error && <p className="text-sm text-destructive">{error}</p>}
+                <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={handleClose}>
                         Batal
                     </Button>
-                    <Button type=submit disabled={creating}>
+                    <Button type="submit" disabled={creating}>
                         {creating ? 'Menyimpan...' : 'Simpan'}
                     </Button>
                 </div>
