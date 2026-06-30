@@ -373,6 +373,16 @@ Bot: Reply ke user: "✅ Pembelian tercatat. Stok tepung: 5.5 kg (aman)"
 - [x] Inline script di app.blade.php: prevent flash of wrong theme
 - [x] localStorage persistence
 
+### 10.4 Error Handling
+- [x] CashEntryController: try-catch store/destroy
+- [x] ExpenseController: try-catch update/destroy
+- [x] IngredientController: try-catch store/storeJson/adjust/destroy
+
+### 10.5 Code Quality
+- [x] ESLint: TypeScript + React hooks rules
+- [x] Prettier: consistent formatting (single quotes, trailing commas, 100 width)
+- [x] All existing code formatted
+
 ---
 
 ## Notes

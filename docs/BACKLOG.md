@@ -28,6 +28,8 @@ _(Kosong — semua phase selesai)_
 ### Code Quality & Infrastructure (Juni 2026)
 - Race condition fix: lockForUpdate() di InventoryService & ProductionRunService
 - Idempotency key: sales, transactions, invoices (UUID, mencegah double submit)
+- Error handling: try-catch di CashEntry, Expense, Ingredient controllers
+- ESLint + Prettier: frontend code style guardrails
 - Dark mode: toggle button, localStorage persistence, logo auto-switch
 
 ### Super Admin Platform (Juni 2026)

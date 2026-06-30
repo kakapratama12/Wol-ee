@@ -14,6 +14,7 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 ## [Unreleased]
 ### Added
 
+- ESLint + Prettier: guardrails untuk code style konsisten. Frontend code otomatis ter-format.
 - Idempotency key di sales, transactions, invoices — mencegah duplikat dari double submit atau network retry. UUID di-generate otomatis di frontend, backend cek sebelum create.
 - Dark mode: toggle button di header, localStorage persistence, auto-detect system preference. Logo otomatis switch (navy → putih) berdasarkan theme.
 - Terminology: "Tenant" → "Usaha", "Owner" → "Pengelola", "Admin" → "Staff" di seluruh UI dan database.
