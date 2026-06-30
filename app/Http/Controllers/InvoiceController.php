@@ -148,16 +148,16 @@ class InvoiceController extends Controller
         $validated = $request->validate([
             'partner_id' => ['required', 'exists:partners,id'],
             'due_date' => ['required', 'date'],
-            'note' => ['nullable', 'string'],
+            'note' => ['nullable', 'string', 'max:1000'],
             'amount' => ['nullable', 'numeric', 'min:0'],
-            'items' => ['nullable', 'array'],
-            'items.*.description' => ['required_with:items', 'string'],
-            'items.*.quantity' => ['required_with:items', 'numeric', 'gt:0'],
-            'items.*.unit_price' => ['required_with:items', 'numeric', 'min:0'],
-            'fees' => ['nullable', 'array'],
+            'items' => ['nullable', 'array', 'max:50'],
+            'items.*.description' => ['required_with:items', 'string', 'max:255'],
+            'items.*.quantity' => ['required_with:items', 'numeric', 'gt:0', 'max:9999999'],
+            'items.*.unit_price' => ['required_with:items', 'numeric', 'min:0', 'max:99999999999'],
+            'fees' => ['nullable', 'array', 'max:20'],
             'fees.*.name' => ['required_with:fees', 'string'],
             'fees.*.type' => ['required_with:fees', 'in:fixed,percentage'],
-            'fees.*.value' => ['required_with:fees', 'numeric', 'min:0'],
+            'fees.*.value' => ['required_with:fees', 'numeric', 'min:0', 'max:99999999999'],
         ]);
 
         // Validate partner is a customer

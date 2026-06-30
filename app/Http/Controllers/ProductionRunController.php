@@ -135,7 +135,7 @@ class ProductionRunController extends Controller
     public function updateItems(Request $request, ProductionRun $productionRun, ProductionRunService $service): RedirectResponse
     {
         $validated = $request->validate([
-            'items' => ['required', 'array', 'min:1'],
+            'items' => ['required', 'array', 'min:1', 'max:50'],
             'items.*.ingredient_id' => ['required', 'integer', 'exists:ingredients,id'],
             'items.*.quantity_used' => ['required', 'numeric', 'gt:0'],
         ]);

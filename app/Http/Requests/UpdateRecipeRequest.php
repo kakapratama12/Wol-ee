@@ -27,7 +27,7 @@ class UpdateRecipeRequest extends FormRequest
             : ['required', 'integer', 'exists:ingredients,id'];
 
         return [
-            'items' => ['present', 'array'],
+            'items' => ['present', 'array', 'max:50'],
             'items.*.ingredient_id' => $ingredientRule,
             'items.*.quantity' => ['required', 'numeric', 'gt:0'],
             'estimated_yield_per_batch' => ['nullable', 'integer', 'min:1'],
