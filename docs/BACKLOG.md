@@ -6,7 +6,12 @@
 
 ## WIP (What We're Building Now)
 
-_(Kosong — semua phase selesai)_
+### Edit Identitas Usaha (30 Juni 2026)
+- [ ] Edit nama usaha + slug di Company Settings
+- [ ] Auto-generate slug dari nama baru (bisa di-override)
+- [ ] Slug uniqueness check (append -2, -3 jika clash)
+- [ ] Audit log perubahan nama
+- [ ] URL preview saat edit slug
 
 ---
 
