@@ -102,7 +102,7 @@ class SaleService
         // Calculate COGS based on product type
         if ($product->isBatch()) {
             // For batch products: use average COGS from production runs
-            $cogsPerUnit = $this->cogs->averageCogsForBatchProduct($product);
+            $cogsPerUnit = $this->cogs->averageCogsForBatchProduct($product, $occurredAt);
         } else {
             // For unit products: use recipe-based COGS
             $cogsPerUnit = $this->cogs->cogsForProduct($product);
