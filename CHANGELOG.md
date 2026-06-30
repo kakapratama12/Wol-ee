@@ -14,6 +14,10 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 ## [Unreleased]
 ### Added
 
+- Dark mode: toggle button di header, localStorage persistence, auto-detect system preference. Logo otomatis switch (navy → putih) berdasarkan theme.
+- Terminology: "Tenant" → "Usaha", "Owner" → "Pengelola", "Admin" → "Staff" di seluruh UI dan database.
+- Super Admin: halaman Platform Users (daftar semua user, search, filter per usaha) dan Platform Usaha (daftar usaha dengan detail pengelola/staff, expandable rows).
+- Form "Tambah Usaha" di Platform Usaha: nama usaha, plan, data pengelola. Slug auto-generate dari nama.
 - Dashboard date filter: pilihan Minggu Ini, Bulan Ini, 3 Bulan Terakhir, dan Custom (date picker).
 - Brand color palette: Deep Navy (primary), Warm Amber (warning), Teal (success), Off White (background), Charcoal (text), Slate (muted), Light Gray (border).
 - Favicon, apple-touch-icon, dan sidebar/login logo dari brand image yang di-upload.
@@ -31,64 +35,6 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 - PnL server error: selectRaw terhapus oleh sed command, menyebabkan GROUP BY error.
 - Favicon background: dari abu-abu (JPEG) menjadi transparan.
-
-### Added
-
-- Super Admin Ops Panel (`/platform`): tenant overview, feedback inbox, AI usage summary, dan command `wol-ee:create-super-admin`.
-- Super Admin AI Usage analytics: event log `bot_ai_requests`, peak request/minute, provider limits, error rate, latency/token metadata, dan breakdown per provider/plan/tenant.
-- Dashboard overview: chart Revenue vs Expense 6 bulan terakhir dan daftar pembelian terbaru.
-- Bot feedback collection: fallback mengarahkan `feedback ...`, API `POST /api/bot/feedback`, dan tabel `bot_feedbacks` untuk kurasi roadmap early adopter.
-- Bot action planner: pencatatan penjualan, pembelian, dan biaya memakai AI intent + slot validation; bot bertanya klarifikasi saat data belum lengkap.
-- Bot confirmation flow: natural language sale/purchase/expense tampil sebagai preview dulu, lalu baru dicatat setelah user menekan konfirmasi.
-- Static Bot Skill Registry (`bot/skills.json`) dan halaman Super Admin `/platform/bot-skills` untuk audit skill, required slots, tool target, dan confirmation policy.
-- Bot query tools (demo owner): `GET /api/reports/pnl`, `/stock-alerts`, `/margin-alerts`, `/top-products`, `/bottom-products`; query router NL tanpa LLM (profit bulan ini, top/bottom products, strategi, stok/margin alert, meta "bisa nanya apa").
-- Kuota AI bot: 25/hari (free/Groq), 150/hari (pro/business/DeepSeek); `GET /api/bot/usage`, `POST /api/bot/ai-usage`.
-- Sidebar navigasi dikategorikan (Transaksi, Inventory, Laporan, Partner, Settings) dengan section collapsible.
-- Halaman web **Aging Report** (`/reports/aging`) — tersembunyi jika tenant belum punya invoice.
-- Kolom `weighted_avg_price` pada bahan baku; COGS memakai rata-rata tertimbang, snapshot penjualan tetap akurat.
-- Dashboard Partner & Invoice: list, detail, aging summary, dan form pembayaran.
-- Sprint 4: auth token per tenant (`{tenant_id}:{secret}`), middleware `BotTokenAuth`,
-  endpoint `POST /api/bot/validate-token`, response format standar API bot.
-- Dashboard Settings > Bot Integration (generate/copy token).
-- Modul Python bot (`bot/`) — API client, handlers NL, offline queue, deployment checklist.
-- Bot NL parsing: `ai_parser.py` adaptasi logic keuangan-bot → output Laravel API (beli/jual/stok NL).
-- Bot API read endpoints: `GET /api/transactions`, `GET /api/sales`, `GET /api/products`.
-- Bot Wol-ee path: `/profit`, `/history`, `/partners` via API untuk user terdaftar; legacy path tetap untuk user lain.
-- Bot batch entry: AI intent `sale_batch`/`purchase_batch`, konfirmasi inline keyboard, endpoint `POST /api/sales/batch` dan `POST /api/transactions/batch`.
-- Bot item not found: daftar item tersedia + link dashboard (tanpa fuzzy mapping).
-- Edit dan hapus penjualan & pembelian di dashboard (koreksi stok otomatis).
-- Edit biaya operasional di dashboard.
-- Sprint 2 API: Partner CRUD, Invoice tracking (create, pay, outstanding), aging report
-  (`/api/partners`, `/api/invoices`, `/api/reports/aging`).
-- Seeder sample partner & invoice untuk tenant `kafe-contoh`.
-- Workflow rekayasa: kebijakan commit, changelog, dan ADR di `AGENTS.md`.
-- `CHANGELOG.md` dan direktori `docs/adr/` (Architecture Decision Records).
-- Fondasi queue: event `SaleRecorded` + listener `SendLowStockAlert` (queued)
-  yang mengirim peringatan stok menipis/kritis ke Telegram setelah penjualan.
-- Middleware `SecurityHeaders` untuk security headers di semua response web.
-- `SECURITY.md`: checklist keamanan & prosedur audit dependency.
-
-### Fixed
-
-- Query router bot tidak lagi menganggap semua kalimat berisi “bulan ini” sebagai P&L, dan quantity seperti `2kg` tidak lagi dibaca sebagai nominal biaya.
-- Tombol salin token di Settings > Bot Integration (fallback mobile + feedback "Disalin!").
-
-### Changed
-
-- `POST /api/sales` mendukung `total` dari bot; backend menghitung harga aktual per item dari total tersebut.
-- `/summary` dan "ringkasan" di bot → laporan P&L bulan ini (bukan hari ini).
-- Tier LLM bot mengikuti `tenants.plan` Wol-ee (bukan legacy `User.plan` keuangan-bot).
-- Penghapusan pembelian ditolak jika stok bahan sudah terpakai (pesan error jelas).
-- `InventoryService::recordPurchase()` memperbarui weighted average (bukan hanya harga beli terakhir).
-- `CogsService` memakai `weighted_avg_price` untuk perhitungan COGS live & snapshot penjualan.
-- Dokumentasi produk (`docs/PRD`, `docs/Roles-Sequence-Diagram`, `docs/Development-Context`)
-  diperbarui: prioritas fitur (Partner, Aging, Invoice tracking P1), MVP scope
-  diselaraskan dengan implementasi v0.1.0, stack Inertia/React, status deploy.
-
-### Security
-
-- Memaksa `shell-quote` ≥ 1.8.4 via `overrides` untuk menutup advisory kritikal
-  GHSA-w7jw-789q-3m8p (transitif dari `concurrently`, dev-only).
 
 ## [0.1.0] - 2026-06-16
 
