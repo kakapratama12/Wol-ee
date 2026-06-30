@@ -1,7 +1,10 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
-interface CurrencyInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'> {
+interface CurrencyInputProps extends Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    'onChange' | 'value'
+> {
     value: number | string;
     onChange: (rawValue: string) => void;
     /** Prefix shown before the formatted value (default: "Rp") */
@@ -18,7 +21,8 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
 
         // Sync external value → display
         React.useEffect(() => {
-            const raw = typeof value === 'string' ? value.replace(/[^\d]/g, '') : String(value ?? '');
+            const raw =
+                typeof value === 'string' ? value.replace(/[^\d]/g, '') : String(value ?? '');
             if (raw === '') {
                 setDisplay('');
             } else {

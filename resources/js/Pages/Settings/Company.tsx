@@ -84,7 +84,8 @@ export default function Company({ tenant }: Props) {
                                 Logo Perusahaan
                             </CardTitle>
                             <CardDescription>
-                                Logo perusahaan yang ditampilkan pada invoice. Maks 2MB (JPG, PNG, SVG).
+                                Logo perusahaan yang ditampilkan pada invoice. Maks 2MB (JPG, PNG,
+                                SVG).
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -169,7 +170,8 @@ export default function Company({ tenant }: Props) {
                                 Informasi Perusahaan
                             </CardTitle>
                             <CardDescription>
-                                Informasi dasar perusahaan yang akan ditampilkan pada invoice dan dokumen lainnya.
+                                Informasi dasar perusahaan yang akan ditampilkan pada invoice dan
+                                dokumen lainnya.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -259,7 +261,9 @@ export default function Company({ tenant }: Props) {
                                     <Input
                                         id="bank_account_name"
                                         value={data.bank_account_name}
-                                        onChange={(e) => setData('bank_account_name', e.target.value)}
+                                        onChange={(e) =>
+                                            setData('bank_account_name', e.target.value)
+                                        }
                                         placeholder="Nama pemilik rekening"
                                     />
                                     <InputError message={errors.bank_account_name} />

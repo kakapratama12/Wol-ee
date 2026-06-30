@@ -8,7 +8,14 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import { formatNumber, formatDate } from '@/lib/format';
 
 interface StockMovement {
@@ -131,14 +138,21 @@ export default function PrepStockIndex({ prepItems, canManage }: Props) {
                                 <CardContent>
                                     <div className="grid grid-cols-2 gap-4 rounded-lg bg-muted/50 p-3 mb-3">
                                         <div>
-                                            <p className="text-xs text-muted-foreground">Stok Minimum</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                Stok Minimum
+                                            </p>
                                             <p className="font-semibold">
-                                                {formatNumber(item.minimum_stock, 2)} {item.base_unit}
+                                                {formatNumber(item.minimum_stock, 2)}{' '}
+                                                {item.base_unit}
                                             </p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-muted-foreground">Total Riwayat</p>
-                                            <p className="font-semibold">{item.stock_movements.length} transaksi</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                Total Riwayat
+                                            </p>
+                                            <p className="font-semibold">
+                                                {item.stock_movements.length} transaksi
+                                            </p>
                                         </div>
                                     </div>
 
@@ -148,7 +162,8 @@ export default function PrepStockIndex({ prepItems, canManage }: Props) {
                                             size="sm"
                                             onClick={() => openAdjust(item)}
                                         >
-                                            <SlidersHorizontal className="h-4 w-4 mr-1" /> Sesuaikan Stok
+                                            <SlidersHorizontal className="h-4 w-4 mr-1" /> Sesuaikan
+                                            Stok
                                         </Button>
                                         <Button
                                             variant="ghost"
@@ -157,11 +172,13 @@ export default function PrepStockIndex({ prepItems, canManage }: Props) {
                                         >
                                             {expandedItem === item.id ? (
                                                 <>
-                                                    <ChevronUp className="h-4 w-4 mr-1" /> Sembunyikan Riwayat
+                                                    <ChevronUp className="h-4 w-4 mr-1" />{' '}
+                                                    Sembunyikan Riwayat
                                                 </>
                                             ) : (
                                                 <>
-                                                    <ChevronDown className="h-4 w-4 mr-1" /> Lihat Riwayat Stok
+                                                    <ChevronDown className="h-4 w-4 mr-1" /> Lihat
+                                                    Riwayat Stok
                                                 </>
                                             )}
                                         </Button>
@@ -169,37 +186,65 @@ export default function PrepStockIndex({ prepItems, canManage }: Props) {
 
                                     {expandedItem === item.id && (
                                         <div className="border-t pt-3">
-                                            <h4 className="text-sm font-medium mb-2">Riwayat Pergerakan Stok</h4>
+                                            <h4 className="text-sm font-medium mb-2">
+                                                Riwayat Pergerakan Stok
+                                            </h4>
                                             {item.stock_movements.length === 0 ? (
-                                                <p className="text-sm text-muted-foreground">Belum ada riwayat pergerakan stok.</p>
+                                                <p className="text-sm text-muted-foreground">
+                                                    Belum ada riwayat pergerakan stok.
+                                                </p>
                                             ) : (
                                                 <Table>
                                                     <TableHeader>
                                                         <TableRow>
                                                             <TableHead>Tanggal</TableHead>
                                                             <TableHead>Tipe</TableHead>
-                                                            <TableHead className="text-right">Jumlah</TableHead>
-                                                            <TableHead className="text-right">Stok Setelah</TableHead>
+                                                            <TableHead className="text-right">
+                                                                Jumlah
+                                                            </TableHead>
+                                                            <TableHead className="text-right">
+                                                                Stok Setelah
+                                                            </TableHead>
                                                             <TableHead>Catatan</TableHead>
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
                                                         {item.stock_movements.map((movement) => (
                                                             <TableRow key={movement.id}>
-                                                                <TableCell>{formatDate(movement.occurred_at)}</TableCell>
+                                                                <TableCell>
+                                                                    {formatDate(
+                                                                        movement.occurred_at,
+                                                                    )}
+                                                                </TableCell>
                                                                 <TableCell>
                                                                     <span className="text-xs capitalize">
-                                                                        {movementTypeLabels[movement.type] ?? movement.type}
+                                                                        {movementTypeLabels[
+                                                                            movement.type
+                                                                        ] ?? movement.type}
                                                                     </span>
                                                                 </TableCell>
                                                                 <TableCell className="text-right font-medium">
-                                                                    <span className={movement.quantity >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                                                        {movement.quantity >= 0 ? '+' : ''}
-                                                                        {formatNumber(movement.quantity, 2)}
+                                                                    <span
+                                                                        className={
+                                                                            movement.quantity >= 0
+                                                                                ? 'text-green-600'
+                                                                                : 'text-red-600'
+                                                                        }
+                                                                    >
+                                                                        {movement.quantity >= 0
+                                                                            ? '+'
+                                                                            : ''}
+                                                                        {formatNumber(
+                                                                            movement.quantity,
+                                                                            2,
+                                                                        )}
                                                                     </span>
                                                                 </TableCell>
                                                                 <TableCell className="text-right">
-                                                                    {formatNumber(movement.stock_after, 2)}
+                                                                    {formatNumber(
+                                                                        movement.stock_after,
+                                                                        2,
+                                                                    )}
                                                                 </TableCell>
                                                                 <TableCell className="text-muted-foreground text-sm">
                                                                     {movement.note || '-'}
@@ -235,7 +280,9 @@ export default function PrepStockIndex({ prepItems, canManage }: Props) {
                             onChange={(e) => adjustForm.setData('current_stock', e.target.value)}
                         />
                         {adjustForm.errors.current_stock && (
-                            <p className="mt-1 text-xs text-destructive">{adjustForm.errors.current_stock}</p>
+                            <p className="mt-1 text-xs text-destructive">
+                                {adjustForm.errors.current_stock}
+                            </p>
                         )}
                     </div>
                     <div>

@@ -6,7 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Select } from '@/Components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import { formatRupiah, formatPercent } from '@/lib/format';
 
 interface ProductMargin {
@@ -44,7 +51,10 @@ interface Props {
 }
 
 export default function MarginIndex({ products, alerts, whatIf }: Props) {
-    const form = useForm({ product_id: whatIf ? String(whatIf.product_id) : '', increase_percent: whatIf ? String(whatIf.increase_percent) : '10' });
+    const form = useForm({
+        product_id: whatIf ? String(whatIf.product_id) : '',
+        increase_percent: whatIf ? String(whatIf.increase_percent) : '10',
+    });
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -58,14 +68,19 @@ export default function MarginIndex({ products, alerts, whatIf }: Props) {
             {alerts.length > 0 && (
                 <div className="mb-6 space-y-2">
                     {alerts.map((a) => (
-                        <div key={a.product} className="flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4">
+                        <div
+                            key={a.product}
+                            className="flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4"
+                        >
                             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
                             <div>
                                 <p className="font-medium">
                                     {a.product}: margin turun {formatPercent(a.margin_drop)}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
-                                    Dari {formatPercent(a.previous_margin)} ke {formatPercent(a.current_margin)} - COGS sekarang {formatRupiah(a.current_cogs)}
+                                    Dari {formatPercent(a.previous_margin)} ke{' '}
+                                    {formatPercent(a.current_margin)} - COGS sekarang{' '}
+                                    {formatRupiah(a.current_cogs)}
                                 </p>
                             </div>
                         </div>
@@ -91,7 +106,10 @@ export default function MarginIndex({ products, alerts, whatIf }: Props) {
                             <TableBody>
                                 {products.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+                                        <TableCell
+                                            colSpan={4}
+                                            className="py-8 text-center text-muted-foreground"
+                                        >
                                             Belum ada produk dengan resep.
                                         </TableCell>
                                     </TableRow>
@@ -100,8 +118,12 @@ export default function MarginIndex({ products, alerts, whatIf }: Props) {
                                     <TableRow key={p.product_id}>
                                         <TableCell className="font-medium">{p.product}</TableCell>
                                         <TableCell>{formatRupiah(p.selling_price)}</TableCell>
-                                        <TableCell className="text-warning">{formatRupiah(p.cogs)}</TableCell>
-                                        <TableCell className="font-semibold text-success">{formatPercent(p.margin)}</TableCell>
+                                        <TableCell className="text-warning">
+                                            {formatRupiah(p.cogs)}
+                                        </TableCell>
+                                        <TableCell className="font-semibold text-success">
+                                            {formatPercent(p.margin)}
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -119,7 +141,11 @@ export default function MarginIndex({ products, alerts, whatIf }: Props) {
                         <form onSubmit={submit} className="space-y-4">
                             <div>
                                 <Label htmlFor="product_id">Produk</Label>
-                                <Select id="product_id" value={form.data.product_id} onChange={(e) => form.setData('product_id', e.target.value)}>
+                                <Select
+                                    id="product_id"
+                                    value={form.data.product_id}
+                                    onChange={(e) => form.setData('product_id', e.target.value)}
+                                >
                                     <option value="">- pilih -</option>
                                     {products.map((p) => (
                                         <option key={p.product_id} value={p.product_id}>
@@ -127,11 +153,23 @@ export default function MarginIndex({ products, alerts, whatIf }: Props) {
                                         </option>
                                     ))}
                                 </Select>
-                                {form.errors.product_id && <p className="mt-1 text-xs text-destructive">{form.errors.product_id}</p>}
+                                {form.errors.product_id && (
+                                    <p className="mt-1 text-xs text-destructive">
+                                        {form.errors.product_id}
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <Label htmlFor="increase_percent">Kenaikan harga bahan (%)</Label>
-                                <Input id="increase_percent" type="number" step="0.1" value={form.data.increase_percent} onChange={(e) => form.setData('increase_percent', e.target.value)} />
+                                <Input
+                                    id="increase_percent"
+                                    type="number"
+                                    step="0.1"
+                                    value={form.data.increase_percent}
+                                    onChange={(e) =>
+                                        form.setData('increase_percent', e.target.value)
+                                    }
+                                />
                             </div>
                             <Button type="submit" className="w-full" disabled={form.processing}>
                                 Simulasikan
@@ -141,15 +179,28 @@ export default function MarginIndex({ products, alerts, whatIf }: Props) {
                         {whatIf && (
                             <div className="mt-5 space-y-2 rounded-lg bg-muted/50 p-4 text-sm">
                                 <p className="font-medium">{whatIf.product}</p>
-                                <Row label="COGS sekarang" value={formatRupiah(whatIf.current_cogs)} />
-                                <Row label={`COGS jika +${whatIf.increase_percent}%`} value={formatRupiah(whatIf.new_cogs)} />
-                                <Row label="Margin sekarang" value={formatPercent(whatIf.current_margin)} />
+                                <Row
+                                    label="COGS sekarang"
+                                    value={formatRupiah(whatIf.current_cogs)}
+                                />
+                                <Row
+                                    label={`COGS jika +${whatIf.increase_percent}%`}
+                                    value={formatRupiah(whatIf.new_cogs)}
+                                />
+                                <Row
+                                    label="Margin sekarang"
+                                    value={formatPercent(whatIf.current_margin)}
+                                />
                                 <Row label="Margin baru" value={formatPercent(whatIf.new_margin)} />
                                 <div className="my-2 border-t border-border" />
-                                <p className="text-muted-foreground">Agar margin tetap, harga jual jadi:</p>
+                                <p className="text-muted-foreground">
+                                    Agar margin tetap, harga jual jadi:
+                                </p>
                                 <p className="text-lg font-bold text-primary">
                                     {formatRupiah(whatIf.recommended_price)}{' '}
-                                    <span className="text-sm font-normal text-muted-foreground">(+{formatPercent(whatIf.price_increase_percent)})</span>
+                                    <span className="text-sm font-normal text-muted-foreground">
+                                        (+{formatPercent(whatIf.price_increase_percent)})
+                                    </span>
                                 </p>
                             </div>
                         )}

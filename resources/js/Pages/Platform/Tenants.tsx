@@ -7,7 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Select } from '@/Components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import { formatDate, formatNumber } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
@@ -57,10 +64,11 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
         });
     };
 
-    const filteredTenants = tenants.filter((tenant) => 
-        search === '' || 
-        tenant.name.toLowerCase().includes(search.toLowerCase()) ||
-        tenant.slug.toLowerCase().includes(search.toLowerCase())
+    const filteredTenants = tenants.filter(
+        (tenant) =>
+            search === '' ||
+            tenant.name.toLowerCase().includes(search.toLowerCase()) ||
+            tenant.slug.toLowerCase().includes(search.toLowerCase()),
     );
 
     const toggleExpand = (id: number) => {
@@ -98,7 +106,9 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                         className="mt-1"
                                     />
                                     {addForm.errors.name && (
-                                        <p className="mt-1 text-xs text-destructive">{addForm.errors.name}</p>
+                                        <p className="mt-1 text-xs text-destructive">
+                                            {addForm.errors.name}
+                                        </p>
                                     )}
                                 </div>
                                 <div>
@@ -124,11 +134,15 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                         <Input
                                             id="add-pengelola-name"
                                             value={addForm.data.pengelola_name}
-                                            onChange={(e) => addForm.setData('pengelola_name', e.target.value)}
+                                            onChange={(e) =>
+                                                addForm.setData('pengelola_name', e.target.value)
+                                            }
                                             className="mt-1"
                                         />
                                         {addForm.errors.pengelola_name && (
-                                            <p className="mt-1 text-xs text-destructive">{addForm.errors.pengelola_name}</p>
+                                            <p className="mt-1 text-xs text-destructive">
+                                                {addForm.errors.pengelola_name}
+                                            </p>
                                         )}
                                     </div>
                                     <div>
@@ -137,11 +151,15 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                             id="add-pengelola-email"
                                             type="email"
                                             value={addForm.data.pengelola_email}
-                                            onChange={(e) => addForm.setData('pengelola_email', e.target.value)}
+                                            onChange={(e) =>
+                                                addForm.setData('pengelola_email', e.target.value)
+                                            }
                                             className="mt-1"
                                         />
                                         {addForm.errors.pengelola_email && (
-                                            <p className="mt-1 text-xs text-destructive">{addForm.errors.pengelola_email}</p>
+                                            <p className="mt-1 text-xs text-destructive">
+                                                {addForm.errors.pengelola_email}
+                                            </p>
                                         )}
                                     </div>
                                     <div>
@@ -150,20 +168,34 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                             id="add-pengelola-password"
                                             type="password"
                                             value={addForm.data.pengelola_password}
-                                            onChange={(e) => addForm.setData('pengelola_password', e.target.value)}
+                                            onChange={(e) =>
+                                                addForm.setData(
+                                                    'pengelola_password',
+                                                    e.target.value,
+                                                )
+                                            }
                                             className="mt-1"
                                         />
                                         {addForm.errors.pengelola_password && (
-                                            <p className="mt-1 text-xs text-destructive">{addForm.errors.pengelola_password}</p>
+                                            <p className="mt-1 text-xs text-destructive">
+                                                {addForm.errors.pengelola_password}
+                                            </p>
                                         )}
                                     </div>
                                     <div>
-                                        <Label htmlFor="add-pengelola-password-confirm">Konfirmasi Password</Label>
+                                        <Label htmlFor="add-pengelola-password-confirm">
+                                            Konfirmasi Password
+                                        </Label>
                                         <Input
                                             id="add-pengelola-password-confirm"
                                             type="password"
                                             value={addForm.data.pengelola_password_confirmation}
-                                            onChange={(e) => addForm.setData('pengelola_password_confirmation', e.target.value)}
+                                            onChange={(e) =>
+                                                addForm.setData(
+                                                    'pengelola_password_confirmation',
+                                                    e.target.value,
+                                                )
+                                            }
                                             className="mt-1"
                                         />
                                     </div>
@@ -174,7 +206,11 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                 <Button type="submit" disabled={addForm.processing}>
                                     Simpan
                                 </Button>
-                                <Button type="button" variant="ghost" onClick={() => setShowAdd(false)}>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => setShowAdd(false)}
+                                >
                                     Batal
                                 </Button>
                             </div>
@@ -234,42 +270,66 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                         </TableCell>
                                         <TableCell>
                                             <div className="font-medium">{tenant.name}</div>
-                                            <div className="text-xs text-muted-foreground">{tenant.slug}</div>
+                                            <div className="text-xs text-muted-foreground">
+                                                {tenant.slug}
+                                            </div>
                                         </TableCell>
-                                        <TableCell className="uppercase text-xs text-muted-foreground">{tenant.plan}</TableCell>
-                                        <TableCell className="uppercase text-xs text-muted-foreground">{tenant.status}</TableCell>
+                                        <TableCell className="uppercase text-xs text-muted-foreground">
+                                            {tenant.plan}
+                                        </TableCell>
+                                        <TableCell className="uppercase text-xs text-muted-foreground">
+                                            {tenant.status}
+                                        </TableCell>
                                         <TableCell>
                                             {formatNumber(tenant.users_count)}
                                             <span className="ml-1 text-xs text-muted-foreground">
-                                                ({tenant.pengelola_count} pengelola, {tenant.staff_count} staff)
+                                                ({tenant.pengelola_count} pengelola,{' '}
+                                                {tenant.staff_count} staff)
                                             </span>
                                         </TableCell>
-                                        <TableCell>{tenant.has_bot_token ? 'Aktif' : '-'}</TableCell>
+                                        <TableCell>
+                                            {tenant.has_bot_token ? 'Aktif' : '-'}
+                                        </TableCell>
                                         <TableCell>{formatNumber(tenant.ai_usage_today)}</TableCell>
                                         <TableCell>{formatNumber(tenant.feedback_count)}</TableCell>
-                                        <TableCell className="text-muted-foreground">{formatDate(tenant.created_at)}</TableCell>
+                                        <TableCell className="text-muted-foreground">
+                                            {formatDate(tenant.created_at)}
+                                        </TableCell>
                                     </TableRow>
                                     {expandedTenant === tenant.id && (
                                         <TableRow key={`${tenant.id}-detail`}>
                                             <TableCell colSpan={9} className="bg-muted/30">
                                                 <div className="py-4 px-6">
-                                                    <h4 className="mb-3 text-sm font-medium">Pengelola</h4>
+                                                    <h4 className="mb-3 text-sm font-medium">
+                                                        Pengelola
+                                                    </h4>
                                                     {tenant.pengelola_users.length > 0 ? (
                                                         <div className="space-y-2">
                                                             {tenant.pengelola_users.map((user) => (
-                                                                <div key={user.id} className="flex items-center gap-3">
+                                                                <div
+                                                                    key={user.id}
+                                                                    className="flex items-center gap-3"
+                                                                >
                                                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
-                                                                        {user.name.charAt(0).toUpperCase()}
+                                                                        {user.name
+                                                                            .charAt(0)
+                                                                            .toUpperCase()}
                                                                     </div>
                                                                     <div>
-                                                                        <div className="text-sm font-medium">{user.name}</div>
-                                                                        <div className="text-xs text-muted-foreground">{user.email}</div>
+                                                                        <div className="text-sm font-medium">
+                                                                            {user.name}
+                                                                        </div>
+                                                                        <div className="text-xs text-muted-foreground">
+                                                                            {user.email}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             ))}
                                                         </div>
                                                     ) : (
-                                                        <p className="text-sm text-muted-foreground">Belum ada pengelola</p>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Belum ada pengelola
+                                                        </p>
                                                     )}
                                                 </div>
                                             </TableCell>

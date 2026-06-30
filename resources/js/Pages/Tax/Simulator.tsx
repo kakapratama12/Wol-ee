@@ -62,30 +62,68 @@ export default function TaxSimulator({ defaults, result }: Props) {
                         <form onSubmit={submit} className="space-y-4">
                             <div>
                                 <Label htmlFor="business_type">Tipe bisnis</Label>
-                                <Select id="business_type" value={form.data.business_type} onChange={(e) => form.setData('business_type', e.target.value)}>
-                                    <option value="perorangan">Perorangan (PPh 21 progresif)</option>
+                                <Select
+                                    id="business_type"
+                                    value={form.data.business_type}
+                                    onChange={(e) => form.setData('business_type', e.target.value)}
+                                >
+                                    <option value="perorangan">
+                                        Perorangan (PPh 21 progresif)
+                                    </option>
                                     <option value="cv">CV (Badan 22%)</option>
                                     <option value="pt">PT (Badan 22%)</option>
                                 </Select>
                             </div>
                             <div>
                                 <Label htmlFor="omset">Omset (Rp)</Label>
-                                <Input id="omset" type="number" step="1" value={form.data.omset} onChange={(e) => form.setData('omset', e.target.value)} />
-                                {form.errors.omset && <p className="mt-1 text-xs text-destructive">{form.errors.omset}</p>}
+                                <Input
+                                    id="omset"
+                                    type="number"
+                                    step="1"
+                                    value={form.data.omset}
+                                    onChange={(e) => form.setData('omset', e.target.value)}
+                                />
+                                {form.errors.omset && (
+                                    <p className="mt-1 text-xs text-destructive">
+                                        {form.errors.omset}
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <Label htmlFor="cogs">COGS (Rp)</Label>
-                                <Input id="cogs" type="number" step="1" value={form.data.cogs} onChange={(e) => form.setData('cogs', e.target.value)} />
-                                <p className="mt-1 text-xs text-muted-foreground">Otomatis dari tracking, bisa diubah manual.</p>
+                                <Input
+                                    id="cogs"
+                                    type="number"
+                                    step="1"
+                                    value={form.data.cogs}
+                                    onChange={(e) => form.setData('cogs', e.target.value)}
+                                />
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                    Otomatis dari tracking, bisa diubah manual.
+                                </p>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <Label htmlFor="expense">Biaya lain (Rp)</Label>
-                                    <Input id="expense" type="number" step="1" value={form.data.expense} onChange={(e) => form.setData('expense', e.target.value)} />
+                                    <Input
+                                        id="expense"
+                                        type="number"
+                                        step="1"
+                                        value={form.data.expense}
+                                        onChange={(e) => form.setData('expense', e.target.value)}
+                                    />
                                 </div>
                                 <div>
                                     <Label htmlFor="waste_percent">Waste (%)</Label>
-                                    <Input id="waste_percent" type="number" step="0.1" value={form.data.waste_percent} onChange={(e) => form.setData('waste_percent', e.target.value)} />
+                                    <Input
+                                        id="waste_percent"
+                                        type="number"
+                                        step="0.1"
+                                        value={form.data.waste_percent}
+                                        onChange={(e) =>
+                                            form.setData('waste_percent', e.target.value)
+                                        }
+                                    />
                                 </div>
                             </div>
                             <Button type="submit" className="w-full" disabled={form.processing}>
@@ -99,47 +137,83 @@ export default function TaxSimulator({ defaults, result }: Props) {
                     {result ? (
                         <>
                             <div className="grid grid-cols-2 gap-4">
-                                <Card className={result.recommended === 'pp23' ? 'border-primary ring-1 ring-primary' : ''}>
+                                <Card
+                                    className={
+                                        result.recommended === 'pp23'
+                                            ? 'border-primary ring-1 ring-primary'
+                                            : ''
+                                    }
+                                >
                                     <CardContent className="p-5">
                                         <div className="flex items-center justify-between">
-                                            <p className="text-sm text-muted-foreground">PP 23 (Final 0.5%)</p>
-                                            {result.recommended === 'pp23' && <Badge>Lebih hemat</Badge>}
+                                            <p className="text-sm text-muted-foreground">
+                                                PP 23 (Final 0.5%)
+                                            </p>
+                                            {result.recommended === 'pp23' && (
+                                                <Badge>Lebih hemat</Badge>
+                                            )}
                                         </div>
-                                        <p className="mt-2 text-2xl font-bold">{formatRupiah(result.pp23)}</p>
+                                        <p className="mt-2 text-2xl font-bold">
+                                            {formatRupiah(result.pp23)}
+                                        </p>
                                     </CardContent>
                                 </Card>
-                                <Card className={result.recommended === 'normal' ? 'border-primary ring-1 ring-primary' : ''}>
+                                <Card
+                                    className={
+                                        result.recommended === 'normal'
+                                            ? 'border-primary ring-1 ring-primary'
+                                            : ''
+                                    }
+                                >
                                     <CardContent className="p-5">
                                         <div className="flex items-center justify-between">
-                                            <p className="text-sm text-muted-foreground">Skema Normal</p>
-                                            {result.recommended === 'normal' && <Badge>Lebih hemat</Badge>}
+                                            <p className="text-sm text-muted-foreground">
+                                                Skema Normal
+                                            </p>
+                                            {result.recommended === 'normal' && (
+                                                <Badge>Lebih hemat</Badge>
+                                            )}
                                         </div>
-                                        <p className="mt-2 text-2xl font-bold">{formatRupiah(result.normal)}</p>
+                                        <p className="mt-2 text-2xl font-bold">
+                                            {formatRupiah(result.normal)}
+                                        </p>
                                     </CardContent>
                                 </Card>
                             </div>
 
                             <Card>
                                 <CardContent className="space-y-2 p-5 text-sm">
-                                    <Row label="COGS + waste" value={formatRupiah(result.cogs_with_waste)} />
-                                    <Row label="Profit taxable" value={formatRupiah(result.taxable_profit)} />
+                                    <Row
+                                        label="COGS + waste"
+                                        value={formatRupiah(result.cogs_with_waste)}
+                                    />
+                                    <Row
+                                        label="Profit taxable"
+                                        value={formatRupiah(result.taxable_profit)}
+                                    />
                                     <div className="my-2 border-t border-border" />
-                                    <Row label="Selisih kedua skema" value={formatRupiah(Math.abs(result.difference))} bold />
+                                    <Row
+                                        label="Selisih kedua skema"
+                                        value={formatRupiah(Math.abs(result.difference))}
+                                        bold
+                                    />
                                 </CardContent>
                             </Card>
 
                             <div className="flex gap-2 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
                                 <Info className="h-4 w-4 shrink-0" />
                                 <p>
-                                    Tool ini untuk estimasi perencanaan keuangan, bukan pengganti konsultan pajak.
-                                    Konsultasikan laporan akhir dengan konsultan pajak atau akuntan bersertifikat.
+                                    Tool ini untuk estimasi perencanaan keuangan, bukan pengganti
+                                    konsultan pajak. Konsultasikan laporan akhir dengan konsultan
+                                    pajak atau akuntan bersertifikat.
                                 </p>
                             </div>
                         </>
                     ) : (
                         <Card>
                             <CardContent className="flex h-full min-h-48 items-center justify-center p-8 text-center text-sm text-muted-foreground">
-                                Isi form lalu klik "Hitung Estimasi Pajak" untuk melihat perbandingan PP 23 vs Normal.
+                                Isi form lalu klik "Hitung Estimasi Pajak" untuk melihat
+                                perbandingan PP 23 vs Normal.
                             </CardContent>
                         </Card>
                     )}

@@ -57,40 +57,50 @@ class IngredientController extends Controller
 
     public function store(StoreIngredientRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-        $data['current_stock'] = $data['current_stock'] ?? 0;
-        $data['weighted_avg_price'] = $data['unit_price'];
+        try {
+            $data = $request->validated();
+            $data['current_stock'] = $data['current_stock'] ?? 0;
+            $data['weighted_avg_price'] = $data['unit_price'];
 
-        $ingredient = Ingredient::create($data);
+            $ingredient = Ingredient::create($data);
 
-        PriceHistory::create([
-            'ingredient_id' => $ingredient->id,
-            'unit_price' => $ingredient->unit_price,
-            'recorded_at' => Carbon::today(),
-        ]);
+            PriceHistory::create([
+                'ingredient_id' => $ingredient->id,
+                'unit_price' => $ingredient->unit_price,
+                'recorded_at' => Carbon::today(),
+            ]);
 
-        return back()->with('success', 'Bahan ditambahkan.');
+            return back()->with('success', 'Bahan ditambahkan.');
+        } catch (\Throwable $e) {
+            \Log::error('Ingredient store failed', ['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => 'Gagal menambahkan bahan. Silakan coba lagi.']);
+        }
     }
 
     public function storeJson(StoreIngredientRequest $request): JsonResponse
     {
-        $data = $request->validated();
-        $data['current_stock'] = $data['current_stock'] ?? 0;
-        $data['weighted_avg_price'] = $data['unit_price'];
+        try {
+            $data = $request->validated();
+            $data['current_stock'] = $data['current_stock'] ?? 0;
+            $data['weighted_avg_price'] = $data['unit_price'];
 
-        $ingredient = Ingredient::create($data);
+            $ingredient = Ingredient::create($data);
 
-        PriceHistory::create([
-            'ingredient_id' => $ingredient->id,
-            'unit_price' => $ingredient->unit_price,
-            'recorded_at' => Carbon::today(),
-        ]);
+            PriceHistory::create([
+                'ingredient_id' => $ingredient->id,
+                'unit_price' => $ingredient->unit_price,
+                'recorded_at' => Carbon::today(),
+            ]);
 
-        return response()->json([
-            'id' => $ingredient->id,
-            'name' => $ingredient->name,
-            'base_unit' => $ingredient->base_unit,
-        ]);
+            return response()->json([
+                'id' => $ingredient->id,
+                'name' => $ingredient->name,
+                'base_unit' => $ingredient->base_unit,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Ingredient storeJson failed', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Gagal menambahkan bahan.'], 500);
+        }
     }
 
     public function update(UpdateIngredientRequest $request, Ingredient $ingredient): RedirectResponse
@@ -117,21 +127,30 @@ class IngredientController extends Controller
 
     public function adjust(AdjustStockRequest $request, Ingredient $ingredient, InventoryService $inventory): RedirectResponse
     {
-        $inventory->adjustStock(
-            $ingredient,
-            (float) $request->validated()['current_stock'],
-            $request->input('note'),
-            $request->user()->id,
-        );
+        try {
+            $inventory->adjustStock(
+                $ingredient,
+                (float) $request->validated()['current_stock'],
+                $request->input('note'),
+                $request->user()->id,
+            );
 
-        return back()->with('success', 'Stok disesuaikan.');
+            return back()->with('success', 'Stok disesuaikan.');
+        } catch (\Throwable $e) {
+            \Log::error('Ingredient adjust failed', ['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => 'Gagal menyesuaikan stok. Silakan coba lagi.']);
+        }
     }
 
     public function destroy(Ingredient $ingredient): RedirectResponse
     {
-        $ingredient->delete();
-
-        return back()->with('success', 'Bahan dihapus.');
+        try {
+            $ingredient->delete();
+            return back()->with('success', 'Bahan dihapus.');
+        } catch (\Throwable $e) {
+            \Log::error('Ingredient delete failed', ['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => 'Gagal menghapus bahan. Kemungkinan bahan masih digunakan di transaksi atau resep.']);
+        }
     }
 
     private function isPengelola(): bool

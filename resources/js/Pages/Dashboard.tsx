@@ -5,7 +5,14 @@ import AppLayout from '@/Layouts/AppLayout';
 import StatCard from '@/Components/StatCard';
 import StockStatusBadge from '@/Components/StockStatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import { Input } from '@/Components/ui/input';
 import { formatRupiah, formatPercent, formatNumber, formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -74,8 +81,21 @@ const periodOptions = [
     { value: 'custom', label: 'Custom' },
 ];
 
-export default function Dashboard({ period, periodLabel, startDate, endDate, metrics, lowStock, recentSales, recentPurchases, monthlyChart }: Props) {
-    const maxChartValue = Math.max(1, ...monthlyChart.flatMap((point) => [point.revenue, point.expense]));
+export default function Dashboard({
+    period,
+    periodLabel,
+    startDate,
+    endDate,
+    metrics,
+    lowStock,
+    recentSales,
+    recentPurchases,
+    monthlyChart,
+}: Props) {
+    const maxChartValue = Math.max(
+        1,
+        ...monthlyChart.flatMap((point) => [point.revenue, point.expense]),
+    );
     const [activePeriod, setActivePeriod] = useState(period);
     const [customStart, setCustomStart] = useState(startDate);
     const [customEnd, setCustomEnd] = useState(endDate);
@@ -83,12 +103,20 @@ export default function Dashboard({ period, periodLabel, startDate, endDate, met
     const changePeriod = (newPeriod: string) => {
         setActivePeriod(newPeriod);
         if (newPeriod !== 'custom') {
-            router.get('/dashboard', { period: newPeriod }, { preserveState: true, preserveScroll: true });
+            router.get(
+                '/dashboard',
+                { period: newPeriod },
+                { preserveState: true, preserveScroll: true },
+            );
         }
     };
 
     const applyCustom = () => {
-        router.get('/dashboard', { period: 'custom', start_date: customStart, end_date: customEnd }, { preserveState: true, preserveScroll: true });
+        router.get(
+            '/dashboard',
+            { period: 'custom', start_date: customStart, end_date: customEnd },
+            { preserveState: true, preserveScroll: true },
+        );
     };
 
     return (
@@ -144,8 +172,17 @@ export default function Dashboard({ period, periodLabel, startDate, endDate, met
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <StatCard label="Omset" value={formatRupiah(metrics.revenue)} icon={<Banknote className="h-5 w-5" />} />
-                <StatCard label="COGS" value={formatRupiah(metrics.cogs)} accent="warning" icon={<PackageMinus className="h-5 w-5" />} />
+                <StatCard
+                    label="Omset"
+                    value={formatRupiah(metrics.revenue)}
+                    icon={<Banknote className="h-5 w-5" />}
+                />
+                <StatCard
+                    label="COGS"
+                    value={formatRupiah(metrics.cogs)}
+                    accent="warning"
+                    icon={<PackageMinus className="h-5 w-5" />}
+                />
                 <StatCard
                     label="Laba Kotor"
                     value={formatRupiah(metrics.gross_profit)}
@@ -167,7 +204,9 @@ export default function Dashboard({ period, periodLabel, startDate, endDate, met
                 </CardHeader>
                 <CardContent>
                     {monthlyChart.length === 0 ? (
-                        <p className="py-6 text-center text-sm text-muted-foreground">Belum ada data chart.</p>
+                        <p className="py-6 text-center text-sm text-muted-foreground">
+                            Belum ada data chart.
+                        </p>
                     ) : (
                         <div className="space-y-4">
                             <div className="flex gap-4 text-xs text-muted-foreground">
@@ -182,7 +221,10 @@ export default function Dashboard({ period, periodLabel, startDate, endDate, met
                             </div>
                             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                 {monthlyChart.map((point) => (
-                                    <div key={`${point.year}-${point.month}`} className="rounded-md border p-3">
+                                    <div
+                                        key={`${point.year}-${point.month}`}
+                                        className="rounded-md border p-3"
+                                    >
                                         <p className="text-sm font-medium">{point.label}</p>
                                         <div className="mt-3 space-y-2">
                                             <div>
@@ -193,7 +235,9 @@ export default function Dashboard({ period, periodLabel, startDate, endDate, met
                                                 <div className="h-2 rounded-full bg-muted">
                                                     <div
                                                         className="h-2 rounded-full bg-primary"
-                                                        style={{ width: `${Math.max(2, (point.revenue / maxChartValue) * 100)}%` }}
+                                                        style={{
+                                                            width: `${Math.max(2, (point.revenue / maxChartValue) * 100)}%`,
+                                                        }}
                                                     />
                                                 </div>
                                             </div>
@@ -205,7 +249,9 @@ export default function Dashboard({ period, periodLabel, startDate, endDate, met
                                                 <div className="h-2 rounded-full bg-muted">
                                                     <div
                                                         className="h-2 rounded-full bg-amber-500"
-                                                        style={{ width: `${Math.max(2, (point.expense / maxChartValue) * 100)}%` }}
+                                                        style={{
+                                                            width: `${Math.max(2, (point.expense / maxChartValue) * 100)}%`,
+                                                        }}
                                                     />
                                                 </div>
                                             </div>
@@ -225,7 +271,9 @@ export default function Dashboard({ period, periodLabel, startDate, endDate, met
                     </CardHeader>
                     <CardContent>
                         {lowStock.length === 0 ? (
-                            <p className="py-6 text-center text-sm text-muted-foreground">Semua stok aman.</p>
+                            <p className="py-6 text-center text-sm text-muted-foreground">
+                                Semua stok aman.
+                            </p>
                         ) : (
                             <Table>
                                 <TableHeader>
@@ -254,7 +302,10 @@ export default function Dashboard({ period, periodLabel, startDate, endDate, met
                                 </TableBody>
                             </Table>
                         )}
-                        <Link href="/inventory" className="mt-3 inline-block text-sm font-medium text-primary hover:underline">
+                        <Link
+                            href="/inventory"
+                            className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+                        >
                             Lihat semua inventory
                         </Link>
                     </CardContent>
@@ -266,7 +317,9 @@ export default function Dashboard({ period, periodLabel, startDate, endDate, met
                     </CardHeader>
                     <CardContent>
                         {recentSales.length === 0 ? (
-                            <p className="py-6 text-center text-sm text-muted-foreground">Belum ada penjualan.</p>
+                            <p className="py-6 text-center text-sm text-muted-foreground">
+                                Belum ada penjualan.
+                            </p>
                         ) : (
                             <Table>
                                 <TableHeader>
@@ -280,16 +333,23 @@ export default function Dashboard({ period, periodLabel, startDate, endDate, met
                                 <TableBody>
                                     {recentSales.map((s) => (
                                         <TableRow key={s.id}>
-                                            <TableCell className="font-medium">{s.product ?? '-'}</TableCell>
+                                            <TableCell className="font-medium">
+                                                {s.product ?? '-'}
+                                            </TableCell>
                                             <TableCell>{s.quantity}</TableCell>
                                             <TableCell>{formatRupiah(s.revenue)}</TableCell>
-                                            <TableCell className="text-success">{formatRupiah(s.profit)}</TableCell>
+                                            <TableCell className="text-success">
+                                                {formatRupiah(s.profit)}
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
                             </Table>
                         )}
-                        <Link href="/sales" className="mt-3 inline-block text-sm font-medium text-primary hover:underline">
+                        <Link
+                            href="/sales"
+                            className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+                        >
                             Lihat semua penjualan
                         </Link>
                     </CardContent>
@@ -301,7 +361,9 @@ export default function Dashboard({ period, periodLabel, startDate, endDate, met
                     </CardHeader>
                     <CardContent>
                         {recentPurchases.length === 0 ? (
-                            <p className="py-6 text-center text-sm text-muted-foreground">Belum ada pembelian.</p>
+                            <p className="py-6 text-center text-sm text-muted-foreground">
+                                Belum ada pembelian.
+                            </p>
                         ) : (
                             <Table>
                                 <TableHeader>
@@ -316,19 +378,28 @@ export default function Dashboard({ period, periodLabel, startDate, endDate, met
                                 <TableBody>
                                     {recentPurchases.map((p) => (
                                         <TableRow key={p.id}>
-                                            <TableCell className="text-muted-foreground">{formatDate(p.occurred_at)}</TableCell>
-                                            <TableCell className="font-medium">{p.ingredient ?? '-'}</TableCell>
+                                            <TableCell className="text-muted-foreground">
+                                                {formatDate(p.occurred_at)}
+                                            </TableCell>
+                                            <TableCell className="font-medium">
+                                                {p.ingredient ?? '-'}
+                                            </TableCell>
                                             <TableCell>
                                                 {formatNumber(p.quantity, 2)} {p.base_unit ?? ''}
                                             </TableCell>
                                             <TableCell>{formatRupiah(p.total)}</TableCell>
-                                            <TableCell className="text-xs uppercase text-muted-foreground">{p.source}</TableCell>
+                                            <TableCell className="text-xs uppercase text-muted-foreground">
+                                                {p.source}
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
                             </Table>
                         )}
-                        <Link href="/transactions" className="mt-3 inline-block text-sm font-medium text-primary hover:underline">
+                        <Link
+                            href="/transactions"
+                            className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+                        >
                             Lihat semua pembelian
                         </Link>
                     </CardContent>

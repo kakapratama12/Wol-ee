@@ -7,7 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Select } from '@/Components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/format';
 
@@ -61,7 +68,8 @@ export default function Users({ users, tenants, roles }: Props) {
 
     const filteredUsers = useMemo(() => {
         return users.filter((user) => {
-            const matchSearch = search === '' || 
+            const matchSearch =
+                search === '' ||
                 user.name.toLowerCase().includes(search.toLowerCase()) ||
                 user.email.toLowerCase().includes(search.toLowerCase());
             const matchTenant = filterTenant === '' || user.tenant_id === filterTenant;
@@ -142,7 +150,11 @@ export default function Users({ users, tenants, roles }: Props) {
                         <div className="w-full sm:w-48">
                             <Select
                                 value={filterTenant}
-                                onChange={(e) => setFilterTenant(e.target.value === '' ? '' : Number(e.target.value))}
+                                onChange={(e) =>
+                                    setFilterTenant(
+                                        e.target.value === '' ? '' : Number(e.target.value),
+                                    )
+                                }
                             >
                                 <option value="">Semua Usaha</option>
                                 {tenants.map((t) => (
@@ -174,7 +186,9 @@ export default function Users({ users, tenants, roles }: Props) {
                                         className="mt-1"
                                     />
                                     {addForm.errors.name && (
-                                        <p className="mt-1 text-xs text-destructive">{addForm.errors.name}</p>
+                                        <p className="mt-1 text-xs text-destructive">
+                                            {addForm.errors.name}
+                                        </p>
                                     )}
                                 </div>
                                 <div>
@@ -187,7 +201,9 @@ export default function Users({ users, tenants, roles }: Props) {
                                         className="mt-1"
                                     />
                                     {addForm.errors.email && (
-                                        <p className="mt-1 text-xs text-destructive">{addForm.errors.email}</p>
+                                        <p className="mt-1 text-xs text-destructive">
+                                            {addForm.errors.email}
+                                        </p>
                                     )}
                                 </div>
                                 <div>
@@ -196,20 +212,28 @@ export default function Users({ users, tenants, roles }: Props) {
                                         id="add-password"
                                         type="password"
                                         value={addForm.data.password}
-                                        onChange={(e) => addForm.setData('password', e.target.value)}
+                                        onChange={(e) =>
+                                            addForm.setData('password', e.target.value)
+                                        }
                                         className="mt-1"
                                     />
                                     {addForm.errors.password && (
-                                        <p className="mt-1 text-xs text-destructive">{addForm.errors.password}</p>
+                                        <p className="mt-1 text-xs text-destructive">
+                                            {addForm.errors.password}
+                                        </p>
                                     )}
                                 </div>
                                 <div>
-                                    <Label htmlFor="add-password-confirm">Konfirmasi Password</Label>
+                                    <Label htmlFor="add-password-confirm">
+                                        Konfirmasi Password
+                                    </Label>
                                     <Input
                                         id="add-password-confirm"
                                         type="password"
                                         value={addForm.data.password_confirmation}
-                                        onChange={(e) => addForm.setData('password_confirmation', e.target.value)}
+                                        onChange={(e) =>
+                                            addForm.setData('password_confirmation', e.target.value)
+                                        }
                                         className="mt-1"
                                     />
                                 </div>
@@ -233,7 +257,9 @@ export default function Users({ users, tenants, roles }: Props) {
                                     <Select
                                         id="add-tenant"
                                         value={addForm.data.tenant_id}
-                                        onChange={(e) => addForm.setData('tenant_id', Number(e.target.value))}
+                                        onChange={(e) =>
+                                            addForm.setData('tenant_id', Number(e.target.value))
+                                        }
                                         className="mt-1"
                                     >
                                         {tenants.map((t) => (
@@ -248,7 +274,11 @@ export default function Users({ users, tenants, roles }: Props) {
                                 <Button type="submit" disabled={addForm.processing}>
                                     Simpan
                                 </Button>
-                                <Button type="button" variant="ghost" onClick={() => setShowAdd(false)}>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => setShowAdd(false)}
+                                >
                                     Batal
                                 </Button>
                             </div>
@@ -275,7 +305,9 @@ export default function Users({ users, tenants, roles }: Props) {
                             {filteredUsers.map((user) => (
                                 <TableRow key={user.id}>
                                     <TableCell className="font-medium">{user.name}</TableCell>
-                                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                                    <TableCell className="text-muted-foreground">
+                                        {user.email}
+                                    </TableCell>
                                     <TableCell>
                                         <span
                                             className={cn(
@@ -350,7 +382,9 @@ export default function Users({ users, tenants, roles }: Props) {
                                     <Label>Usaha</Label>
                                     <Select
                                         value={editForm.data.tenant_id}
-                                        onChange={(e) => editForm.setData('tenant_id', Number(e.target.value))}
+                                        onChange={(e) =>
+                                            editForm.setData('tenant_id', Number(e.target.value))
+                                        }
                                         className="mt-1"
                                     >
                                         {tenants.map((t) => (
@@ -364,7 +398,11 @@ export default function Users({ users, tenants, roles }: Props) {
                                     <Button type="submit" disabled={editForm.processing}>
                                         Simpan
                                     </Button>
-                                    <Button type="button" variant="ghost" onClick={() => setEditingUser(null)}>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        onClick={() => setEditingUser(null)}
+                                    >
                                         Batal
                                     </Button>
                                 </div>
@@ -388,11 +426,15 @@ export default function Users({ users, tenants, roles }: Props) {
                                     <Input
                                         type="password"
                                         value={passwordForm.data.password}
-                                        onChange={(e) => passwordForm.setData('password', e.target.value)}
+                                        onChange={(e) =>
+                                            passwordForm.setData('password', e.target.value)
+                                        }
                                         className="mt-1"
                                     />
                                     {passwordForm.errors.password && (
-                                        <p className="mt-1 text-xs text-destructive">{passwordForm.errors.password}</p>
+                                        <p className="mt-1 text-xs text-destructive">
+                                            {passwordForm.errors.password}
+                                        </p>
                                     )}
                                 </div>
                                 <div>
@@ -400,7 +442,12 @@ export default function Users({ users, tenants, roles }: Props) {
                                     <Input
                                         type="password"
                                         value={passwordForm.data.password_confirmation}
-                                        onChange={(e) => passwordForm.setData('password_confirmation', e.target.value)}
+                                        onChange={(e) =>
+                                            passwordForm.setData(
+                                                'password_confirmation',
+                                                e.target.value,
+                                            )
+                                        }
                                         className="mt-1"
                                     />
                                 </div>
@@ -408,7 +455,11 @@ export default function Users({ users, tenants, roles }: Props) {
                                     <Button type="submit" disabled={passwordForm.processing}>
                                         Reset
                                     </Button>
-                                    <Button type="button" variant="ghost" onClick={() => setResetPasswordUser(null)}>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        onClick={() => setResetPasswordUser(null)}
+                                    >
                                         Batal
                                     </Button>
                                 </div>

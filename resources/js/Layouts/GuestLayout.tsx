@@ -12,7 +12,11 @@ function GuestInner({ children }: PropsWithChildren) {
             </div>
             <div>
                 <Link href="/">
-                    <img src={theme === "dark" ? "/logo-white.png" : "/logo.png"} alt="Wol-ee" className="h-16 w-auto" />
+                    <img
+                        src={theme === 'dark' ? '/logo-white.png' : '/logo.png'}
+                        alt="Wol-ee"
+                        className="h-16 w-auto"
+                    />
                 </Link>
             </div>
 

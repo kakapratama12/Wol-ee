@@ -11,7 +11,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import CreatableCombobox from '@/Components/ui/creatable-combobox';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import { formatRupiah, formatNumber, formatDate } from '@/lib/format';
 import type { Paginated } from '@/types';
 
@@ -46,14 +53,24 @@ function toDatetimeLocal(iso: string | null): string {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export default function TransactionsIndex({ transactions, ingredients: initialIngredients }: Props) {
+export default function TransactionsIndex({
+    transactions,
+    ingredients: initialIngredients,
+}: Props) {
     const [ingredients, setIngredients] = useState(initialIngredients);
     const [showCreateModal, setShowCreateModal] = useState(false);
 
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     const defaultDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    const form = useForm({ ingredient_id: '', quantity: '', total: '', note: '', occurred_at: defaultDate, idempotency_key: '' });
+    const form = useForm({
+        ingredient_id: '',
+        quantity: '',
+        total: '',
+        note: '',
+        occurred_at: defaultDate,
+        idempotency_key: '',
+    });
     const editForm = useForm({
         ingredient_id: '',
         quantity: '',
@@ -119,7 +136,11 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                             <div>
                                 <Label>Bahan</Label>
                                 <CreatableCombobox
-                                    options={ingredients.map((i) => ({ id: i.id, label: i.name, sublabel: i.base_unit }))}
+                                    options={ingredients.map((i) => ({
+                                        id: i.id,
+                                        label: i.name,
+                                        sublabel: i.base_unit,
+                                    }))}
                                     value={form.data.ingredient_id}
                                     onChange={(v) => form.setData('ingredient_id', v)}
                                     onCreateNew={() => setShowCreateModal(true)}
@@ -129,18 +150,42 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="quantity">Jumlah {selected ? `(${selected.base_unit})` : ''}</Label>
-                                <Input id="quantity" type="number" step="0.0001" value={form.data.quantity} onChange={(e) => form.setData('quantity', e.target.value)} />
-                                {form.errors.quantity && <p className="mt-1 text-xs text-destructive">{form.errors.quantity}</p>}
+                                <Label htmlFor="quantity">
+                                    Jumlah {selected ? `(${selected.base_unit})` : ''}
+                                </Label>
+                                <Input
+                                    id="quantity"
+                                    type="number"
+                                    step="0.0001"
+                                    value={form.data.quantity}
+                                    onChange={(e) => form.setData('quantity', e.target.value)}
+                                />
+                                {form.errors.quantity && (
+                                    <p className="mt-1 text-xs text-destructive">
+                                        {form.errors.quantity}
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <Label htmlFor="total">Total harga (Rp)</Label>
-                                <CurrencyInput id="total" value={form.data.total} onChange={(v) => form.setData('total', v)} />
-                                {form.errors.total && <p className="mt-1 text-xs text-destructive">{form.errors.total}</p>}
+                                <CurrencyInput
+                                    id="total"
+                                    value={form.data.total}
+                                    onChange={(v) => form.setData('total', v)}
+                                />
+                                {form.errors.total && (
+                                    <p className="mt-1 text-xs text-destructive">
+                                        {form.errors.total}
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <Label htmlFor="note">Catatan (opsional)</Label>
-                                <Input id="note" value={form.data.note} onChange={(e) => form.setData('note', e.target.value)} />
+                                <Input
+                                    id="note"
+                                    value={form.data.note}
+                                    onChange={(e) => form.setData('note', e.target.value)}
+                                />
                             </div>
                             <div>
                                 <Label htmlFor="occurred_at">Tanggal</Label>
@@ -174,10 +219,18 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                             <TableBody>
                                 {transactions.data.map((t) => (
                                     <TableRow key={t.id}>
-                                        <TableCell className="text-sm">{formatDate(t.occurred_at)}</TableCell>
-                                        <TableCell className="font-medium">{t.ingredient}</TableCell>
-                                        <TableCell className="text-number">{formatNumber(t.quantity)} {t.base_unit}</TableCell>
-                                        <TableCell className="text-number">{formatRupiah(t.total)}</TableCell>
+                                        <TableCell className="text-sm">
+                                            {formatDate(t.occurred_at)}
+                                        </TableCell>
+                                        <TableCell className="font-medium">
+                                            {t.ingredient}
+                                        </TableCell>
+                                        <TableCell className="text-number">
+                                            {formatNumber(t.quantity)} {t.base_unit}
+                                        </TableCell>
+                                        <TableCell className="text-number">
+                                            {formatRupiah(t.total)}
+                                        </TableCell>
                                         <TableCell>
                                             <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
                                                 {t.source}
@@ -185,10 +238,18 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-1">
-                                                <Button variant="ghost" size="sm" onClick={() => openEdit(t)}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => openEdit(t)}
+                                                >
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
-                                                <Button variant="ghost" size="sm" onClick={() => remove(t)}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => remove(t)}
+                                                >
                                                     <Trash2 className="h-4 w-4 text-destructive" />
                                                 </Button>
                                             </div>
@@ -197,7 +258,10 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                                 ))}
                                 {transactions.data.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                                        <TableCell
+                                            colSpan={6}
+                                            className="h-24 text-center text-muted-foreground"
+                                        >
                                             Belum ada pembelian.
                                         </TableCell>
                                     </TableRow>
@@ -218,33 +282,65 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                         <div>
                             <Label>Bahan</Label>
                             <CreatableCombobox
-                                options={ingredients.map((i) => ({ id: i.id, label: i.name, sublabel: i.base_unit }))}
+                                options={ingredients.map((i) => ({
+                                    id: i.id,
+                                    label: i.name,
+                                    sublabel: i.base_unit,
+                                }))}
                                 value={editForm.data.ingredient_id}
                                 onChange={(v) => editForm.setData('ingredient_id', v)}
-                                onCreateNew={() => { setEditing(null); setShowCreateModal(true); }}
+                                onCreateNew={() => {
+                                    setEditing(null);
+                                    setShowCreateModal(true);
+                                }}
                                 placeholder="- Pilih bahan -"
                                 createLabel="Tambah Bahan Baru"
                             />
                         </div>
                         <div>
-                            <Label>Jumlah {editSelected ? `(${editSelected.base_unit})` : ''}</Label>
-                            <Input type="number" step="0.0001" value={editForm.data.quantity} onChange={(e) => editForm.setData('quantity', e.target.value)} />
+                            <Label>
+                                Jumlah {editSelected ? `(${editSelected.base_unit})` : ''}
+                            </Label>
+                            <Input
+                                type="number"
+                                step="0.0001"
+                                value={editForm.data.quantity}
+                                onChange={(e) => editForm.setData('quantity', e.target.value)}
+                            />
                         </div>
                         <div>
                             <Label>Total harga (Rp)</Label>
-                            <CurrencyInput value={editForm.data.total} onChange={(v) => editForm.setData('total', v)} />
+                            <CurrencyInput
+                                value={editForm.data.total}
+                                onChange={(v) => editForm.setData('total', v)}
+                            />
                         </div>
                         <div>
                             <Label>Catatan</Label>
-                            <Input value={editForm.data.note} onChange={(e) => editForm.setData('note', e.target.value)} />
+                            <Input
+                                value={editForm.data.note}
+                                onChange={(e) => editForm.setData('note', e.target.value)}
+                            />
                         </div>
                         <div>
                             <Label>Tanggal</Label>
-                            <Input type="datetime-local" value={editForm.data.occurred_at} onChange={(e) => editForm.setData('occurred_at', e.target.value)} />
+                            <Input
+                                type="datetime-local"
+                                value={editForm.data.occurred_at}
+                                onChange={(e) => editForm.setData('occurred_at', e.target.value)}
+                            />
                         </div>
                         <div className="flex justify-end gap-2">
-                            <Button type="button" variant="outline" onClick={() => setEditing(null)}>Batal</Button>
-                            <Button type="submit" disabled={editForm.processing}>Simpan</Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setEditing(null)}
+                            >
+                                Batal
+                            </Button>
+                            <Button type="submit" disabled={editForm.processing}>
+                                Simpan
+                            </Button>
                         </div>
                     </form>
                 </Modal>

@@ -80,23 +80,38 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
     });
 
     const addItem = () => {
-        form.setData('items', [...form.data.items, { description: '', quantity: '1', unit_price: '' }]);
+        form.setData('items', [
+            ...form.data.items,
+            { description: '', quantity: '1', unit_price: '' },
+        ]);
     };
     const removeItem = (i: number) => {
-        form.setData('items', form.data.items.filter((_, idx) => idx !== i));
+        form.setData(
+            'items',
+            form.data.items.filter((_, idx) => idx !== i),
+        );
     };
     const updateItem = (i: number, key: string, value: string) => {
-        form.setData('items', form.data.items.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)));
+        form.setData(
+            'items',
+            form.data.items.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)),
+        );
     };
 
     const addFee = () => {
         form.setData('fees', [...form.data.fees, { name: '', type: 'fixed', value: '' }]);
     };
     const removeFee = (i: number) => {
-        form.setData('fees', form.data.fees.filter((_, idx) => idx !== i));
+        form.setData(
+            'fees',
+            form.data.fees.filter((_, idx) => idx !== i),
+        );
     };
     const updateFee = (i: number, key: keyof FeeRow, value: string) => {
-        form.setData('fees', form.data.fees.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)));
+        form.setData(
+            'fees',
+            form.data.fees.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)),
+        );
     };
 
     const submit = (e: React.FormEvent) => {
@@ -112,7 +127,10 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
             <Head title={`Edit ${invoice.invoice_number}`} />
 
             <div className="mb-4">
-                <Link href="/invoices" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
+                <Link
+                    href="/invoices"
+                    className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+                >
                     <ArrowLeft className="mr-1 h-4 w-4" />
                     Kembali ke daftar
                 </Link>
@@ -137,16 +155,26 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
                                         headers: {
                                             'Content-Type': 'application/json',
                                             'X-Requested-With': 'XMLHttpRequest',
-                                            'X-XSRF-TOKEN': decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? ''),
+                                            'X-XSRF-TOKEN': decodeURIComponent(
+                                                document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ??
+                                                    '',
+                                            ),
                                         },
                                         body: JSON.stringify({ name, type: 'customer' }),
                                     });
                                     const data = await res.json();
-                                    setCustomers((prev) => [...prev, { id: data.id, name: data.name }]);
+                                    setCustomers((prev) => [
+                                        ...prev,
+                                        { id: data.id, name: data.name },
+                                    ]);
                                     return { id: data.id, name: data.name };
                                 }}
                             />
-                            {form.errors.partner_id && <p className="mt-1 text-xs text-destructive">{form.errors.partner_id}</p>}
+                            {form.errors.partner_id && (
+                                <p className="mt-1 text-xs text-destructive">
+                                    {form.errors.partner_id}
+                                </p>
+                            )}
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -172,8 +200,16 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
                         {!useItems && (
                             <div>
                                 <Label htmlFor="amount">Nominal (Rp)</Label>
-                                <CurrencyInput id="amount" value={form.data.amount} onChange={(v) => form.setData('amount', v)} />
-                                {form.errors.amount && <p className="mt-1 text-xs text-destructive">{form.errors.amount}</p>}
+                                <CurrencyInput
+                                    id="amount"
+                                    value={form.data.amount}
+                                    onChange={(v) => form.setData('amount', v)}
+                                />
+                                {form.errors.amount && (
+                                    <p className="mt-1 text-xs text-destructive">
+                                        {form.errors.amount}
+                                    </p>
+                                )}
                             </div>
                         )}
 
@@ -192,16 +228,32 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
 
                         <div className="w-48">
                             <Label htmlFor="due_date">Jatuh Tempo</Label>
-                            <Input id="due_date" type="date" value={form.data.due_date} onChange={(e) => form.setData('due_date', e.target.value)} />
-                            {form.errors.due_date && <p className="mt-1 text-xs text-destructive">{form.errors.due_date}</p>}
+                            <Input
+                                id="due_date"
+                                type="date"
+                                value={form.data.due_date}
+                                onChange={(e) => form.setData('due_date', e.target.value)}
+                            />
+                            {form.errors.due_date && (
+                                <p className="mt-1 text-xs text-destructive">
+                                    {form.errors.due_date}
+                                </p>
+                            )}
                         </div>
 
                         <div>
                             <Label htmlFor="note">Catatan</Label>
-                            <Input id="note" value={form.data.note} onChange={(e) => form.setData('note', e.target.value)} />
+                            <Input
+                                id="note"
+                                value={form.data.note}
+                                onChange={(e) => form.setData('note', e.target.value)}
+                            />
                         </div>
                         <div className="flex justify-end gap-2">
-                            <Link href="/invoices" className={buttonVariants({ variant: 'outline' })}>
+                            <Link
+                                href="/invoices"
+                                className={buttonVariants({ variant: 'outline' })}
+                            >
                                 Batal
                             </Link>
                             <Button type="submit" disabled={form.processing}>

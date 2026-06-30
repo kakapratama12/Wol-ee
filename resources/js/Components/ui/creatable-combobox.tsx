@@ -82,7 +82,7 @@ export default function CreatableCombobox({
         <div ref={containerRef} className={cn('relative', className)}>
             {/* Trigger */}
             <button
-                type='button'
+                type="button"
                 onClick={() => setOpen(!open)}
                 className={cn(
                     'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
@@ -95,65 +95,76 @@ export default function CreatableCombobox({
                         <span>
                             {selected.label}
                             {selected.sublabel && (
-                                <span className='ml-1 text-muted-foreground'>({selected.sublabel})</span>
+                                <span className="ml-1 text-muted-foreground">
+                                    ({selected.sublabel})
+                                </span>
                             )}
                         </span>
                     ) : (
                         placeholder
                     )}
                 </span>
-                <span className='flex items-center gap-1'>
+                <span className="flex items-center gap-1">
                     {selected && (
                         <span
-                            role='button'
+                            role="button"
                             tabIndex={-1}
                             onClick={handleClear}
-                            className='rounded-sm p-0.5 text-muted-foreground hover:text-foreground'
+                            className="rounded-sm p-0.5 text-muted-foreground hover:text-foreground"
                         >
-                            <X className='h-3 w-3' />
+                            <X className="h-3 w-3" />
                         </span>
                     )}
-                    <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', open && 'rotate-180')} />
+                    <ChevronDown
+                        className={cn(
+                            'h-4 w-4 text-muted-foreground transition-transform',
+                            open && 'rotate-180',
+                        )}
+                    />
                 </span>
             </button>
 
-            {error && <p className='mt-1 text-xs text-destructive'>{error}</p>}
+            {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
 
             {/* Dropdown */}
             {open && (
-                <div className='absolute z-50 mt-1 w-full overflow-hidden rounded-md border border-border bg-popover shadow-md'>
+                <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-md border border-border bg-popover shadow-md">
                     {/* Search input */}
-                    <div className='flex items-center gap-2 border-b border-border px-3'>
-                        <Search className='h-4 w-4 shrink-0 text-muted-foreground' />
+                    <div className="flex items-center gap-2 border-b border-border px-3">
+                        <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
                         <input
                             ref={inputRef}
-                            type='text'
+                            type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder={searchPlaceholder}
-                            className='h-9 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground'
+                            className="h-9 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                         />
                     </div>
 
                     {/* Options list */}
-                    <div className='max-h-60 overflow-y-auto p-1'>
+                    <div className="max-h-60 overflow-y-auto p-1">
                         {filtered.length === 0 && (
-                            <p className='px-3 py-2 text-sm text-muted-foreground'>Tidak ditemukan</p>
+                            <p className="px-3 py-2 text-sm text-muted-foreground">
+                                Tidak ditemukan
+                            </p>
                         )}
                         {filtered.map((option) => (
                             <button
                                 key={option.id}
-                                type='button'
+                                type="button"
                                 onClick={() => handleSelect(option.id)}
                                 className={cn(
                                     'flex w-full items-center justify-between rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground',
                                     String(option.id) === String(value) && 'bg-accent font-medium',
                                 )}
                             >
-                                <span className='truncate'>
+                                <span className="truncate">
                                     {option.label}
                                     {option.sublabel && (
-                                        <span className='ml-1 text-muted-foreground'>({option.sublabel})</span>
+                                        <span className="ml-1 text-muted-foreground">
+                                            ({option.sublabel})
+                                        </span>
                                     )}
                                 </span>
                             </button>
@@ -161,17 +172,17 @@ export default function CreatableCombobox({
                     </div>
 
                     {/* Create new button */}
-                    <div className='border-t border-border p-1'>
+                    <div className="border-t border-border p-1">
                         <button
-                            type='button'
+                            type="button"
                             onClick={() => {
                                 setOpen(false);
                                 setSearch('');
                                 onCreateNew();
                             }}
-                            className='flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm text-primary hover:bg-accent hover:text-accent-foreground outline-none'
+                            className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm text-primary hover:bg-accent hover:text-accent-foreground outline-none"
                         >
-                            <Plus className='h-4 w-4' />
+                            <Plus className="h-4 w-4" />
                             {createLabel}
                         </button>
                     </div>

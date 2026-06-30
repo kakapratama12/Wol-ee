@@ -1,7 +1,14 @@
 import { Head } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import { formatRupiah } from '@/lib/format';
 
 interface AgingBuckets {
@@ -52,7 +59,9 @@ export default function AgingReport({ report }: Props) {
                     <CardContent className="space-y-2 text-sm">
                         <p>
                             <span className="text-muted-foreground">Total outstanding:</span>{' '}
-                            <span className="font-semibold">{formatRupiah(report.summary.total_outstanding)}</span>
+                            <span className="font-semibold">
+                                {formatRupiah(report.summary.total_outstanding)}
+                            </span>
                         </p>
                         <p>
                             <span className="text-muted-foreground">Partner berutang:</span>{' '}
@@ -61,7 +70,9 @@ export default function AgingReport({ report }: Props) {
                         <div className="border-t pt-3">
                             {Object.entries(report.by_aging).map(([key, value]) => (
                                 <div key={key} className="flex justify-between py-1">
-                                    <span className="text-muted-foreground">{agingLabels[key]}</span>
+                                    <span className="text-muted-foreground">
+                                        {agingLabels[key]}
+                                    </span>
                                     <span>{formatRupiah(value)}</span>
                                 </div>
                             ))}
@@ -75,7 +86,9 @@ export default function AgingReport({ report }: Props) {
                     </CardHeader>
                     <CardContent>
                         {report.by_partner.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">Tidak ada piutang outstanding.</p>
+                            <p className="text-sm text-muted-foreground">
+                                Tidak ada piutang outstanding.
+                            </p>
                         ) : (
                             <Table>
                                 <TableHeader>
@@ -91,12 +104,24 @@ export default function AgingReport({ report }: Props) {
                                 <TableBody>
                                     {report.by_partner.map((row) => (
                                         <TableRow key={row.partner_id}>
-                                            <TableCell className="font-medium">{row.partner}</TableCell>
-                                            <TableCell className="text-right">{formatRupiah(row.total)}</TableCell>
-                                            <TableCell className="text-right">{formatRupiah(row.current)}</TableCell>
-                                            <TableCell className="text-right">{formatRupiah(row['1-2_months'])}</TableCell>
-                                            <TableCell className="text-right">{formatRupiah(row['2-3_months'])}</TableCell>
-                                            <TableCell className="text-right">{formatRupiah(row['3_plus'])}</TableCell>
+                                            <TableCell className="font-medium">
+                                                {row.partner}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatRupiah(row.total)}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatRupiah(row.current)}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatRupiah(row['1-2_months'])}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatRupiah(row['2-3_months'])}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatRupiah(row['3_plus'])}
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>

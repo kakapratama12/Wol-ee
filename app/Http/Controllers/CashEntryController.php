@@ -19,22 +19,31 @@ class CashEntryController extends Controller
             'occurred_at' => ['required', 'date'],
         ]);
 
-        DB::transaction(function () use ($validated) {
-            CashEntry::create([
-                'type' => $validated['type'],
-                'amount' => $validated['amount'],
-                'description' => $validated['description'] ?? null,
-                'occurred_at' => $validated['occurred_at'],
-            ]);
-        });
+        try {
+            DB::transaction(function () use ($validated) {
+                CashEntry::create([
+                    'type' => $validated['type'],
+                    'amount' => $validated['amount'],
+                    'description' => $validated['description'] ?? null,
+                    'occurred_at' => $validated['occurred_at'],
+                ]);
+            });
 
-        return back()->with('success', 'Kas masuk tercatat.');
+            return back()->with('success', 'Kas masuk tercatat.');
+        } catch (\Throwable $e) {
+            \Log::error('CashEntry store failed', ['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => 'Gagal mencatat kas masuk. Silakan coba lagi.']);
+        }
     }
 
     public function destroy(CashEntry $cashEntry): RedirectResponse
     {
-        $cashEntry->delete();
-
-        return back()->with('success', 'Kas masuk dihapus.');
+        try {
+            $cashEntry->delete();
+            return back()->with('success', 'Kas masuk dihapus.');
+        } catch (\Throwable $e) {
+            \Log::error('CashEntry delete failed', ['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => 'Gagal menghapus kas masuk.']);
+        }
     }
 }

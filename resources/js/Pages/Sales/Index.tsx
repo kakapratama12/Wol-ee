@@ -11,7 +11,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import CreatableCombobox from '@/Components/ui/creatable-combobox';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import { formatRupiah, formatPercent, formatDate } from '@/lib/format';
 import type { Paginated } from '@/types';
 
@@ -55,7 +62,14 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     const defaultDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    const form = useForm({ product_id: '', quantity: '', unit_price: '', note: '', occurred_at: defaultDate, idempotency_key: '' });
+    const form = useForm({
+        product_id: '',
+        quantity: '',
+        unit_price: '',
+        note: '',
+        occurred_at: defaultDate,
+        idempotency_key: '',
+    });
     const editForm = useForm({
         product_id: '',
         quantity: '',
@@ -95,7 +109,11 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
     };
 
     const remove = (sale: Sale) => {
-        if (confirm(`Hapus penjualan ${sale.product} x${sale.quantity}? Stok bahan akan dikembalikan.`)) {
+        if (
+            confirm(
+                `Hapus penjualan ${sale.product} x${sale.quantity}? Stok bahan akan dikembalikan.`,
+            )
+        ) {
             router.delete(`/sales/${sale.id}`, { preserveScroll: true });
         }
     };
@@ -121,7 +139,11 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                             <div>
                                 <Label>Produk</Label>
                                 <CreatableCombobox
-                                    options={products.map((p) => ({ id: p.id, label: p.name, sublabel: formatRupiah(p.selling_price) }))}
+                                    options={products.map((p) => ({
+                                        id: p.id,
+                                        label: p.name,
+                                        sublabel: formatRupiah(p.selling_price),
+                                    }))}
                                     value={form.data.product_id}
                                     onChange={(v) => form.setData('product_id', v)}
                                     onCreateNew={() => setShowCreateModal(true)}
@@ -132,14 +154,28 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                             </div>
                             <div>
                                 <Label htmlFor="quantity">Jumlah</Label>
-                                <Input id="quantity" type="number" step="1" value={form.data.quantity} onChange={(e) => form.setData('quantity', e.target.value)} />
-                                {form.errors.quantity && <p className="mt-1 text-xs text-destructive">{form.errors.quantity}</p>}
+                                <Input
+                                    id="quantity"
+                                    type="number"
+                                    step="1"
+                                    value={form.data.quantity}
+                                    onChange={(e) => form.setData('quantity', e.target.value)}
+                                />
+                                {form.errors.quantity && (
+                                    <p className="mt-1 text-xs text-destructive">
+                                        {form.errors.quantity}
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <Label htmlFor="unit_price">Harga jual / unit (opsional)</Label>
                                 <CurrencyInput
                                     id="unit_price"
-                                    placeholder={selected ? String(selected.selling_price) : 'pakai harga produk'}
+                                    placeholder={
+                                        selected
+                                            ? String(selected.selling_price)
+                                            : 'pakai harga produk'
+                                    }
                                     value={form.data.unit_price}
                                     onChange={(v) => form.setData('unit_price', v)}
                                 />
@@ -178,19 +214,37 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                             <TableBody>
                                 {sales.data.map((s) => (
                                     <TableRow key={s.id}>
-                                        <TableCell className="text-sm">{formatDate(s.occurred_at)}</TableCell>
+                                        <TableCell className="text-sm">
+                                            {formatDate(s.occurred_at)}
+                                        </TableCell>
                                         <TableCell className="font-medium">{s.product}</TableCell>
                                         <TableCell className="text-number">{s.quantity}</TableCell>
-                                        <TableCell className="text-number">{formatRupiah(s.revenue)}</TableCell>
-                                        <TableCell className="text-number">{formatRupiah(s.cogs)}</TableCell>
-                                        <TableCell className="text-number">{formatRupiah(s.profit)}</TableCell>
-                                        <TableCell className="text-number">{formatPercent(s.margin)}</TableCell>
+                                        <TableCell className="text-number">
+                                            {formatRupiah(s.revenue)}
+                                        </TableCell>
+                                        <TableCell className="text-number">
+                                            {formatRupiah(s.cogs)}
+                                        </TableCell>
+                                        <TableCell className="text-number">
+                                            {formatRupiah(s.profit)}
+                                        </TableCell>
+                                        <TableCell className="text-number">
+                                            {formatPercent(s.margin)}
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-1">
-                                                <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => openEdit(s)}
+                                                >
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
-                                                <Button variant="ghost" size="sm" onClick={() => remove(s)}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => remove(s)}
+                                                >
                                                     <Trash2 className="h-4 w-4 text-destructive" />
                                                 </Button>
                                             </div>
@@ -199,7 +253,10 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                                 ))}
                                 {sales.data.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                                        <TableCell
+                                            colSpan={8}
+                                            className="h-24 text-center text-muted-foreground"
+                                        >
                                             Belum ada penjualan.
                                         </TableCell>
                                     </TableRow>
@@ -220,33 +277,64 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                         <div>
                             <Label>Produk</Label>
                             <CreatableCombobox
-                                options={products.map((p) => ({ id: p.id, label: p.name, sublabel: formatRupiah(p.selling_price) }))}
+                                options={products.map((p) => ({
+                                    id: p.id,
+                                    label: p.name,
+                                    sublabel: formatRupiah(p.selling_price),
+                                }))}
                                 value={editForm.data.product_id}
                                 onChange={(v) => editForm.setData('product_id', v)}
-                                onCreateNew={() => { setEditing(null); setShowCreateModal(true); }}
+                                onCreateNew={() => {
+                                    setEditing(null);
+                                    setShowCreateModal(true);
+                                }}
                                 placeholder="- Pilih produk -"
                                 createLabel="Tambah Produk Baru"
                             />
                         </div>
                         <div>
                             <Label>Jumlah</Label>
-                            <Input type="number" step="1" value={editForm.data.quantity} onChange={(e) => editForm.setData('quantity', e.target.value)} />
+                            <Input
+                                type="number"
+                                step="1"
+                                value={editForm.data.quantity}
+                                onChange={(e) => editForm.setData('quantity', e.target.value)}
+                            />
                         </div>
                         <div>
                             <Label>Harga jual / unit</Label>
-                            <CurrencyInput placeholder={editSelected ? String(editSelected.selling_price) : ''} value={editForm.data.unit_price} onChange={(v) => editForm.setData('unit_price', v)} />
+                            <CurrencyInput
+                                placeholder={editSelected ? String(editSelected.selling_price) : ''}
+                                value={editForm.data.unit_price}
+                                onChange={(v) => editForm.setData('unit_price', v)}
+                            />
                         </div>
                         <div>
                             <Label>Catatan</Label>
-                            <Input value={editForm.data.note} onChange={(e) => editForm.setData('note', e.target.value)} />
+                            <Input
+                                value={editForm.data.note}
+                                onChange={(e) => editForm.setData('note', e.target.value)}
+                            />
                         </div>
                         <div>
                             <Label>Tanggal</Label>
-                            <Input type="datetime-local" value={editForm.data.occurred_at} onChange={(e) => editForm.setData('occurred_at', e.target.value)} />
+                            <Input
+                                type="datetime-local"
+                                value={editForm.data.occurred_at}
+                                onChange={(e) => editForm.setData('occurred_at', e.target.value)}
+                            />
                         </div>
                         <div className="flex justify-end gap-2">
-                            <Button type="button" variant="outline" onClick={() => setEditing(null)}>Batal</Button>
-                            <Button type="submit" disabled={editForm.processing}>Simpan</Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setEditing(null)}
+                            >
+                                Batal
+                            </Button>
+                            <Button type="submit" disabled={editForm.processing}>
+                                Simpan
+                            </Button>
                         </div>
                     </form>
                 </Modal>

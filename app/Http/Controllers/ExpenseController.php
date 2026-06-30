@@ -55,19 +55,27 @@ class ExpenseController extends Controller
 
     public function update(UpdateExpenseRequest $request, Expense $expense): RedirectResponse
     {
-        $data = $request->validated();
-        if ($request->has('occurred_at')) {
-            $data['occurred_at'] = $request->date('occurred_at');
+        try {
+            $data = $request->validated();
+            if ($request->has('occurred_at')) {
+                $data['occurred_at'] = $request->date('occurred_at');
+            }
+            $expense->update($data);
+            return back()->with('success', 'Biaya diperbarui.');
+        } catch (\Throwable $e) {
+            \Log::error('Expense update failed', ['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => 'Gagal memperbarui biaya.']);
         }
-        $expense->update($data);
-
-        return back()->with('success', 'Biaya diperbarui.');
     }
 
     public function destroy(Expense $expense): RedirectResponse
     {
-        $expense->delete();
-
-        return back()->with('success', 'Biaya dihapus.');
+        try {
+            $expense->delete();
+            return back()->with('success', 'Biaya dihapus.');
+        } catch (\Throwable $e) {
+            \Log::error('Expense delete failed', ['error' => $e->getMessage()]);
+            return back()->withErrors(['error' => 'Gagal menghapus biaya.']);
+        }
     }
 }

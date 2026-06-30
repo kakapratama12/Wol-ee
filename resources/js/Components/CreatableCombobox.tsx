@@ -35,13 +35,9 @@ export default function CreatableCombobox({
 
     const selected = options.find((o) => o.id === Number(value));
 
-    const filtered = options.filter((o) =>
-        o.name.toLowerCase().includes(query.toLowerCase())
-    );
+    const filtered = options.filter((o) => o.name.toLowerCase().includes(query.toLowerCase()));
 
-    const exactMatch = options.some(
-        (o) => o.name.toLowerCase() === query.toLowerCase()
-    );
+    const exactMatch = options.some((o) => o.name.toLowerCase() === query.toLowerCase());
 
     const showCreate = query.length > 0 && !exactMatch && !!onCreate;
 
@@ -82,14 +78,22 @@ export default function CreatableCombobox({
                 }}
                 className={cn(
                     'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-                    !selected && 'text-muted-foreground'
+                    !selected && 'text-muted-foreground',
                 )}
             >
-                <span className="truncate">
-                    {selected ? selected.name : placeholder}
-                </span>
-                <svg className="ml-2 h-4 w-4 shrink-0 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <span className="truncate">{selected ? selected.name : placeholder}</span>
+                <svg
+                    className="ml-2 h-4 w-4 shrink-0 opacity-50"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                    />
                 </svg>
             </button>
 
@@ -120,12 +124,14 @@ export default function CreatableCombobox({
                                 }}
                                 className={cn(
                                     'flex w-full items-center justify-between rounded-sm px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground',
-                                    option.id === Number(value) && 'bg-accent'
+                                    option.id === Number(value) && 'bg-accent',
                                 )}
                             >
                                 <span className="truncate">{option.name}</span>
                                 {option.sublabel && (
-                                    <span className="ml-2 text-xs text-muted-foreground">{option.sublabel}</span>
+                                    <span className="ml-2 text-xs text-muted-foreground">
+                                        {option.sublabel}
+                                    </span>
                                 )}
                             </button>
                         ))}
@@ -140,8 +146,18 @@ export default function CreatableCombobox({
                                     <span>Menyimpan...</span>
                                 ) : (
                                     <>
-                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                        <svg
+                                            className="h-4 w-4"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M12 4v16m8-8H4"
+                                            />
                                         </svg>
                                         <span>Buat "{query}"</span>
                                     </>

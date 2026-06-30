@@ -3,7 +3,14 @@ import { Button } from '@/Components/ui/button';
 import { CurrencyInput } from '@/Components/ui/currency-input';
 import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import { formatRupiah } from '@/lib/format';
 
 export interface FeeRow {
@@ -46,7 +53,7 @@ export default function InvoiceFormFields({
     const totalFees = fees.reduce((sum, fee) => {
         const val = parseFloat(fee.value) || 0;
         if (fee.type === 'percentage') {
-            return sum + (subtotal * val / 100);
+            return sum + (subtotal * val) / 100;
         }
         return sum + val;
     }, 0);
@@ -72,7 +79,9 @@ export default function InvoiceFormFields({
                                 <TableCell>
                                     <Input
                                         value={row.description}
-                                        onChange={(e) => onUpdateItem(i, 'description', e.target.value)}
+                                        onChange={(e) =>
+                                            onUpdateItem(i, 'description', e.target.value)
+                                        }
                                         placeholder="Deskripsi item"
                                     />
                                 </TableCell>
@@ -81,7 +90,9 @@ export default function InvoiceFormFields({
                                         type="number"
                                         min="1"
                                         value={row.quantity}
-                                        onChange={(e) => onUpdateItem(i, 'quantity', e.target.value)}
+                                        onChange={(e) =>
+                                            onUpdateItem(i, 'quantity', e.target.value)
+                                        }
                                     />
                                 </TableCell>
                                 <TableCell>
@@ -134,7 +145,13 @@ export default function InvoiceFormFields({
                                 <TableCell>
                                     <Select
                                         value={fee.type}
-                                        onChange={(e) => onUpdateFee(i, 'type', e.target.value as 'fixed' | 'percentage')}
+                                        onChange={(e) =>
+                                            onUpdateFee(
+                                                i,
+                                                'type',
+                                                e.target.value as 'fixed' | 'percentage',
+                                            )
+                                        }
                                     >
                                         <option value="fixed">Nominal (Rp)</option>
                                         <option value="percentage">Persen (%)</option>
@@ -151,7 +168,12 @@ export default function InvoiceFormFields({
                                     />
                                 </TableCell>
                                 <TableCell>
-                                    <Button type="button" variant="ghost" size="icon" onClick={() => onRemoveFee(i)}>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => onRemoveFee(i)}
+                                    >
                                         <Trash2 className="h-4 w-4 text-destructive" />
                                     </Button>
                                 </TableCell>

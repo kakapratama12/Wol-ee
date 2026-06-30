@@ -7,7 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Badge } from '@/Components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import Modal from '@/Components/ui/modal';
 import { formatRupiah, formatNumber, formatDate, formatPercent } from '@/lib/format';
 
@@ -40,7 +47,9 @@ interface Props {
 
 export default function FinishedGoodsIndex({ batchProducts }: Props) {
     const [expandedProduct, setExpandedProduct] = useState<number | null>(null);
-    const [editingRun, setEditingRun] = useState<ProductionDetail & { product_name?: string } | null>(null);
+    const [editingRun, setEditingRun] = useState<
+        (ProductionDetail & { product_name?: string }) | null
+    >(null);
 
     const yieldForm = useForm({
         yield_actual: '',
@@ -96,7 +105,8 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                             <Package className="mx-auto mb-4 h-12 w-12 opacity-30" />
                             <p className="text-lg font-medium">Belum ada produk batch</p>
                             <p className="mt-1 text-sm">
-                                Buat produk dengan tipe <strong>Batch</strong> di halaman Produk & Resep, lalu produksi untuk mengisi stok.
+                                Buat produk dengan tipe <strong>Batch</strong> di halaman Produk &
+                                Resep, lalu produksi untuk mengisi stok.
                             </p>
                         </CardContent>
                     </Card>
@@ -110,7 +120,10 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                             <CardTitle className="flex items-center gap-2">
                                                 {product.name}
                                                 {product.current_stock < 0 && (
-                                                    <Badge variant="destructive" className="text-xs">
+                                                    <Badge
+                                                        variant="destructive"
+                                                        className="text-xs"
+                                                    >
                                                         Stok Minus
                                                     </Badge>
                                                 )}
@@ -121,7 +134,12 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-headline">
-                                                <span className="text-number-lg">{formatNumber(product.current_stock)}</span> <span className="text-sm font-normal text-muted-foreground">{product.unit}</span>
+                                                <span className="text-number-lg">
+                                                    {formatNumber(product.current_stock)}
+                                                </span>{' '}
+                                                <span className="text-sm font-normal text-muted-foreground">
+                                                    {product.unit}
+                                                </span>
                                             </p>
                                             <p className="text-xs text-muted-foreground">
                                                 Stok saat ini
@@ -132,16 +150,26 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                 <CardContent>
                                     <div className="grid grid-cols-3 gap-4 rounded-lg bg-muted/50 p-3 mb-3">
                                         <div>
-                                            <p className="text-xs text-muted-foreground">Harga Jual</p>
-                                            <p className="font-semibold text-number">{formatRupiah(product.selling_price)}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                Harga Jual
+                                            </p>
+                                            <p className="font-semibold text-number">
+                                                {formatRupiah(product.selling_price)}
+                                            </p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-muted-foreground">COGS Rata-rata</p>
-                                            <p className="font-semibold text-number">{formatRupiah(product.avg_cogs)}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                COGS Rata-rata
+                                            </p>
+                                            <p className="font-semibold text-number">
+                                                {formatRupiah(product.avg_cogs)}
+                                            </p>
                                         </div>
                                         <div>
                                             <p className="text-xs text-muted-foreground">Margin</p>
-                                            <p className="font-semibold text-success">{formatPercent(product.margin)}</p>
+                                            <p className="font-semibold text-success">
+                                                {formatPercent(product.margin)}
+                                            </p>
                                         </div>
                                     </div>
 
@@ -153,11 +181,13 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                         >
                                             {expandedProduct === product.id ? (
                                                 <>
-                                                    <ChevronUp className="h-4 w-4 mr-1" /> Sembunyikan Detail
+                                                    <ChevronUp className="h-4 w-4 mr-1" />{' '}
+                                                    Sembunyikan Detail
                                                 </>
                                             ) : (
                                                 <>
-                                                    <ChevronDown className="h-4 w-4 mr-1" /> Lihat Detail Produksi
+                                                    <ChevronDown className="h-4 w-4 mr-1" /> Lihat
+                                                    Detail Produksi
                                                 </>
                                             )}
                                         </Button>
@@ -165,66 +195,105 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
 
                                     {expandedProduct === product.id && (
                                         <div className="border-t pt-3">
-                                            <h4 className="text-sm font-medium mb-2">Riwayat Produksi</h4>
+                                            <h4 className="text-sm font-medium mb-2">
+                                                Riwayat Produksi
+                                            </h4>
                                             {product.production_details.length === 0 ? (
-                                                <p className="text-sm text-muted-foreground">Belum ada produksi.</p>
+                                                <p className="text-sm text-muted-foreground">
+                                                    Belum ada produksi.
+                                                </p>
                                             ) : (
                                                 <Table>
                                                     <TableHeader>
                                                         <TableRow>
                                                             <TableHead>Tanggal</TableHead>
-                                                            <TableHead className="text-center">Yield</TableHead>
-                                                            <TableHead className="text-center">Waste</TableHead>
-                                                            <TableHead className="text-right">Total Biaya</TableHead>
-                                                            <TableHead className="text-right">Biaya/Unit</TableHead>
+                                                            <TableHead className="text-center">
+                                                                Yield
+                                                            </TableHead>
+                                                            <TableHead className="text-center">
+                                                                Waste
+                                                            </TableHead>
+                                                            <TableHead className="text-right">
+                                                                Total Biaya
+                                                            </TableHead>
+                                                            <TableHead className="text-right">
+                                                                Biaya/Unit
+                                                            </TableHead>
                                                             <TableHead>Catatan</TableHead>
                                                             <TableHead></TableHead>
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
-                                                        {product.production_details.map((detail) => (
-                                                            <TableRow key={detail.id}>
-                                                                <TableCell>{formatDate(detail.produced_at)}</TableCell>
-                                                                <TableCell className="text-center font-medium">
-                                                                    {detail.yield_recorded ? (
-                                                                        formatNumber(detail.yield_actual)
-                                                                    ) : (
-                                                                        <span className="text-muted-foreground italic text-xs">Belum Catat Yield</span>
-                                                                    )}
-                                                                </TableCell>
-                                                                <TableCell className="text-center">
-                                                                    {detail.waste_count > 0 ? (
-                                                                        <span className="text-orange-600">
-                                                                            {formatNumber(detail.waste_count)}
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="text-muted-foreground">0</span>
-                                                                    )}
-                                                                </TableCell>
-                                                                <TableCell className="text-right">
-                                                                    {formatRupiah(detail.total_cost)}
-                                                                </TableCell>
-                                                                <TableCell className="text-right">
-                                                                    {detail.yield_recorded ? formatRupiah(detail.cost_per_unit) : '-'}
-                                                                </TableCell>
-                                                                <TableCell className="text-muted-foreground text-sm">
-                                                                    {detail.notes || '-'}
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="sm"
-                                                                        onClick={() => openEditYield(detail, product.name)}
-                                                                    >
-                                                                        {detail.yield_recorded ? (
-                                                                            <Pencil className="h-4 w-4" />
-                                                                        ) : (
-                                                                            <span className="text-xs">Catat Yield</span>
+                                                        {product.production_details.map(
+                                                            (detail) => (
+                                                                <TableRow key={detail.id}>
+                                                                    <TableCell>
+                                                                        {formatDate(
+                                                                            detail.produced_at,
                                                                         )}
-                                                                    </Button>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ))}
+                                                                    </TableCell>
+                                                                    <TableCell className="text-center font-medium">
+                                                                        {detail.yield_recorded ? (
+                                                                            formatNumber(
+                                                                                detail.yield_actual,
+                                                                            )
+                                                                        ) : (
+                                                                            <span className="text-muted-foreground italic text-xs">
+                                                                                Belum Catat Yield
+                                                                            </span>
+                                                                        )}
+                                                                    </TableCell>
+                                                                    <TableCell className="text-center">
+                                                                        {detail.waste_count > 0 ? (
+                                                                            <span className="text-orange-600">
+                                                                                {formatNumber(
+                                                                                    detail.waste_count,
+                                                                                )}
+                                                                            </span>
+                                                                        ) : (
+                                                                            <span className="text-muted-foreground">
+                                                                                0
+                                                                            </span>
+                                                                        )}
+                                                                    </TableCell>
+                                                                    <TableCell className="text-right">
+                                                                        {formatRupiah(
+                                                                            detail.total_cost,
+                                                                        )}
+                                                                    </TableCell>
+                                                                    <TableCell className="text-right">
+                                                                        {detail.yield_recorded
+                                                                            ? formatRupiah(
+                                                                                  detail.cost_per_unit,
+                                                                              )
+                                                                            : '-'}
+                                                                    </TableCell>
+                                                                    <TableCell className="text-muted-foreground text-sm">
+                                                                        {detail.notes || '-'}
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            onClick={() =>
+                                                                                openEditYield(
+                                                                                    detail,
+                                                                                    product.name,
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            {detail.yield_recorded ? (
+                                                                                <Pencil className="h-4 w-4" />
+                                                                            ) : (
+                                                                                <span className="text-xs">
+                                                                                    Catat Yield
+                                                                                </span>
+                                                                            )}
+                                                                        </Button>
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ),
+                                                        )}
                                                     </TableBody>
                                                 </Table>
                                             )}
@@ -258,7 +327,9 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                 onChange={(e) => yieldForm.setData('yield_actual', e.target.value)}
                             />
                             {yieldForm.errors.yield_actual && (
-                                <p className="mt-1 text-xs text-destructive">{yieldForm.errors.yield_actual}</p>
+                                <p className="mt-1 text-xs text-destructive">
+                                    {yieldForm.errors.yield_actual}
+                                </p>
                             )}
                         </div>
                         <div>

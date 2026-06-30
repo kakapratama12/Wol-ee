@@ -6,7 +6,14 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import Modal from '@/Components/ui/modal';
 import { formatRupiah, formatNumber, formatDate } from '@/lib/format';
 
@@ -121,7 +128,11 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
     };
 
     const reverseRun = (run: ProductionRun) => {
-        if (confirm(`Batalkan produksi "${run.product}" (${run.yield_actual} ${run.product}? Seluruh stok akan dikembalikan.`)) {
+        if (
+            confirm(
+                `Batalkan produksi "${run.product}" (${run.yield_actual} ${run.product}? Seluruh stok akan dikembalikan.`,
+            )
+        ) {
             router.delete(`/production-runs/${run.id}`);
         }
     };
@@ -164,7 +175,10 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
     };
 
     const removeEditItem = (index: number) => {
-        itemsForm.setData('items', itemsForm.data.items.filter((_, idx) => idx !== index));
+        itemsForm.setData(
+            'items',
+            itemsForm.data.items.filter((_, idx) => idx !== index),
+        );
     };
 
     const [addIngredientId, setAddIngredientId] = useState<string>('');
@@ -216,7 +230,12 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
                 <div className="flex items-center justify-between">
                     <h1 className="text-headline">Produksi</h1>
                     {batchProducts.length > 0 && (
-                        <Button onClick={() => { setShowForm(true); form.reset(); }}>
+                        <Button
+                            onClick={() => {
+                                setShowForm(true);
+                                form.reset();
+                            }}
+                        >
                             <Plus className="mr-2 h-4 w-4" />
                             Produksi Baru
                         </Button>
@@ -229,7 +248,8 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
                             <Factory className="mx-auto mb-4 h-12 w-12 opacity-30" />
                             <p className="text-lg font-medium">Belum ada produk batch</p>
                             <p className="mt-1 text-sm">
-                                Buat produk dengan tipe <strong>Batch</strong> di halaman Produk & Resep terlebih dulu.
+                                Buat produk dengan tipe <strong>Batch</strong> di halaman Produk &
+                                Resep terlebih dulu.
                             </p>
                         </CardContent>
                     </Card>
@@ -249,11 +269,15 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
                                         <select
                                             className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                             value={form.data.product_id}
-                                            onChange={(e) => form.setData('product_id', e.target.value)}
+                                            onChange={(e) =>
+                                                form.setData('product_id', e.target.value)
+                                            }
                                         >
                                             <option value="">Pilih produk...</option>
                                             {batchProducts.map((p) => (
-                                                <option key={p.id} value={p.id}>{p.name}</option>
+                                                <option key={p.id} value={p.id}>
+                                                    {p.name}
+                                                </option>
                                             ))}
                                         </select>
                                     </div>
@@ -264,7 +288,9 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
                                             min="1"
                                             className="mt-1"
                                             value={form.data.batch_count}
-                                            onChange={(e) => form.setData('batch_count', e.target.value)}
+                                            onChange={(e) =>
+                                                form.setData('batch_count', e.target.value)
+                                            }
                                         />
                                     </div>
                                 </div>
@@ -280,7 +306,8 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
                                 </div>
 
                                 <p className="text-xs text-muted-foreground">
-                                    Bahan akan otomatis digunakan sesuai resep × jumlah batch. Stok bisa diedit setelah produksi tercatat.
+                                    Bahan akan otomatis digunakan sesuai resep × jumlah batch. Stok
+                                    bisa diedit setelah produksi tercatat.
                                 </p>
 
                                 {form.errors.batch_count && (
@@ -294,7 +321,11 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
                                     <Button type="submit" disabled={form.processing}>
                                         {form.processing ? 'Menyimpan...' : 'Simpan Produksi'}
                                     </Button>
-                                    <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setShowForm(false)}
+                                    >
                                         Batal
                                     </Button>
                                 </div>
@@ -327,24 +358,37 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
                                     {runs.map((run) => (
                                         <TableRow key={run.id}>
                                             <TableCell>{formatDate(run.produced_at)}</TableCell>
-                                            <TableCell className="font-medium">{run.product}</TableCell>
-                                            <TableCell className="text-center">{run.batch_count}</TableCell>
+                                            <TableCell className="font-medium">
+                                                {run.product}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {run.batch_count}
+                                            </TableCell>
                                             <TableCell className="text-center font-medium">
                                                 {run.yield_recorded ? (
                                                     formatNumber(run.yield_actual)
                                                 ) : (
-                                                    <span className="text-muted-foreground italic text-xs">Belum Catat</span>
+                                                    <span className="text-muted-foreground italic text-xs">
+                                                        Belum Catat
+                                                    </span>
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-center">
                                                 {run.waste_count > 0 ? (
-                                                    <span className="text-orange-600">{formatNumber(run.waste_count)} ({run.waste_percentage}%)</span>
+                                                    <span className="text-orange-600">
+                                                        {formatNumber(run.waste_count)} (
+                                                        {run.waste_percentage}%)
+                                                    </span>
                                                 ) : (
                                                     <span className="text-muted-foreground">0</span>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-right">{formatRupiah(run.total_cost)}</TableCell>
-                                            <TableCell className="text-right">{formatRupiah(run.cost_per_unit)}</TableCell>
+                                            <TableCell className="text-right">
+                                                {formatRupiah(run.total_cost)}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatRupiah(run.cost_per_unit)}
+                                            </TableCell>
                                             <TableCell>
                                                 <div className="flex gap-1">
                                                     <Button
@@ -391,7 +435,10 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
                 <form onSubmit={submitYield} className="space-y-4">
                     <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
                         <p>Production Run #{editingRun?.id}</p>
-                        <p>Batch: {editingRun?.batch_count} | Total Biaya: {formatRupiah(editingRun?.total_cost ?? 0)}</p>
+                        <p>
+                            Batch: {editingRun?.batch_count} | Total Biaya:{' '}
+                            {formatRupiah(editingRun?.total_cost ?? 0)}
+                        </p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -403,7 +450,9 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
                                 onChange={(e) => yieldForm.setData('yield_actual', e.target.value)}
                             />
                             {yieldForm.errors.yield_actual && (
-                                <p className="mt-1 text-xs text-destructive">{yieldForm.errors.yield_actual}</p>
+                                <p className="mt-1 text-xs text-destructive">
+                                    {yieldForm.errors.yield_actual}
+                                </p>
                             )}
                         </div>
                         <div>
@@ -448,7 +497,9 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
                                 <div className="flex items-center justify-between mb-2">
                                     <p className="font-medium text-sm">{item.ingredient}</p>
                                     <div className="flex items-center gap-2">
-                                        <p className="text-xs text-muted-foreground">{formatRupiah(item.unit_price)}/{item.base_unit}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {formatRupiah(item.unit_price)}/{item.base_unit}
+                                        </p>
                                         <Button
                                             type="button"
                                             variant="ghost"
@@ -473,41 +524,62 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
                                         />
                                     </div>
                                     <p className="pb-2 text-sm font-medium whitespace-nowrap">
-                                        = {formatRupiah((parseFloat(item.quantity_used) || 0) * item.unit_price)}
+                                        ={' '}
+                                        {formatRupiah(
+                                            (parseFloat(item.quantity_used) || 0) * item.unit_price,
+                                        )}
                                     </p>
                                 </div>
-                                <p className="text-xs text-muted-foreground mt-1">{item.base_unit}</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    {item.base_unit}
+                                </p>
                             </div>
                         ))}
 
-                    {/* Add Extra Ingredient */}
-                    <div className="flex items-end gap-2 rounded-lg border border-dashed p-3">
-                        <div className="flex-1">
-                            <Label className="text-xs text-muted-foreground">Tambah Bahan</Label>
-                            <select
-                                className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                value={addIngredientId}
-                                onChange={(e) => setAddIngredientId(e.target.value)}
+                        {/* Add Extra Ingredient */}
+                        <div className="flex items-end gap-2 rounded-lg border border-dashed p-3">
+                            <div className="flex-1">
+                                <Label className="text-xs text-muted-foreground">
+                                    Tambah Bahan
+                                </Label>
+                                <select
+                                    className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    value={addIngredientId}
+                                    onChange={(e) => setAddIngredientId(e.target.value)}
+                                >
+                                    <option value="">Pilih bahan dari inventory...</option>
+                                    {ingredients
+                                        .filter(
+                                            (ing) =>
+                                                !itemsForm.data.items.some(
+                                                    (item) => item.ingredient_id === ing.id,
+                                                ),
+                                        )
+                                        .map((ing) => (
+                                            <option key={ing.id} value={ing.id}>
+                                                {ing.name} ({ing.base_unit}) — Stok:{' '}
+                                                {formatNumber(ing.current_stock)}
+                                            </option>
+                                        ))}
+                                </select>
+                            </div>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addExtraIngredient}
+                                disabled={!addIngredientId}
                             >
-                                <option value="">Pilih bahan dari inventory...</option>
-                                {ingredients
-                                    .filter((ing) => !itemsForm.data.items.some((item) => item.ingredient_id === ing.id))
-                                    .map((ing) => (
-                                        <option key={ing.id} value={ing.id}>
-                                            {ing.name} ({ing.base_unit}) — Stok: {formatNumber(ing.current_stock)}
-                                        </option>
-                                    ))}
-                            </select>
+                                <Plus className="mr-1 h-4 w-4" />
+                                Tambah
+                            </Button>
                         </div>
-                        <Button type="button" variant="outline" size="sm" onClick={addExtraIngredient} disabled={!addIngredientId}>
-                            <Plus className="mr-1 h-4 w-4" />
-                            Tambah
-                        </Button>
-                    </div>
                     </div>
 
                     <div className="flex justify-end rounded-lg bg-muted/50 p-3">
-                        <p className="text-sm font-semibold">Total: {formatRupiah(editItemsTotalCost)}</p>
+                        <p className="text-sm font-semibold">
+                            Total: {formatRupiah(editItemsTotalCost)}
+                        </p>
                     </div>
 
                     {itemsForm.errors.items && (
@@ -522,7 +594,11 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
                     </p>
 
                     <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" onClick={() => setEditingItemsRun(null)}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setEditingItemsRun(null)}
+                        >
                             Batal
                         </Button>
                         <Button type="submit" disabled={itemsForm.processing}>

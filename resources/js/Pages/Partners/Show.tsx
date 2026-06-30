@@ -4,7 +4,14 @@ import AppLayout from '@/Layouts/AppLayout';
 import InvoiceStatusBadge from '@/Components/InvoiceStatusBadge';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import { Badge } from '@/Components/ui/badge';
 import { formatDate, formatRupiah } from '@/lib/format';
 import type { PageProps } from '@/types';
@@ -50,7 +57,12 @@ const agingLabels: Record<string, string> = {
     '3_plus': '3+ bulan',
 };
 
-export default function PartnersShow({ partner, outstandingInvoices, aging, totalOutstanding }: Props) {
+export default function PartnersShow({
+    partner,
+    outstandingInvoices,
+    aging,
+    totalOutstanding,
+}: Props) {
     const { props } = usePage<PageProps>();
     const isOwner = props.auth.user.role === 'pengelola';
 
@@ -65,7 +77,10 @@ export default function PartnersShow({ partner, outstandingInvoices, aging, tota
             <Head title={partner.name} />
 
             <div className="mb-4">
-                <Link href="/partners" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
+                <Link
+                    href="/partners"
+                    className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+                >
                     <ArrowLeft className="mr-1 h-4 w-4" />
                     Kembali ke daftar
                 </Link>
@@ -90,10 +105,22 @@ export default function PartnersShow({ partner, outstandingInvoices, aging, tota
                         )}
                     </CardHeader>
                     <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
-                        <p><span className="text-muted-foreground">Kontak:</span> {partner.contact ?? '-'}</p>
-                        <p><span className="text-muted-foreground">Telepon:</span> {partner.phone ?? '-'}</p>
-                        <p><span className="text-muted-foreground">Email:</span> {partner.email ?? '-'}</p>
-                        <p className="sm:col-span-2"><span className="text-muted-foreground">Alamat:</span> {partner.address ?? '-'}</p>
+                        <p>
+                            <span className="text-muted-foreground">Kontak:</span>{' '}
+                            {partner.contact ?? '-'}
+                        </p>
+                        <p>
+                            <span className="text-muted-foreground">Telepon:</span>{' '}
+                            {partner.phone ?? '-'}
+                        </p>
+                        <p>
+                            <span className="text-muted-foreground">Email:</span>{' '}
+                            {partner.email ?? '-'}
+                        </p>
+                        <p className="sm:col-span-2">
+                            <span className="text-muted-foreground">Alamat:</span>{' '}
+                            {partner.address ?? '-'}
+                        </p>
                     </CardContent>
                 </Card>
 
@@ -102,7 +129,9 @@ export default function PartnersShow({ partner, outstandingInvoices, aging, tota
                         <CardTitle>Aging Summary</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
-                        <p className="font-medium">Total outstanding: {formatRupiah(totalOutstanding)}</p>
+                        <p className="font-medium">
+                            Total outstanding: {formatRupiah(totalOutstanding)}
+                        </p>
                         {Object.entries(aging).map(([key, value]) => (
                             <div key={key} className="flex justify-between">
                                 <span className="text-muted-foreground">{agingLabels[key]}</span>
@@ -130,7 +159,10 @@ export default function PartnersShow({ partner, outstandingInvoices, aging, tota
                         <TableBody>
                             {outstandingInvoices.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                                    <TableCell
+                                        colSpan={4}
+                                        className="text-center text-muted-foreground"
+                                    >
                                         Tidak ada invoice outstanding.
                                     </TableCell>
                                 </TableRow>
@@ -138,14 +170,19 @@ export default function PartnersShow({ partner, outstandingInvoices, aging, tota
                                 outstandingInvoices.map((invoice) => (
                                     <TableRow key={invoice.id}>
                                         <TableCell>
-                                            <Link href={`/invoices/${invoice.id}`} className="font-medium hover:underline">
+                                            <Link
+                                                href={`/invoices/${invoice.id}`}
+                                                className="font-medium hover:underline"
+                                            >
                                                 {invoice.invoice_number}
                                             </Link>
                                         </TableCell>
                                         <TableCell>{formatRupiah(invoice.remaining)}</TableCell>
                                         <TableCell>
                                             {formatDate(invoice.due_date)}
-                                            <span className="ml-2 text-xs text-muted-foreground">({invoice.days_label})</span>
+                                            <span className="ml-2 text-xs text-muted-foreground">
+                                                ({invoice.days_label})
+                                            </span>
                                         </TableCell>
                                         <TableCell>
                                             <InvoiceStatusBadge status={invoice.status} />

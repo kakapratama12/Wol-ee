@@ -11,7 +11,14 @@ import InvoiceFormFields, { type FeeRow } from '@/Components/InvoiceFormFields';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import { formatDate, formatRupiah } from '@/lib/format';
 import type { PageProps } from '@/types';
 
@@ -64,23 +71,38 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
     const [useItems, setUseItems] = useState(false);
 
     const addItem = () => {
-        form.setData('items', [...form.data.items, { description: '', quantity: '1', unit_price: '' }]);
+        form.setData('items', [
+            ...form.data.items,
+            { description: '', quantity: '1', unit_price: '' },
+        ]);
     };
     const removeItem = (i: number) => {
-        form.setData('items', form.data.items.filter((_, idx) => idx !== i));
+        form.setData(
+            'items',
+            form.data.items.filter((_, idx) => idx !== i),
+        );
     };
     const updateItem = (i: number, key: string, value: string) => {
-        form.setData('items', form.data.items.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)));
+        form.setData(
+            'items',
+            form.data.items.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)),
+        );
     };
 
     const addFee = () => {
         form.setData('fees', [...form.data.fees, { name: '', type: 'fixed', value: '' }]);
     };
     const removeFee = (i: number) => {
-        form.setData('fees', form.data.fees.filter((_, idx) => idx !== i));
+        form.setData(
+            'fees',
+            form.data.fees.filter((_, idx) => idx !== i),
+        );
     };
     const updateFee = (i: number, key: keyof FeeRow, value: string) => {
-        form.setData('fees', form.data.fees.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)));
+        form.setData(
+            'fees',
+            form.data.fees.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)),
+        );
     };
 
     const setFilter = (status: string) => {
@@ -93,10 +115,12 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
             form.setData('amount', '');
         }
         form.setData('idempotency_key', crypto.randomUUID());
-        form.post('/invoices', { onSuccess: () => {
-            setFormOpen(false);
-            setUseItems(false);
-        }});
+        form.post('/invoices', {
+            onSuccess: () => {
+                setFormOpen(false);
+                setUseItems(false);
+            },
+        });
     };
 
     return (
@@ -149,7 +173,10 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                         <TableBody>
                             {invoices.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                                    <TableCell
+                                        colSpan={6}
+                                        className="text-center text-muted-foreground"
+                                    >
                                         Belum ada invoice.
                                     </TableCell>
                                 </TableRow>
@@ -157,13 +184,20 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                                 invoices.map((invoice) => (
                                     <TableRow key={invoice.id}>
                                         <TableCell>
-                                            <Link href={`/invoices/${invoice.id}`} className="font-medium hover:underline">
+                                            <Link
+                                                href={`/invoices/${invoice.id}`}
+                                                className="font-medium hover:underline"
+                                            >
                                                 {invoice.invoice_number}
                                             </Link>
                                         </TableCell>
                                         <TableCell>{invoice.partner ?? '-'}</TableCell>
-                                        <TableCell className="text-right text-number">{formatRupiah(invoice.amount)}</TableCell>
-                                        <TableCell className="text-right text-number">{formatRupiah(invoice.remaining)}</TableCell>
+                                        <TableCell className="text-right text-number">
+                                            {formatRupiah(invoice.amount)}
+                                        </TableCell>
+                                        <TableCell className="text-right text-number">
+                                            {formatRupiah(invoice.remaining)}
+                                        </TableCell>
                                         <TableCell>{formatDate(invoice.due_date)}</TableCell>
                                         <TableCell>
                                             <InvoiceStatusBadge status={invoice.status} />
@@ -176,7 +210,12 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                 </CardContent>
             </Card>
 
-            <Modal open={formOpen} onClose={() => setFormOpen(false)} title="Buat Invoice" size="xl">
+            <Modal
+                open={formOpen}
+                onClose={() => setFormOpen(false)}
+                title="Buat Invoice"
+                size="xl"
+            >
                 <form onSubmit={submit} className="space-y-4">
                     <div>
                         <Label htmlFor="partner_id">Customer</Label>
@@ -191,7 +230,9 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                                     headers: {
                                         'Content-Type': 'application/json',
                                         'X-Requested-With': 'XMLHttpRequest',
-                                        'X-XSRF-TOKEN': decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || ''),
+                                        'X-XSRF-TOKEN': decodeURIComponent(
+                                            document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || '',
+                                        ),
                                     },
                                     body: JSON.stringify({ name, type: 'customer' }),
                                 });
@@ -200,7 +241,11 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                                 return { id: data.id, name: data.name };
                             }}
                         />
-                        {form.errors.partner_id && <p className="mt-1 text-xs text-destructive">{form.errors.partner_id}</p>}
+                        {form.errors.partner_id && (
+                            <p className="mt-1 text-xs text-destructive">
+                                {form.errors.partner_id}
+                            </p>
+                        )}
                     </div>
                     <div className="flex items-center gap-2">
                         <input
@@ -223,8 +268,16 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                     {!useItems && (
                         <div>
                             <Label htmlFor="amount">Nominal (Rp)</Label>
-                            <CurrencyInput id="amount" value={form.data.amount} onChange={(v) => form.setData('amount', v)} />
-                            {form.errors.amount && <p className="mt-1 text-xs text-destructive">{form.errors.amount}</p>}
+                            <CurrencyInput
+                                id="amount"
+                                value={form.data.amount}
+                                onChange={(v) => form.setData('amount', v)}
+                            />
+                            {form.errors.amount && (
+                                <p className="mt-1 text-xs text-destructive">
+                                    {form.errors.amount}
+                                </p>
+                            )}
                         </div>
                     )}
                     {useItems && (
@@ -242,12 +295,23 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
 
                     <div className="w-48">
                         <Label htmlFor="due_date">Jatuh Tempo</Label>
-                        <Input id="due_date" type="date" value={form.data.due_date} onChange={(e) => form.setData('due_date', e.target.value)} />
-                        {form.errors.due_date && <p className="mt-1 text-xs text-destructive">{form.errors.due_date}</p>}
+                        <Input
+                            id="due_date"
+                            type="date"
+                            value={form.data.due_date}
+                            onChange={(e) => form.setData('due_date', e.target.value)}
+                        />
+                        {form.errors.due_date && (
+                            <p className="mt-1 text-xs text-destructive">{form.errors.due_date}</p>
+                        )}
                     </div>
                     <div>
                         <Label htmlFor="note">Catatan</Label>
-                        <Input id="note" value={form.data.note} onChange={(e) => form.setData('note', e.target.value)} />
+                        <Input
+                            id="note"
+                            value={form.data.note}
+                            onChange={(e) => form.setData('note', e.target.value)}
+                        />
                     </div>
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>

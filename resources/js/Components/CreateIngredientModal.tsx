@@ -46,7 +46,7 @@ export default function CreateIngredientModal({
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-XSRF-TOKEN': decodeURIComponent(
-                        document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || ''
+                        document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || '',
                     ),
                 },
                 body: JSON.stringify({
@@ -169,7 +169,9 @@ export default function CreateIngredientModal({
                                 type="number"
                                 step="0.0001"
                                 value={form.current_stock}
-                                onChange={(e) => setForm({ ...form, current_stock: e.target.value })}
+                                onChange={(e) =>
+                                    setForm({ ...form, current_stock: e.target.value })
+                                }
                             />
                         </div>
                         <div>
@@ -179,7 +181,9 @@ export default function CreateIngredientModal({
                                 type="number"
                                 step="0.0001"
                                 value={form.minimum_stock}
-                                onChange={(e) => setForm({ ...form, minimum_stock: e.target.value })}
+                                onChange={(e) =>
+                                    setForm({ ...form, minimum_stock: e.target.value })
+                                }
                             />
                         </div>
                     </div>
@@ -196,10 +200,15 @@ export default function CreateIngredientModal({
             </Modal>
 
             {/* Calculator Modal */}
-            <Modal open={calcOpen} onClose={() => setCalcOpen(false)} title="Kalkulator Harga Satuan">
+            <Modal
+                open={calcOpen}
+                onClose={() => setCalcOpen(false)}
+                title="Kalkulator Harga Satuan"
+            >
                 <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">
-                        Masukkan jumlah yang dibeli (dalam <strong>{form.base_unit || 'satuan'}</strong>) dan harga belinya.
+                        Masukkan jumlah yang dibeli (dalam{' '}
+                        <strong>{form.base_unit || 'satuan'}</strong>) dan harga belinya.
                     </p>
                     <div className="grid grid-cols-2 gap-3">
                         <div>
@@ -225,9 +234,14 @@ export default function CreateIngredientModal({
                     </div>
                     {parseFloat(calcQty) > 0 && parseFloat(calcHarga) > 0 && (
                         <div className="rounded-md bg-muted p-3 text-center">
-                            <p className="text-sm text-muted-foreground">Estimasi harga per {form.base_unit || 'satuan'}:</p>
+                            <p className="text-sm text-muted-foreground">
+                                Estimasi harga per {form.base_unit || 'satuan'}:
+                            </p>
                             <p className="text-lg font-bold">
-                                {new Intl.NumberFormat('id-ID').format(Math.round(parseFloat(calcHarga) / parseFloat(calcQty)))} Rp/{form.base_unit || 'satuan'}
+                                {new Intl.NumberFormat('id-ID').format(
+                                    Math.round(parseFloat(calcHarga) / parseFloat(calcQty)),
+                                )}{' '}
+                                Rp/{form.base_unit || 'satuan'}
                             </p>
                         </div>
                     )}

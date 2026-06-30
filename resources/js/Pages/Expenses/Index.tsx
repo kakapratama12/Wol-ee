@@ -9,7 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Select } from '@/Components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import { formatRupiah, formatDate } from '@/lib/format';
 
 interface Expense {
@@ -40,8 +47,18 @@ const categoryColors: Record<string, string> = {
 };
 
 const months = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
 ];
 
 function toDatetimeLocal(iso: string | null): string {
@@ -56,7 +73,14 @@ function getPeriodFromDate(dateStr: string): { month: number; year: number } {
     return { month: d.getMonth() + 1, year: d.getFullYear() };
 }
 
-export default function ExpensesIndex({ expenses, total, categories, categoryDescriptions, period, periodLabel }: Props) {
+export default function ExpensesIndex({
+    expenses,
+    total,
+    categories,
+    categoryDescriptions,
+    period,
+    periodLabel,
+}: Props) {
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     const defaultDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
@@ -88,7 +112,10 @@ export default function ExpensesIndex({ expenses, total, categories, categoryDes
             form.setData('period_month', p.month);
             form.setData('period_year', p.year);
         }
-        form.post('/expenses', { preserveScroll: true, onSuccess: () => form.setData('amount', '') });
+        form.post('/expenses', {
+            preserveScroll: true,
+            onSuccess: () => form.setData('amount', ''),
+        });
     };
 
     const openEdit = (expense: Expense) => {
@@ -132,14 +159,22 @@ export default function ExpensesIndex({ expenses, total, categories, categoryDes
             <Head title="Biaya" />
 
             <div className="mb-4 flex gap-2">
-                <Select className="w-40" value={period.month} onChange={(e) => changePeriod(Number(e.target.value), period.year)}>
+                <Select
+                    className="w-40"
+                    value={period.month}
+                    onChange={(e) => changePeriod(Number(e.target.value), period.year)}
+                >
                     {months.map((m, i) => (
                         <option key={i} value={i + 1}>
                             {m}
                         </option>
                     ))}
                 </Select>
-                <Select className="w-28" value={period.year} onChange={(e) => changePeriod(period.month, Number(e.target.value))}>
+                <Select
+                    className="w-28"
+                    value={period.year}
+                    onChange={(e) => changePeriod(period.month, Number(e.target.value))}
+                >
                     {years.map((y) => (
                         <option key={y} value={y}>
                             {y}
@@ -157,7 +192,11 @@ export default function ExpensesIndex({ expenses, total, categories, categoryDes
                         <form onSubmit={submit} className="space-y-4">
                             <div>
                                 <Label htmlFor="category">Kategori</Label>
-                                <Select id="category" value={form.data.category} onChange={(e) => form.setData('category', e.target.value)}>
+                                <Select
+                                    id="category"
+                                    value={form.data.category}
+                                    onChange={(e) => form.setData('category', e.target.value)}
+                                >
                                     {Object.entries(categories).map(([key, label]) => (
                                         <option key={key} value={key}>
                                             {label}
@@ -165,17 +204,31 @@ export default function ExpensesIndex({ expenses, total, categories, categoryDes
                                     ))}
                                 </Select>
                                 {form.data.category && categoryDescriptions[form.data.category] && (
-                                    <p className="mt-1 text-xs text-muted-foreground">{categoryDescriptions[form.data.category]}</p>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        {categoryDescriptions[form.data.category]}
+                                    </p>
                                 )}
                             </div>
                             <div>
                                 <Label htmlFor="description">Deskripsi (opsional)</Label>
-                                <Input id="description" value={form.data.description} onChange={(e) => form.setData('description', e.target.value)} />
+                                <Input
+                                    id="description"
+                                    value={form.data.description}
+                                    onChange={(e) => form.setData('description', e.target.value)}
+                                />
                             </div>
                             <div>
                                 <Label htmlFor="amount">Jumlah (Rp)</Label>
-                                <CurrencyInput id="amount" value={form.data.amount} onChange={(v) => form.setData('amount', v)} />
-                                {form.errors.amount && <p className="mt-1 text-xs text-destructive">{form.errors.amount}</p>}
+                                <CurrencyInput
+                                    id="amount"
+                                    value={form.data.amount}
+                                    onChange={(v) => form.setData('amount', v)}
+                                />
+                                {form.errors.amount && (
+                                    <p className="mt-1 text-xs text-destructive">
+                                        {form.errors.amount}
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <Label htmlFor="occurred_at">Tanggal</Label>
@@ -212,7 +265,10 @@ export default function ExpensesIndex({ expenses, total, categories, categoryDes
                             <TableBody>
                                 {expenses.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                                        <TableCell
+                                            colSpan={5}
+                                            className="py-8 text-center text-muted-foreground"
+                                        >
                                             Belum ada biaya.
                                         </TableCell>
                                     </TableRow>
@@ -220,19 +276,35 @@ export default function ExpensesIndex({ expenses, total, categories, categoryDes
                                 {expenses.map((e) => (
                                     <TableRow key={e.id}>
                                         <TableCell className="font-medium">
-                                            <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${categoryColors[e.category] ?? 'bg-gray-100 text-gray-800'}`}>
+                                            <span
+                                                className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${categoryColors[e.category] ?? 'bg-gray-100 text-gray-800'}`}
+                                            >
                                                 {categories[e.category] ?? e.category}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="text-sm">{formatDate(e.occurred_at)}</TableCell>
-                                        <TableCell className="text-muted-foreground">{e.description ?? '-'}</TableCell>
-                                        <TableCell className="text-right">{formatRupiah(e.amount)}</TableCell>
+                                        <TableCell className="text-sm">
+                                            {formatDate(e.occurred_at)}
+                                        </TableCell>
+                                        <TableCell className="text-muted-foreground">
+                                            {e.description ?? '-'}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            {formatRupiah(e.amount)}
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-1">
-                                                <Button variant="ghost" size="icon" onClick={() => openEdit(e)}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => openEdit(e)}
+                                                >
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" onClick={() => remove(e.id)}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => remove(e.id)}
+                                                >
                                                     <Trash2 className="h-4 w-4 text-destructive" />
                                                 </Button>
                                             </div>
@@ -249,7 +321,10 @@ export default function ExpensesIndex({ expenses, total, categories, categoryDes
                 <form onSubmit={submitEdit} className="space-y-4">
                     <div>
                         <Label>Kategori</Label>
-                        <Select value={editForm.data.category} onChange={(e) => editForm.setData('category', e.target.value)}>
+                        <Select
+                            value={editForm.data.category}
+                            onChange={(e) => editForm.setData('category', e.target.value)}
+                        >
                             {Object.entries(categories).map(([key, label]) => (
                                 <option key={key} value={key}>
                                     {label}
@@ -257,17 +332,29 @@ export default function ExpensesIndex({ expenses, total, categories, categoryDes
                             ))}
                         </Select>
                         {editForm.data.category && categoryDescriptions[editForm.data.category] && (
-                            <p className="mt-1 text-xs text-muted-foreground">{categoryDescriptions[editForm.data.category]}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                {categoryDescriptions[editForm.data.category]}
+                            </p>
                         )}
                     </div>
                     <div>
                         <Label>Deskripsi</Label>
-                        <Input value={editForm.data.description} onChange={(e) => editForm.setData('description', e.target.value)} />
+                        <Input
+                            value={editForm.data.description}
+                            onChange={(e) => editForm.setData('description', e.target.value)}
+                        />
                     </div>
                     <div>
                         <Label>Jumlah (Rp)</Label>
-                        <CurrencyInput value={editForm.data.amount} onChange={(v) => editForm.setData('amount', v)} />
-                        {editForm.errors.amount && <p className="mt-1 text-xs text-destructive">{editForm.errors.amount}</p>}
+                        <CurrencyInput
+                            value={editForm.data.amount}
+                            onChange={(v) => editForm.setData('amount', v)}
+                        />
+                        {editForm.errors.amount && (
+                            <p className="mt-1 text-xs text-destructive">
+                                {editForm.errors.amount}
+                            </p>
+                        )}
                     </div>
                     <div>
                         <Label>Tanggal</Label>

@@ -17,7 +17,10 @@ export default function BotIntegration({ hasToken, tenantName, plainToken }: Pro
     const inputRef = useRef<HTMLInputElement>(null);
     const [copied, setCopied] = useState(false);
     const generate = () => {
-        if (hasToken && !confirm('Token lama akan diganti. Bot harus dikonfigurasi ulang. Lanjutkan?')) {
+        if (
+            hasToken &&
+            !confirm('Token lama akan diganti. Bot harus dikonfigurasi ulang. Lanjutkan?')
+        ) {
             return;
         }
         router.post('/settings/bot/token');
@@ -53,8 +56,8 @@ export default function BotIntegration({ hasToken, tenantName, plainToken }: Pro
                             Integrasi Telegram Bot
                         </CardTitle>
                         <CardDescription>
-                            Token untuk tenant <strong>{tenantName}</strong>. Staff paste token ini saat
-                            registrasi di bot Telegram.
+                            Token untuk tenant <strong>{tenantName}</strong>. Staff paste token ini
+                            saat registrasi di bot Telegram.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -72,17 +75,29 @@ export default function BotIntegration({ hasToken, tenantName, plainToken }: Pro
                             <div className="space-y-2">
                                 <Label>Token baru (salin sekarang)</Label>
                                 <div className="flex gap-2">
-                                    <Input ref={inputRef} readOnly value={plainToken} className="font-mono text-sm" />
-                                    <Button type="button" variant="outline" onClick={copyToken} aria-label={copied ? 'Disalin' : 'Salin token'}>
-                                        {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                                    <Input
+                                        ref={inputRef}
+                                        readOnly
+                                        value={plainToken}
+                                        className="font-mono text-sm"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={copyToken}
+                                        aria-label={copied ? 'Disalin' : 'Salin token'}
+                                    >
+                                        {copied ? (
+                                            <Check className="h-4 w-4 text-green-600" />
+                                        ) : (
+                                            <Copy className="h-4 w-4" />
+                                        )}
                                     </Button>
                                 </div>
                                 <p className="text-xs text-amber-600">
                                     Token hanya ditampilkan sekali setelah generate.
                                 </p>
-                                {copied && (
-                                    <p className="text-xs text-green-600">Disalin!</p>
-                                )}
+                                {copied && <p className="text-xs text-green-600">Disalin!</p>}
                             </div>
                         )}
 

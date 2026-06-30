@@ -156,7 +156,8 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
             .map((item) => {
                 if (!isNavGroup(item)) {
                     if ('pengelolaOnly' in item && item.pengelolaOnly && !isPengelola) return null;
-                    if ('superAdminOnly' in item && item.superAdminOnly && !isSuperAdmin) return null;
+                    if ('superAdminOnly' in item && item.superAdminOnly && !isSuperAdmin)
+                        return null;
                     if (isSuperAdmin && !item.superAdminOnly) return null;
                     return item;
                 }
@@ -236,7 +237,10 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
                                 {item.label}
                             </span>
                             <ChevronDown
-                                className={cn('h-4 w-4 transition-transform', isOpen && 'rotate-180')}
+                                className={cn(
+                                    'h-4 w-4 transition-transform',
+                                    isOpen && 'rotate-180',
+                                )}
                             />
                         </button>
                         {isOpen && (
@@ -276,13 +280,20 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
                 )}
             >
                 <div className="flex h-16 items-center border-b border-border px-6">
-                    <img src={theme === "dark" ? "/logo-white.png" : "/logo.png"} alt="Wol-ee" className="h-10 w-auto" />
+                    <img
+                        src={theme === 'dark' ? '/logo-white.png' : '/logo.png'}
+                        alt="Wol-ee"
+                        className="h-10 w-auto"
+                    />
                 </div>
                 {renderNav()}
             </aside>
 
             {sidebarOpen && (
-                <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+                <div
+                    className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                />
             )}
 
             <div className="lg:pl-64">

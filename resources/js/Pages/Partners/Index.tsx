@@ -8,7 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Select } from '@/Components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import { Badge } from '@/Components/ui/badge';
 import { formatRupiah } from '@/lib/format';
 import type { PageProps } from '@/types';
@@ -47,7 +54,11 @@ export default function PartnersIndex({ partners, filters }: Props) {
     });
 
     const applyFilters = (type: string) => {
-        router.get('/partners', { type: type || undefined, q: search || undefined }, { preserveState: true });
+        router.get(
+            '/partners',
+            { type: type || undefined, q: search || undefined },
+            { preserveState: true },
+        );
     };
 
     const submitSearch = (e: React.FormEvent) => {
@@ -57,7 +68,14 @@ export default function PartnersIndex({ partners, filters }: Props) {
 
     const openCreate = () => {
         setEditing(null);
-        form.setData({ name: '', type: 'customer', contact: '', phone: '', email: '', address: '' });
+        form.setData({
+            name: '',
+            type: 'customer',
+            contact: '',
+            phone: '',
+            email: '',
+            address: '',
+        });
         form.clearErrors();
         setFormOpen(true);
     };
@@ -153,20 +171,33 @@ export default function PartnersIndex({ partners, filters }: Props) {
                         <TableBody>
                             {partners.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={isOwner ? 6 : 5} className="text-center text-muted-foreground">
+                                    <TableCell
+                                        colSpan={isOwner ? 6 : 5}
+                                        className="text-center text-muted-foreground"
+                                    >
                                         Belum ada partner.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 partners.map((partner) => (
-                                    <TableRow key={partner.id} className="cursor-pointer hover:bg-muted/50">
+                                    <TableRow
+                                        key={partner.id}
+                                        className="cursor-pointer hover:bg-muted/50"
+                                    >
                                         <TableCell>
-                                            <Link href={`/partners/${partner.id}`} className="font-medium hover:underline">
+                                            <Link
+                                                href={`/partners/${partner.id}`}
+                                                className="font-medium hover:underline"
+                                            >
                                                 {partner.name}
                                             </Link>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant="outline">{partner.type === 'customer' ? 'Customer' : 'Supplier'}</Badge>
+                                            <Badge variant="outline">
+                                                {partner.type === 'customer'
+                                                    ? 'Customer'
+                                                    : 'Supplier'}
+                                            </Badge>
                                         </TableCell>
                                         <TableCell>{partner.contact ?? '-'}</TableCell>
                                         <TableCell>{partner.phone ?? '-'}</TableCell>
@@ -178,10 +209,18 @@ export default function PartnersIndex({ partners, filters }: Props) {
                                         {isOwner && (
                                             <TableCell>
                                                 <div className="flex gap-1">
-                                                    <Button size="icon" variant="ghost" onClick={() => openEdit(partner)}>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() => openEdit(partner)}
+                                                    >
                                                         <Pencil className="h-4 w-4" />
                                                     </Button>
-                                                    <Button size="icon" variant="ghost" onClick={() => remove(partner)}>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() => remove(partner)}
+                                                    >
                                                         <Trash2 className="h-4 w-4 text-destructive" />
                                                     </Button>
                                                 </div>
@@ -195,35 +234,66 @@ export default function PartnersIndex({ partners, filters }: Props) {
                 </CardContent>
             </Card>
 
-            <Modal open={formOpen} onClose={() => setFormOpen(false)} title={editing ? 'Edit Partner' : 'Tambah Partner'}>
+            <Modal
+                open={formOpen}
+                onClose={() => setFormOpen(false)}
+                title={editing ? 'Edit Partner' : 'Tambah Partner'}
+            >
                 <form onSubmit={submit} className="space-y-4">
                     <div>
                         <Label htmlFor="name">Nama</Label>
-                        <Input id="name" value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} />
-                        {form.errors.name && <p className="mt-1 text-xs text-destructive">{form.errors.name}</p>}
+                        <Input
+                            id="name"
+                            value={form.data.name}
+                            onChange={(e) => form.setData('name', e.target.value)}
+                        />
+                        {form.errors.name && (
+                            <p className="mt-1 text-xs text-destructive">{form.errors.name}</p>
+                        )}
                     </div>
                     <div>
                         <Label htmlFor="type">Tipe</Label>
-                        <Select id="type" value={form.data.type} onChange={(e) => form.setData('type', e.target.value)}>
+                        <Select
+                            id="type"
+                            value={form.data.type}
+                            onChange={(e) => form.setData('type', e.target.value)}
+                        >
                             <option value="customer">Customer</option>
                             <option value="supplier">Supplier</option>
                         </Select>
                     </div>
                     <div>
                         <Label htmlFor="contact">Kontak</Label>
-                        <Input id="contact" value={form.data.contact} onChange={(e) => form.setData('contact', e.target.value)} />
+                        <Input
+                            id="contact"
+                            value={form.data.contact}
+                            onChange={(e) => form.setData('contact', e.target.value)}
+                        />
                     </div>
                     <div>
                         <Label htmlFor="phone">Telepon</Label>
-                        <Input id="phone" value={form.data.phone} onChange={(e) => form.setData('phone', e.target.value)} />
+                        <Input
+                            id="phone"
+                            value={form.data.phone}
+                            onChange={(e) => form.setData('phone', e.target.value)}
+                        />
                     </div>
                     <div>
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" value={form.data.email} onChange={(e) => form.setData('email', e.target.value)} />
+                        <Input
+                            id="email"
+                            type="email"
+                            value={form.data.email}
+                            onChange={(e) => form.setData('email', e.target.value)}
+                        />
                     </div>
                     <div>
                         <Label htmlFor="address">Alamat</Label>
-                        <Input id="address" value={form.data.address} onChange={(e) => form.setData('address', e.target.value)} />
+                        <Input
+                            id="address"
+                            value={form.data.address}
+                            onChange={(e) => form.setData('address', e.target.value)}
+                        />
                     </div>
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>

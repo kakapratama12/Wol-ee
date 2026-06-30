@@ -22,7 +22,12 @@ export default function StatCard({ label, value, hint, icon, accent = 'default' 
         <Card>
             <CardContent className="flex items-center gap-4 p-5">
                 {icon && (
-                    <div className={cn('flex h-11 w-11 items-center justify-center rounded-lg', accentMap[accent])}>
+                    <div
+                        className={cn(
+                            'flex h-11 w-11 items-center justify-center rounded-lg',
+                            accentMap[accent],
+                        )}
+                    >
                         {icon}
                     </div>
                 )}

@@ -11,11 +11,7 @@ interface CreateProductModalProps {
     onSuccess: (product: { id: number; name: string; selling_price: number }) => void;
 }
 
-export default function CreateProductModal({
-    open,
-    onClose,
-    onSuccess,
-}: CreateProductModalProps) {
+export default function CreateProductModal({ open, onClose, onSuccess }: CreateProductModalProps) {
     const [form, setForm] = useState({
         name: '',
         unit: 'pcs',
@@ -37,7 +33,7 @@ export default function CreateProductModal({
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-XSRF-TOKEN': decodeURIComponent(
-                        document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || ''
+                        document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || '',
                     ),
                 },
                 body: JSON.stringify({
@@ -101,7 +97,10 @@ export default function CreateProductModal({
                         />
                     </div>
                     <div>
-                        <Label htmlFor="prod-price">Harga Jual (Rp) <span className="text-muted-foreground text-xs">(opsional)</span></Label>
+                        <Label htmlFor="prod-price">
+                            Harga Jual (Rp){' '}
+                            <span className="text-muted-foreground text-xs">(opsional)</span>
+                        </Label>
                         <CurrencyInput
                             id="prod-price"
                             value={form.selling_price}
@@ -115,7 +114,9 @@ export default function CreateProductModal({
                         id="prod-recipe-type"
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                         value={form.recipe_type}
-                        onChange={(e) => setForm({ ...form, recipe_type: e.target.value as 'unit' | 'batch' })}
+                        onChange={(e) =>
+                            setForm({ ...form, recipe_type: e.target.value as 'unit' | 'batch' })
+                        }
                     >
                         <option value="unit">Unit (per porsi)</option>
                         <option value="batch">Batch (per produksi)</option>
@@ -128,7 +129,9 @@ export default function CreateProductModal({
                             id="prod-is-prep"
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             value={form.is_prep ? 'true' : 'false'}
-                            onChange={(e) => setForm({ ...form, is_prep: e.target.value === 'true' })}
+                            onChange={(e) =>
+                                setForm({ ...form, is_prep: e.target.value === 'true' })
+                            }
                         >
                             <option value="false">Produk Jadi</option>
                             <option value="true">Prep - Bahan Setengah Jadi</option>

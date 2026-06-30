@@ -38,8 +38,18 @@ interface Props {
 }
 
 const months = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
 ];
 
 const modalTypes = [
@@ -59,7 +69,11 @@ export default function Cashflow({ report, period, periodLabel }: Props) {
     });
 
     const changePeriod = (month: number, year: number) => {
-        router.get('/reports/cashflow', { month, year }, { preserveState: true, preserveScroll: true });
+        router.get(
+            '/reports/cashflow',
+            { month, year },
+            { preserveState: true, preserveScroll: true },
+        );
     };
 
     const submitModal = (e: React.FormEvent) => {
@@ -90,7 +104,11 @@ export default function Cashflow({ report, period, periodLabel }: Props) {
                             </option>
                         ))}
                     </Select>
-                    <Select className="w-28" value={period.year} onChange={(e) => changePeriod(period.month, Number(e.target.value))}>
+                    <Select
+                        className="w-28"
+                        value={period.year}
+                        onChange={(e) => changePeriod(period.month, Number(e.target.value))}
+                    >
                         {years.map((y) => (
                             <option key={y} value={y}>
                                 {y}
@@ -112,7 +130,10 @@ export default function Cashflow({ report, period, periodLabel }: Props) {
                         <form onSubmit={submitModal} className="flex flex-wrap items-end gap-4">
                             <div>
                                 <Label>Jenis</Label>
-                                <Select value={form.data.type} onChange={(e) => form.setData('type', e.target.value)}>
+                                <Select
+                                    value={form.data.type}
+                                    onChange={(e) => form.setData('type', e.target.value)}
+                                >
                                     {modalTypes.map((t) => (
                                         <option key={t.value} value={t.value}>
                                             {t.label}
@@ -122,21 +143,41 @@ export default function Cashflow({ report, period, periodLabel }: Props) {
                             </div>
                             <div>
                                 <Label>Deskripsi</Label>
-                                <Input value={form.data.description} onChange={(e) => form.setData('description', e.target.value)} className="w-48" />
+                                <Input
+                                    value={form.data.description}
+                                    onChange={(e) => form.setData('description', e.target.value)}
+                                    className="w-48"
+                                />
                             </div>
                             <div>
                                 <Label>Jumlah (Rp)</Label>
-                                <CurrencyInput value={form.data.amount} onChange={(v) => form.setData('amount', v)} className="w-40" />
-                                {form.errors.amount && <p className="mt-1 text-xs text-destructive">{form.errors.amount}</p>}
+                                <CurrencyInput
+                                    value={form.data.amount}
+                                    onChange={(v) => form.setData('amount', v)}
+                                    className="w-40"
+                                />
+                                {form.errors.amount && (
+                                    <p className="mt-1 text-xs text-destructive">
+                                        {form.errors.amount}
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <Label>Tanggal</Label>
-                                <Input type="date" value={form.data.occurred_at} onChange={(e) => form.setData('occurred_at', e.target.value)} />
+                                <Input
+                                    type="date"
+                                    value={form.data.occurred_at}
+                                    onChange={(e) => form.setData('occurred_at', e.target.value)}
+                                />
                             </div>
                             <Button type="submit" disabled={form.processing}>
                                 <Plus className="h-4 w-4" /> Simpan
                             </Button>
-                            <Button type="button" variant="ghost" onClick={() => setShowModal(false)}>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => setShowModal(false)}
+                            >
                                 Batal
                             </Button>
                         </form>
@@ -158,17 +199,38 @@ export default function Cashflow({ report, period, periodLabel }: Props) {
                     {/* Kas Masuk */}
                     <SectionTitle title="Kas Masuk" color="text-green-700" />
                     <Line label="Penjualan" value={formatRupiah(report.kas_masuk.penjualan)} />
-                    <Line label="Modal / Kas Masuk Lain" value={formatRupiah(report.kas_masuk.modal)} />
-                    <Line label="Total Kas Masuk" value={formatRupiah(report.total_kas_masuk)} bold />
+                    <Line
+                        label="Modal / Kas Masuk Lain"
+                        value={formatRupiah(report.kas_masuk.modal)}
+                    />
+                    <Line
+                        label="Total Kas Masuk"
+                        value={formatRupiah(report.total_kas_masuk)}
+                        bold
+                    />
 
                     <div className="border-t border-border" />
 
                     {/* Kas Keluar */}
                     <SectionTitle title="Kas Keluar" color="text-red-700" />
-                    <Line label="Pembelian Bahan" value={formatRupiah(report.kas_keluar.pembelian)} />
-                    <Line label="Biaya Operasional" value={formatRupiah(report.kas_keluar.biaya_operasional)} />
-                    <Line label="Di Luar Usaha" value={formatRupiah(report.kas_keluar.di_luar_usaha)} muted />
-                    <Line label="Total Kas Keluar" value={formatRupiah(report.total_kas_keluar)} bold />
+                    <Line
+                        label="Pembelian Bahan"
+                        value={formatRupiah(report.kas_keluar.pembelian)}
+                    />
+                    <Line
+                        label="Biaya Operasional"
+                        value={formatRupiah(report.kas_keluar.biaya_operasional)}
+                    />
+                    <Line
+                        label="Di Luar Usaha"
+                        value={formatRupiah(report.kas_keluar.di_luar_usaha)}
+                        muted
+                    />
+                    <Line
+                        label="Total Kas Keluar"
+                        value={formatRupiah(report.total_kas_keluar)}
+                        bold
+                    />
 
                     <div className="border-t border-border" />
 

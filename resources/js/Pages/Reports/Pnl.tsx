@@ -45,8 +45,18 @@ interface Props {
 }
 
 const months = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
 ];
 
 const categoryLabels: Record<string, string> = {
@@ -76,11 +86,14 @@ export default function Pnl({ report, period, periodLabel }: Props) {
     };
 
     // Group expenses by category
-    const expensesByCategory = report.expenses.reduce((acc, e) => {
-        if (!acc[e.category]) acc[e.category] = [];
-        acc[e.category].push(e);
-        return acc;
-    }, {} as Record<string, ExpenseItem[]>);
+    const expensesByCategory = report.expenses.reduce(
+        (acc, e) => {
+            if (!acc[e.category]) acc[e.category] = [];
+            acc[e.category].push(e);
+            return acc;
+        },
+        {} as Record<string, ExpenseItem[]>,
+    );
 
     return (
         <AppLayout title="Laporan P&L">
@@ -99,7 +112,11 @@ export default function Pnl({ report, period, periodLabel }: Props) {
                             </option>
                         ))}
                     </Select>
-                    <Select className="w-28" value={period.year} onChange={(e) => changePeriod(period.month, Number(e.target.value))}>
+                    <Select
+                        className="w-28"
+                        value={period.year}
+                        onChange={(e) => changePeriod(period.month, Number(e.target.value))}
+                    >
                         {years.map((y) => (
                             <option key={y} value={y}>
                                 {y}
@@ -128,7 +145,10 @@ export default function Pnl({ report, period, periodLabel }: Props) {
                         count={report.revenue_by_product.length}
                     >
                         {report.revenue_by_product.map((item) => (
-                            <div key={item.product} className="flex items-center justify-between py-0.5 pl-4">
+                            <div
+                                key={item.product}
+                                className="flex items-center justify-between py-0.5 pl-4"
+                            >
                                 <span className="text-muted-foreground">{item.product}</span>
                                 <span>{formatRupiah(item.revenue)}</span>
                             </div>
@@ -144,7 +164,10 @@ export default function Pnl({ report, period, periodLabel }: Props) {
                         count={report.cogs_by_product.length}
                     >
                         {report.cogs_by_product.map((item) => (
-                            <div key={item.product} className="flex items-center justify-between py-0.5 pl-4">
+                            <div
+                                key={item.product}
+                                className="flex items-center justify-between py-0.5 pl-4"
+                            >
                                 <span className="text-muted-foreground">{item.product}</span>
                                 <span>{formatRupiah(item.cogs)}</span>
                             </div>
@@ -170,12 +193,22 @@ export default function Pnl({ report, period, periodLabel }: Props) {
                     >
                         {Object.entries(expensesByCategory).map(([category, items]) => (
                             <div key={category} className="mt-2">
-                                <p className={cn('font-semibold text-xs', categoryColors[category] ?? 'text-slate-700')}>
+                                <p
+                                    className={cn(
+                                        'font-semibold text-xs',
+                                        categoryColors[category] ?? 'text-slate-700',
+                                    )}
+                                >
                                     {categoryLabels[category] ?? category}
                                 </p>
                                 {items.map((item, idx) => (
-                                    <div key={idx} className="flex items-center justify-between py-0.5 pl-4">
-                                        <span className="text-muted-foreground">{item.description}</span>
+                                    <div
+                                        key={idx}
+                                        className="flex items-center justify-between py-0.5 pl-4"
+                                    >
+                                        <span className="text-muted-foreground">
+                                            {item.description}
+                                        </span>
                                         <span>{formatRupiah(item.amount)}</span>
                                     </div>
                                 ))}
@@ -222,7 +255,11 @@ function CollapsibleRow({
                 className="flex w-full items-center justify-between py-0.5 hover:bg-muted/50 rounded"
             >
                 <span className="flex items-center gap-1">
-                    {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                    {expanded ? (
+                        <ChevronDown className="h-3 w-3" />
+                    ) : (
+                        <ChevronRight className="h-3 w-3" />
+                    )}
                     {label}
                     <span className="text-xs text-muted-foreground">({count})</span>
                 </span>
