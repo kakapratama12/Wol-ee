@@ -108,11 +108,6 @@ export default function InvoiceFormFields({
                     <Plus className="mr-1 h-4 w-4" />
                     Tambah Item
                 </Button>
-                {subtotal > 0 && (
-                    <div className="flex justify-end text-sm font-medium">
-                        Subtotal: {formatRupiah(subtotal)}
-                    </div>
-                )}
             </div>
 
             {/* Fees */}
