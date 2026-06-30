@@ -12,6 +12,25 @@ Singkatnya — catat perubahan yang **terlihat/berdampak ke pengguna atau operat
 murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 ## [Unreleased]
+### Added
+
+- Dashboard date filter: pilihan Minggu Ini, Bulan Ini, 3 Bulan Terakhir, dan Custom (date picker).
+- Brand color palette: Deep Navy (primary), Warm Amber (warning), Teal (success), Off White (background), Charcoal (text), Slate (muted), Light Gray (border).
+- Favicon, apple-touch-icon, dan sidebar/login logo dari brand image yang di-upload.
+- Report design standard: angka operasional selalu positif (tanpa minus/kurung). Hanya Laba/Rugi yang pakai hijau/merah.
+
+### Changed
+
+- Dashboard metrics, penjualan terbaru, dan pembelian terbaru sekarang ikut filter tanggal yang dipilih.
+- PnL: hapus kuantitas (pcs) dari breakdown revenue & COGS. COGS & Expenses tampil sebagai angka biasa.
+- Cashflow: Kas Keluar tampil sebagai angka biasa (bukan dalam kurung). Saldo Akhir saja yang pakai warna.
+- Typography: Figtree untuk semua (body + headline), JetBrains Mono dihapus.
+- Sidebar dan login page pakai logo brand image (bukan SVG default).
+
+### Fixed
+
+- PnL server error: selectRaw terhapus oleh sed command, menyebabkan GROUP BY error.
+- Favicon background: dari abu-abu (JPEG) menjadi transparan.
 
 ### Added
 
