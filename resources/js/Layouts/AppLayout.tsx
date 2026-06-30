@@ -15,6 +15,8 @@ import {
     Utensils,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ThemeProvider } from '@/Components/ThemeProvider';
+import ThemeToggle from '@/Components/ThemeToggle';
 import type { PageProps } from '@/types';
 
 interface NavSingle {
@@ -126,7 +128,7 @@ function groupHasActiveChild(url: string, children: NavLink[]): boolean {
     return children.some((child) => isActive(url, child.href));
 }
 
-export default function AppLayout({ title, children }: PropsWithChildren<{ title?: string }>) {
+function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string }>) {
     const { props, url } = usePage<PageProps>();
     const user = props.auth.user;
     const isPengelola = user.role === 'pengelola';
@@ -293,7 +295,8 @@ export default function AppLayout({ title, children }: PropsWithChildren<{ title
                         </button>
                         <h1 className="text-lg font-semibold">{title}</h1>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        <ThemeToggle />
                         <div className="hidden text-right sm:block">
                             <p className="text-sm font-medium leading-tight">{user.name}</p>
                             <p className="text-xs capitalize text-muted-foreground">{user.role}</p>
@@ -324,5 +327,13 @@ export default function AppLayout({ title, children }: PropsWithChildren<{ title
                 </div>
             )}
         </div>
+    );
+}
+
+export default function AppLayout(props: PropsWithChildren<{ title?: string }>) {
+    return (
+        <ThemeProvider>
+            <AppLayoutInner {...props} />
+        </ThemeProvider>
     );
 }
