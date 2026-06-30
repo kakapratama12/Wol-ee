@@ -25,7 +25,7 @@ interface Product {
     id: number;
     name: string;
     unit: string;
-    selling_price: number;
+    selling_price: number | null;
     recipe_type: 'unit' | 'batch';
     estimated_yield_per_batch: number | null;
     is_active: boolean;
@@ -89,17 +89,21 @@ export default function ProductsIndex({ products, ingredients }: Props) {
 
     const openEdit = (p: Product) => {
         setEditing(p);
-        productForm.setData({ name: p.name, unit: p.unit, selling_price: String(p.selling_price), recipe_type: p.recipe_type, is_prep: p.is_prep });
+        productForm.setData({ name: p.name, unit: p.unit, selling_price: p.selling_price ? String(p.selling_price) : '', recipe_type: p.recipe_type, is_prep: p.is_prep });
         productForm.clearErrors();
         setFormOpen(true);
     };
 
     const submitProduct = (e: React.FormEvent) => {
         e.preventDefault();
+        const data = {
+            ...productForm.data,
+            selling_price: productForm.data.selling_price ? Number(productForm.data.selling_price) : null,
+        };
         if (editing) {
-            productForm.put(`/products/${editing.id}`, { onSuccess: () => setFormOpen(false) });
+            router.put(`/products/${editing.id}`, data, { onSuccess: () => setFormOpen(false) });
         } else {
-            productForm.post('/products', { onSuccess: () => setFormOpen(false) });
+            router.post('/products', data, { onSuccess: () => setFormOpen(false) });
         }
     };
 
@@ -180,7 +184,7 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                                     )}
                                 </CardTitle>
                                 <p className="mt-1 text-sm text-muted-foreground">
-                                    {formatRupiah(p.selling_price)} / {p.unit}
+                                    {p.selling_price ? `${formatRupiah(p.selling_price)} / ${p.unit}` : p.unit}
                                 </p>
                                 {p.recipe_type === 'batch' && p.estimated_yield_per_batch && (
                                     <p className="mt-1 text-xs text-blue-600">
@@ -196,10 +200,12 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                                     <p className="text-xs text-muted-foreground">COGS</p>
                                     <p className="font-semibold">{formatRupiah(p.cogs)}</p>
                                 </div>
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Margin</p>
-                                    <p className="font-semibold text-success">{formatPercent(p.margin)}</p>
-                                </div>
+                                {!p.is_prep && (
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Margin</p>
+                                        <p className="font-semibold text-success">{formatPercent(p.margin)}</p>
+                                    </div>
+                                )}
                             </div>
                             <p className="mt-3 text-xs text-muted-foreground">{p.recipe.length} bahan dalam resep</p>
                             <div className="mt-3 flex gap-2">
@@ -254,11 +260,13 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                             <Label htmlFor="unit">Satuan jual</Label>
                             <Input id="unit" value={productForm.data.unit} onChange={(e) => productForm.setData('unit', e.target.value)} placeholder="pcs, cup, porsi" />
                         </div>
-                        <div>
-                            <Label htmlFor="selling_price">Harga jual (Rp)</Label>
-                            <Input id="selling_price" type="number" step="1" value={productForm.data.selling_price} onChange={(e) => productForm.setData('selling_price', e.target.value)} />
-                            {productForm.errors.selling_price && <p className="mt-1 text-xs text-destructive">{productForm.errors.selling_price}</p>}
-                        </div>
+                        {!productForm.data.is_prep && (
+                            <div>
+                                <Label htmlFor="selling_price">Harga jual (Rp) <span className="text-muted-foreground text-xs">(opsional)</span></Label>
+                                <Input id="selling_price" type="number" step="1" value={productForm.data.selling_price} onChange={(e) => productForm.setData('selling_price', e.target.value)} placeholder="nanti aja" />
+                                {productForm.errors.selling_price && <p className="mt-1 text-xs text-destructive">{productForm.errors.selling_price}</p>}
+                            </div>
+                        )}
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
@@ -348,10 +356,12 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                             <p className="text-xs text-muted-foreground">COGS / porsi</p>
                             <p className="text-lg font-bold">{formatRupiah(preview.cogs)}</p>
                         </div>
-                        <div>
-                            <p className="text-xs text-muted-foreground">Margin (harga {formatRupiah(recipeProduct?.selling_price ?? 0)})</p>
-                            <p className="text-lg font-bold text-success">{formatPercent(preview.margin)}</p>
-                        </div>
+                        {!recipeProduct?.is_prep && (
+                            <div>
+                                <p className="text-xs text-muted-foreground">Margin (harga {formatRupiah(recipeProduct?.selling_price ?? 0)})</p>
+                                <p className="text-lg font-bold text-success">{formatPercent(preview.margin)}</p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex justify-end gap-2">

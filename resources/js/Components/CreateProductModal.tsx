@@ -42,7 +42,7 @@ export default function CreateProductModal({
                 },
                 body: JSON.stringify({
                     ...form,
-                    selling_price: Number(form.selling_price) || 0,
+                    selling_price: form.selling_price ? Number(form.selling_price) : null,
                 }),
             });
             const data = await res.json();
@@ -101,12 +101,11 @@ export default function CreateProductModal({
                         />
                     </div>
                     <div>
-                        <Label htmlFor="prod-price">Harga Jual (Rp)</Label>
+                        <Label htmlFor="prod-price">Harga Jual (Rp) <span className="text-muted-foreground text-xs">(opsional)</span></Label>
                         <CurrencyInput
                             id="prod-price"
                             value={form.selling_price}
                             onChange={(v) => setForm({ ...form, selling_price: v })}
-                            required
                         />
                     </div>
                 </div>
@@ -122,6 +121,20 @@ export default function CreateProductModal({
                         <option value="batch">Batch (per produksi)</option>
                     </select>
                 </div>
+                {form.recipe_type === 'batch' && (
+                    <div>
+                        <Label htmlFor="prod-is-prep">Kategori</Label>
+                        <select
+                            id="prod-is-prep"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            value={form.is_prep ? 'true' : 'false'}
+                            onChange={(e) => setForm({ ...form, is_prep: e.target.value === 'true' })}
+                        >
+                            <option value="false">Produk Jadi</option>
+                            <option value="true">Prep - Bahan Setengah Jadi</option>
+                        </select>
+                    </div>
+                )}
                 {error && <p className="text-sm text-destructive">{error}</p>}
                 <div className="flex justify-end gap-2">
                     <Button type="button" variant="outline" onClick={handleClose}>
