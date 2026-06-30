@@ -6,15 +6,7 @@
 
 ## WIP (What We're Building Now)
 
-### Phase 2: Platform Users
-- [ ] List semua user global
-- [ ] Filter/search by usaha mana
-- [ ] Lihat role (pengelola / staff)
-
-### Phase 3: Platform Usaha
-- [ ] List semua usaha
-- [ ] Lihat siapa pengelola-nya
-- [ ] Basic info (nama, tipe usaha, dll)
+_(Kosong — semua phase selesai)_
 
 ---
 
@@ -33,9 +25,10 @@
 
 ## Done / Finished
 
-### Super Admin
+### Super Admin Platform (Juni 2026)
 - Platform Overview
-- User Management (CRUD + role)
+- User Management (CRUD + role + search + filter by usaha)
+- Usaha Management (list + search + expandable pengelola details)
 - Feedback Inbox
 - AI Usage Analytics
 - Bot Skills Registry
