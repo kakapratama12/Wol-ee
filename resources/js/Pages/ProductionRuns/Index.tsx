@@ -152,6 +152,10 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
         itemsForm.setData('items', items);
     };
 
+    const removeEditItem = (index: number) => {
+        itemsForm.setData('items', itemsForm.data.items.filter((_, idx) => idx !== index));
+    };
+
     const [addIngredientId, setAddIngredientId] = useState<string>('');
 
     const addExtraIngredient = () => {
@@ -432,7 +436,18 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
                             <div key={item.ingredient_id} className="rounded-lg border p-3">
                                 <div className="flex items-center justify-between mb-2">
                                     <p className="font-medium text-sm">{item.ingredient}</p>
-                                    <p className="text-xs text-muted-foreground">{formatRupiah(item.unit_price)}/{item.base_unit}</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-xs text-muted-foreground">{formatRupiah(item.unit_price)}/{item.base_unit}</p>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6"
+                                            onClick={() => removeEditItem(i)}
+                                        >
+                                            <Trash2 className="h-3 w-3 text-destructive" />
+                                        </Button>
+                                    </div>
                                 </div>
                                 <div className="flex items-end gap-2">
                                     <div className="flex-1">
