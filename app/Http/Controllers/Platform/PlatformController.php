@@ -92,16 +92,17 @@ class PlatformController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:tenants,slug'],
             'plan' => ['required', 'in:free,pro,business'],
             'pengelola_name' => ['required', 'string', 'max:255'],
             'pengelola_email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'pengelola_password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
+        $slug = \Illuminate\Support\Str::slug($data['name']);
+
         $tenant = Tenant::create([
             'name' => $data['name'],
-            'slug' => $data['slug'],
+            'slug' => $slug,
             'plan' => $data['plan'],
             'status' => Tenant::STATUS_ACTIVE,
         ]);

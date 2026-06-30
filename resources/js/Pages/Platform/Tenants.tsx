@@ -40,7 +40,6 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
 
     const addForm = useForm({
         name: '',
-        slug: '',
         plan: 'free',
         pengelola_name: '',
         pengelola_email: '',
@@ -56,13 +55,6 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                 setShowAdd(false);
             },
         });
-    };
-
-    const generateSlug = (name: string) => {
-        return name
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-+|-+$/g, '');
     };
 
     const filteredTenants = tenants.filter((tenant) => 
@@ -102,28 +94,11 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                     <Input
                                         id="add-name"
                                         value={addForm.data.name}
-                                        onChange={(e) => {
-                                            addForm.setData('name', e.target.value);
-                                            if (!addForm.data.slug) {
-                                                addForm.setData('slug', generateSlug(e.target.value));
-                                            }
-                                        }}
+                                        onChange={(e) => addForm.setData('name', e.target.value)}
                                         className="mt-1"
                                     />
                                     {addForm.errors.name && (
                                         <p className="mt-1 text-xs text-destructive">{addForm.errors.name}</p>
-                                    )}
-                                </div>
-                                <div>
-                                    <Label htmlFor="add-slug">Slug</Label>
-                                    <Input
-                                        id="add-slug"
-                                        value={addForm.data.slug}
-                                        onChange={(e) => addForm.setData('slug', e.target.value)}
-                                        className="mt-1"
-                                    />
-                                    {addForm.errors.slug && (
-                                        <p className="mt-1 text-xs text-destructive">{addForm.errors.slug}</p>
                                     )}
                                 </div>
                                 <div>
@@ -214,7 +189,7 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
-                            placeholder="Cari nama atau slug usaha..."
+                            placeholder="Cari nama usaha..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="pl-9"
