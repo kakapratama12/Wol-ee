@@ -237,7 +237,7 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                         />
                     )}
 
-                    <div>
+                    <div className="w-48">
                         <Label htmlFor="due_date">Jatuh Tempo</Label>
                         <Input id="due_date" type="date" value={form.data.due_date} onChange={(e) => form.setData('due_date', e.target.value)} />
                         {form.errors.due_date && <p className="mt-1 text-xs text-destructive">{form.errors.due_date}</p>}

@@ -62,8 +62,8 @@ export default function InvoiceFormFields({
                     <TableHeader>
                         <TableRow>
                             <TableHead className="w-1/3">Deskripsi</TableHead>
-                            <TableHead className="w-24">Qty</TableHead>
-                            <TableHead className="w-44">Harga Satuan</TableHead>
+                            <TableHead className="w-20">Qty</TableHead>
+                            <TableHead className="w-36">Harga Satuan</TableHead>
                             <TableHead className="w-10"></TableHead>
                         </TableRow>
                     </TableHeader>
@@ -97,7 +97,6 @@ export default function InvoiceFormFields({
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => onRemoveItem(i)}
-                                        disabled={items.length <= 1}
                                     >
                                         <Trash2 className="h-4 w-4 text-destructive" />
                                     </Button>
@@ -119,27 +118,25 @@ export default function InvoiceFormFields({
 
             {/* Fees */}
             <div className="space-y-3 border-t pt-4">
-                <div className="flex items-center justify-between">
-                    <Label>Biaya Tambahan</Label>
-                    <Button type="button" variant="outline" size="sm" onClick={onAddFee}>
-                        <Plus className="mr-1 h-4 w-4" />
-                        Tambah Biaya
-                    </Button>
-                </div>
+                <Label>Biaya Tambahan</Label>
                 {fees.length > 0 && (
                     <div className="space-y-2">
+                        <div className="flex items-end gap-3 text-xs text-muted-foreground px-1">
+                            <div className="flex-1">Nama</div>
+                            <div className="w-28">Tipe</div>
+                            <div className="w-28">Nilai</div>
+                            <div className="w-10"></div>
+                        </div>
                         {fees.map((fee, i) => (
-                            <div key={i} className="flex items-end gap-2">
+                            <div key={i} className="flex items-end gap-3">
                                 <div className="flex-1">
-                                    <Label className="text-xs">Nama</Label>
                                     <Input
                                         value={fee.name}
                                         onChange={(e) => onUpdateFee(i, 'name', e.target.value)}
                                         placeholder="Delivery Fee, PPN, dll"
                                     />
                                 </div>
-                                <div className="w-32">
-                                    <Label className="text-xs">Tipe</Label>
+                                <div className="w-28">
                                     <Select
                                         value={fee.type}
                                         onChange={(e) => onUpdateFee(i, 'type', e.target.value as 'fixed' | 'percentage')}
@@ -148,8 +145,7 @@ export default function InvoiceFormFields({
                                         <option value="percentage">Persen (%)</option>
                                     </Select>
                                 </div>
-                                <div className="w-36">
-                                    <Label className="text-xs">{fee.type === 'percentage' ? 'Persen' : 'Nominal'}</Label>
+                                <div className="w-28">
                                     <Input
                                         type="number"
                                         min="0"
@@ -166,6 +162,10 @@ export default function InvoiceFormFields({
                         ))}
                     </div>
                 )}
+                <Button type="button" variant="outline" size="sm" onClick={onAddFee}>
+                    <Plus className="mr-1 h-4 w-4" />
+                    Tambah Biaya
+                </Button>
             </div>
 
             {/* Total */}
