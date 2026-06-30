@@ -354,7 +354,27 @@ Bot: Reply ke user: "✅ Pembelian tercatat. Stok tepung: 5.5 kg (aman)"
 - [x] Bisa preview PDF sebelum download
 - [x] Invoice lunas bisa generate kuitansi
 
-*Last updated: 23 June 2026*
+*Last updated: 30 June 2026*
+## Sprint 10: Data Integrity & UX (Juni 2026)
+
+### 10.1 Race Condition Fix
+- [x] lockForUpdate() di InventoryService: recordUsage, reversePurchase, reverseSaleUsage, deductFinishedGoods
+- [x] lockForUpdate() di ProductionRunService::create (stock check inside transaction)
+
+### 10.2 Idempotency Key
+- [x] Migration: tambah idempotency_key (UUID, nullable, unique) ke sales, transactions, invoices
+- [x] API controllers: cek X-Idempotency-Key header, return existing record if duplicate
+- [x] Web controllers: accept idempotency_key dari form data
+- [x] Frontend: auto-generate UUID via crypto.randomUUID() on submit
+
+### 10.3 Dark Mode
+- [x] ThemeProvider + ThemeToggle component
+- [x] AppLayout + GuestLayout: switch logo berdasarkan theme
+- [x] Inline script di app.blade.php: prevent flash of wrong theme
+- [x] localStorage persistence
+
+---
+
 ## Notes
 
 - **Tenant ID is CRITICAL** — harus di Sprint 1, jangan ditunda
@@ -364,7 +384,7 @@ Bot: Reply ke user: "✅ Pembelian tercatat. Stok tepung: 5.5 kg (aman)"
 
 ---
 
-*Last updated: 19 June 2026*
+
 *Owner: Odi (kakapratama12)*
 
 ---
@@ -403,4 +423,4 @@ Bot: Reply ke user: "✅ Pembelian tercatat. Stok tepung: 5.5 kg (aman)"
 - [x] Harga bahan baku dihitung otomatis dari volume + harga
 - [x] Modal resep gak tembus layar
 
-*Last updated: 23 June 2026*
+*Last updated: 30 June 2026*

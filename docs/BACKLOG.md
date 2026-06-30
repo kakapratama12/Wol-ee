@@ -25,6 +25,11 @@ _(Kosong — semua phase selesai)_
 
 ## Done / Finished
 
+### Code Quality & Infrastructure (Juni 2026)
+- Race condition fix: lockForUpdate() di InventoryService & ProductionRunService
+- Idempotency key: sales, transactions, invoices (UUID, mencegah double submit)
+- Dark mode: toggle button, localStorage persistence, logo auto-switch
+
 ### Super Admin Platform (Juni 2026)
 - Platform Overview
 - User Management (CRUD + role + search + filter by usaha)
