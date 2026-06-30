@@ -33,6 +33,7 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 ### Fixed
 
+- Race condition: stock deduction sekarang pake `lockForUpdate()` di InventoryService (recordUsage, reversePurchase, reverseSaleUsage, deductFinishedGoods) dan ProductionRunService. Mencegah oversell dari concurrent sales/production runs.
 - PnL server error: selectRaw terhapus oleh sed command, menyebabkan GROUP BY error.
 - Favicon background: dari abu-abu (JPEG) menjadi transparan.
 
