@@ -50,7 +50,10 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
     const [ingredients, setIngredients] = useState(initialIngredients);
     const [showCreateModal, setShowCreateModal] = useState(false);
 
-    const form = useForm({ ingredient_id: '', quantity: '', total: '', note: '' });
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const defaultDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const form = useForm({ ingredient_id: '', quantity: '', total: '', note: '', occurred_at: defaultDate });
     const editForm = useForm({
         ingredient_id: '',
         quantity: '',
@@ -137,6 +140,15 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                             <div>
                                 <Label htmlFor="note">Catatan (opsional)</Label>
                                 <Input id="note" value={form.data.note} onChange={(e) => form.setData('note', e.target.value)} />
+                            </div>
+                            <div>
+                                <Label htmlFor="occurred_at">Tanggal</Label>
+                                <Input
+                                    id="occurred_at"
+                                    type="datetime-local"
+                                    value={form.data.occurred_at}
+                                    onChange={(e) => form.setData('occurred_at', e.target.value)}
+                                />
                             </div>
                             <Button type="submit" className="w-full" disabled={form.processing}>
                                 Simpan & Tambah Stok

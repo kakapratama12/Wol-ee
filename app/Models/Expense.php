@@ -35,6 +35,7 @@ class Expense extends Model
         'amount',
         'period_month',
         'period_year',
+        'occurred_at',
         'tenant_id',
     ];
 
@@ -42,5 +43,6 @@ class Expense extends Model
         'amount' => 'decimal:2',
         'period_month' => 'integer',
         'period_year' => 'integer',
+        'occurred_at' => 'datetime',
     ];
 }

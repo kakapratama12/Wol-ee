@@ -52,7 +52,10 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
     const [products, setProducts] = useState(initialProducts);
     const [showCreateModal, setShowCreateModal] = useState(false);
 
-    const form = useForm({ product_id: '', quantity: '', unit_price: '', note: '' });
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const defaultDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const form = useForm({ product_id: '', quantity: '', unit_price: '', note: '', occurred_at: defaultDate });
     const editForm = useForm({
         product_id: '',
         quantity: '',
@@ -138,6 +141,15 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                                     placeholder={selected ? String(selected.selling_price) : 'pakai harga produk'}
                                     value={form.data.unit_price}
                                     onChange={(v) => form.setData('unit_price', v)}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="occurred_at">Tanggal</Label>
+                                <Input
+                                    id="occurred_at"
+                                    type="datetime-local"
+                                    value={form.data.occurred_at}
+                                    onChange={(e) => form.setData('occurred_at', e.target.value)}
                                 />
                             </div>
                             <Button type="submit" className="w-full" disabled={form.processing}>
