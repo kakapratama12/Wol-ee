@@ -176,14 +176,16 @@ export default function Company({ tenant }: Props) {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="name">Nama Usaha *</Label>
+                                <Label htmlFor="name">Nama Usaha</Label>
                                 <Input
                                     id="name"
                                     value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
-                                    placeholder="Masukkan nama usaha"
+                                    disabled
+                                    className="bg-muted"
                                 />
-                                <InputError message={errors.name} />
+                                <p className="text-xs text-muted-foreground">
+                                    Nama usaha hanya bisa diubah oleh super admin.
+                                </p>
                             </div>
 
                             <div className="space-y-2">
