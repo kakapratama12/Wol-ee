@@ -18,7 +18,7 @@ class UpdatePurchaseRequest extends FormRequest
     {
         return [
             'ingredient_id' => ['required', 'integer', 'exists:ingredients,id'],
-'quantity' => ['sometimes', 'numeric', 'min:0.01', 'max:9999999']
+'quantity' => ['sometimes', 'numeric', 'min:0.01', 'max:9999999'],
             'total' => ['required', 'numeric', 'gte:0'],
             'note' => ['nullable', 'string', 'max:255'],
             'occurred_at' => ['nullable', 'date'],
