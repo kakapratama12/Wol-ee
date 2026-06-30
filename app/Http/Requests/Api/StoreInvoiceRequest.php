@@ -23,7 +23,7 @@ class StoreInvoiceRequest extends FormRequest
                 'required', 'integer',
                 Rule::exists('partners', 'id')->where('type', Partner::TYPE_CUSTOMER),
             ],
-            'amount' => ['nullable', 'numeric', 'min:0'],
+            'amount' => ['nullable', 'numeric', 'min:0', 'max:99999999999'],
             'due_date' => ['required', 'date'],
             'note' => ['nullable', 'string', 'max:1000'],
             'items' => ['nullable', 'array'],

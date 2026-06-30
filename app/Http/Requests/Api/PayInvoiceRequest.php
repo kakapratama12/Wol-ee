@@ -17,7 +17,7 @@ class PayInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => ['required', 'numeric', 'gt:0'],
+'amount' => ['required', 'numeric', 'min:0', 'max:99999999999']
             'paid_at' => ['nullable', 'date'],
         ];
     }

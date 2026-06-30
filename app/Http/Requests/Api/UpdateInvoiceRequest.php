@@ -17,7 +17,7 @@ class UpdateInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => ['sometimes', 'required', 'numeric', 'gt:0'],
+            'amount' => ['sometimes', 'required', 'numeric', 'gt:0', 'max:99999999999'],
             'due_date' => ['sometimes', 'required', 'date'],
             'note' => ['nullable', 'string', 'max:1000'],
         ];

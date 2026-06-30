@@ -20,8 +20,8 @@ class StoreTransactionRequest extends FormRequest
             'ingredient_id' => ['nullable', 'integer', 'exists:ingredients,id'],
             'ingredient' => ['nullable', 'string', 'max:255'],
             // quantity dalam base_unit ingredient (mis. gram, ml)
-            'quantity' => ['required', 'numeric', 'gt:0'],
-            'unit_price' => ['nullable', 'numeric', 'gte:0'],
+            'quantity' => ['required', 'numeric', 'min:0.01', 'max:9999999'],
+            'unit_price' => ['nullable', 'numeric', 'gte:0', 'max:99999999999'],
             'total' => ['nullable', 'numeric', 'gte:0'],
             'note' => ['nullable', 'string', 'max:255'],
             'occurred_at' => ['nullable', 'date'],

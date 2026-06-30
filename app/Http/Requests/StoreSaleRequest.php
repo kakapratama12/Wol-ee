@@ -18,8 +18,8 @@ class StoreSaleRequest extends FormRequest
     {
         return [
             'product_id' => ['required', 'integer', 'exists:products,id'],
-            'quantity' => ['required', 'integer', 'gt:0'],
-            'unit_price' => ['nullable', 'numeric', 'gte:0'],
+            'quantity' => ['required', 'integer', 'min:1', 'max:9999999'],
+            'unit_price' => ['nullable', 'numeric', 'gte:0', 'max:99999999999'],
             'note' => ['nullable', 'string', 'max:255'],
             'occurred_at' => ['nullable', 'date'],
         ];
