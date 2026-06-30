@@ -88,6 +88,35 @@ class PlatformController extends Controller
         ]);
     }
 
+    public function storeTenant(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'slug' => ['required', 'string', 'max:255', 'unique:tenants,slug'],
+            'plan' => ['required', 'in:free,pro,business'],
+            'pengelola_name' => ['required', 'string', 'max:255'],
+            'pengelola_email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'pengelola_password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $tenant = Tenant::create([
+            'name' => $data['name'],
+            'slug' => $data['slug'],
+            'plan' => $data['plan'],
+            'status' => Tenant::STATUS_ACTIVE,
+        ]);
+
+        User::create([
+            'name' => $data['pengelola_name'],
+            'email' => $data['pengelola_email'],
+            'password' => $data['pengelola_password'],
+            'role' => User::ROLE_PENGELOLA,
+            'tenant_id' => $tenant->id,
+        ]);
+
+        return redirect()->route('platform.tenants')->with('success', 'Usaha berhasil dibuat.');
+    }
+
     public function feedback(Request $request): Response
     {
         $status = $request->string('status')->toString();

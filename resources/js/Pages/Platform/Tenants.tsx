@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { Head } from '@inertiajs/react';
-import { Search, ChevronDown, ChevronRight } from 'lucide-react';
+import { Head, useForm } from '@inertiajs/react';
+import { Search, ChevronDown, ChevronRight, Plus } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
+import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
+import { Label } from '@/Components/ui/label';
+import { Select } from '@/Components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { formatDate, formatNumber } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -33,6 +36,34 @@ interface TenantRow {
 export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
     const [search, setSearch] = useState('');
     const [expandedTenant, setExpandedTenant] = useState<number | null>(null);
+    const [showAdd, setShowAdd] = useState(false);
+
+    const addForm = useForm({
+        name: '',
+        slug: '',
+        plan: 'free',
+        pengelola_name: '',
+        pengelola_email: '',
+        pengelola_password: '',
+        pengelola_password_confirmation: '',
+    });
+
+    const handleAdd = (e: React.FormEvent) => {
+        e.preventDefault();
+        addForm.post(route('platform.tenants.store'), {
+            onSuccess: () => {
+                addForm.reset();
+                setShowAdd(false);
+            },
+        });
+    };
+
+    const generateSlug = (name: string) => {
+        return name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    };
 
     const filteredTenants = tenants.filter((tenant) => 
         search === '' || 
@@ -48,11 +79,134 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
         <AppLayout title="Usaha">
             <Head title="Platform Usaha" />
 
-            <div className="mb-4">
+            <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-muted-foreground">
                     {filteredTenants.length} usaha dari {tenants.length} total
                 </p>
+                <Button onClick={() => setShowAdd(!showAdd)}>
+                    <Plus className="mr-2 h-4 w-4" /> Tambah Usaha
+                </Button>
             </div>
+
+            {/* Add Usaha Form */}
+            {showAdd && (
+                <Card className="mb-6">
+                    <CardHeader>
+                        <CardTitle>Tambah Usaha Baru</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleAdd} className="space-y-4">
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <div>
+                                    <Label htmlFor="add-name">Nama Usaha</Label>
+                                    <Input
+                                        id="add-name"
+                                        value={addForm.data.name}
+                                        onChange={(e) => {
+                                            addForm.setData('name', e.target.value);
+                                            if (!addForm.data.slug) {
+                                                addForm.setData('slug', generateSlug(e.target.value));
+                                            }
+                                        }}
+                                        className="mt-1"
+                                    />
+                                    {addForm.errors.name && (
+                                        <p className="mt-1 text-xs text-destructive">{addForm.errors.name}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <Label htmlFor="add-slug">Slug</Label>
+                                    <Input
+                                        id="add-slug"
+                                        value={addForm.data.slug}
+                                        onChange={(e) => addForm.setData('slug', e.target.value)}
+                                        className="mt-1"
+                                    />
+                                    {addForm.errors.slug && (
+                                        <p className="mt-1 text-xs text-destructive">{addForm.errors.slug}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <Label htmlFor="add-plan">Plan</Label>
+                                    <Select
+                                        id="add-plan"
+                                        value={addForm.data.plan}
+                                        onChange={(e) => addForm.setData('plan', e.target.value)}
+                                        className="mt-1"
+                                    >
+                                        <option value="free">Free</option>
+                                        <option value="pro">Pro</option>
+                                        <option value="business">Business</option>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="border-t pt-4">
+                                <h4 className="mb-3 text-sm font-medium">Pengelola (Owner)</h4>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <Label htmlFor="add-pengelola-name">Nama</Label>
+                                        <Input
+                                            id="add-pengelola-name"
+                                            value={addForm.data.pengelola_name}
+                                            onChange={(e) => addForm.setData('pengelola_name', e.target.value)}
+                                            className="mt-1"
+                                        />
+                                        {addForm.errors.pengelola_name && (
+                                            <p className="mt-1 text-xs text-destructive">{addForm.errors.pengelola_name}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="add-pengelola-email">Email</Label>
+                                        <Input
+                                            id="add-pengelola-email"
+                                            type="email"
+                                            value={addForm.data.pengelola_email}
+                                            onChange={(e) => addForm.setData('pengelola_email', e.target.value)}
+                                            className="mt-1"
+                                        />
+                                        {addForm.errors.pengelola_email && (
+                                            <p className="mt-1 text-xs text-destructive">{addForm.errors.pengelola_email}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="add-pengelola-password">Password</Label>
+                                        <Input
+                                            id="add-pengelola-password"
+                                            type="password"
+                                            value={addForm.data.pengelola_password}
+                                            onChange={(e) => addForm.setData('pengelola_password', e.target.value)}
+                                            className="mt-1"
+                                        />
+                                        {addForm.errors.pengelola_password && (
+                                            <p className="mt-1 text-xs text-destructive">{addForm.errors.pengelola_password}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="add-pengelola-password-confirm">Konfirmasi Password</Label>
+                                        <Input
+                                            id="add-pengelola-password-confirm"
+                                            type="password"
+                                            value={addForm.data.pengelola_password_confirmation}
+                                            onChange={(e) => addForm.setData('pengelola_password_confirmation', e.target.value)}
+                                            className="mt-1"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                                <Button type="submit" disabled={addForm.processing}>
+                                    Simpan
+                                </Button>
+                                <Button type="button" variant="ghost" onClick={() => setShowAdd(false)}>
+                                    Batal
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Search */}
             <Card className="mb-6">
