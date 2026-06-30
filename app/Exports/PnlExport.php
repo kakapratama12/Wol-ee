@@ -54,6 +54,12 @@ class PnlExport
             $row++;
             $write('  Operasional', (float) $expensesByCategory['operasional'], false, true);
         }
+        if (($expensesByCategory['logistik'] ?? 0) > 0) {
+            $sheet->setCellValue("A{$row}", 'Biaya Logistik/Pengiriman');
+            $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setColor(\PhpOffice\PhpSpreadsheet\Style\Color::getInstance('FF800080'));
+            $row++;
+            $write('  Logistik/Pengiriman', (float) $expensesByCategory['logistik'], false, true);
+        }
         if (($expensesByCategory['overhead'] ?? 0) > 0) {
             $sheet->setCellValue("A{$row}", 'Biaya Overhead');
             $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setColor(\PhpOffice\PhpSpreadsheet\Style\Color::getInstance('FFFF8C00'));

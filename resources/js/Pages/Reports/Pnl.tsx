@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
-import { Download } from 'lucide-react';
+import { Download, ChevronDown, ChevronRight } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -7,23 +8,34 @@ import { Select } from '@/Components/ui/select';
 import { formatRupiah, formatPercent } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
-interface ExpenseRow {
+interface RevenueItem {
+    product: string;
+    revenue: number;
+    quantity: number;
+}
+
+interface CogsItem {
+    product: string;
+    cogs: number;
+    quantity: number;
+}
+
+interface ExpenseItem {
     category: string;
+    description: string;
     amount: number;
 }
 
 interface Report {
     revenue: number;
+    revenue_by_product: RevenueItem[];
     cogs: number;
+    cogs_by_product: CogsItem[];
     gross_profit: number;
     gross_margin: number;
-    expenses: ExpenseRow[];
+    expenses: ExpenseItem[];
     total_expenses: number;
-    expenses_by_category: {
-        bahan_baku: number;
-        operasional: number;
-        overhead: number;
-    };
+    expenses_by_category: Record<string, number>;
     net_profit: number;
     net_margin: number;
 }
@@ -39,12 +51,38 @@ const months = [
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
 ];
 
+const categoryLabels: Record<string, string> = {
+    bahan_baku: 'Bahan Baku',
+    operasional: 'Operasional',
+    logistik: 'Logistik/Pengiriman',
+    overhead: 'Overhead',
+    non_operasional: 'Di Luar Usaha',
+};
+
+const categoryColors: Record<string, string> = {
+    bahan_baku: 'text-blue-700',
+    operasional: 'text-green-700',
+    logistik: 'text-purple-700',
+    overhead: 'text-orange-700',
+    non_operasional: 'text-slate-700',
+};
+
 export default function Pnl({ report, period, periodLabel }: Props) {
     const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
+    const [showRevenue, setShowRevenue] = useState(false);
+    const [showCogs, setShowCogs] = useState(false);
+    const [showExpenses, setShowExpenses] = useState(false);
 
     const changePeriod = (month: number, year: number) => {
         router.get('/pnl', { month, year }, { preserveState: true, preserveScroll: true });
     };
+
+    // Group expenses by category
+    const expensesByCategory = report.expenses.reduce((acc, e) => {
+        if (!acc[e.category]) acc[e.category] = [];
+        acc[e.category].push(e);
+        return acc;
+    }, {} as Record<string, ExpenseItem[]>);
 
     return (
         <AppLayout title="Laporan P&L">
@@ -83,40 +121,66 @@ export default function Pnl({ report, period, periodLabel }: Props) {
                     <CardTitle>Laporan P&L - {periodLabel}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-1 text-sm">
-                    <Line label="Revenue" value={formatRupiah(report.revenue)} />
-                    <Line label="COGS" value={`(${formatRupiah(report.cogs)})`} muted />
+                    {/* Revenue Section */}
+                    <CollapsibleRow
+                        label="Revenue"
+                        value={formatRupiah(report.revenue)}
+                        expanded={showRevenue}
+                        onToggle={() => setShowRevenue(!showRevenue)}
+                        count={report.revenue_by_product.length}
+                    >
+                        {report.revenue_by_product.map((item) => (
+                            <div key={item.product} className="flex items-center justify-between py-0.5 pl-4">
+                                <span className="text-muted-foreground">{item.product}</span>
+                                <span>{formatRupiah(item.revenue)} <span className="text-xs text-muted-foreground">({item.quantity} pcs)</span></span>
+                            </div>
+                        ))}
+                    </CollapsibleRow>
+
+                    {/* COGS Section */}
+                    <CollapsibleRow
+                        label="COGS"
+                        value={`(${formatRupiah(report.cogs)})`}
+                        expanded={showCogs}
+                        onToggle={() => setShowCogs(!showCogs)}
+                        count={report.cogs_by_product.length}
+                        muted
+                    >
+                        {report.cogs_by_product.map((item) => (
+                            <div key={item.product} className="flex items-center justify-between py-0.5 pl-4">
+                                <span className="text-muted-foreground">{item.product}</span>
+                                <span className="text-muted-foreground">({formatRupiah(item.cogs)}) <span className="text-xs">({item.quantity} pcs)</span></span>
+                            </div>
+                        ))}
+                    </CollapsibleRow>
+
                     <Line label="Gross Profit" value={formatRupiah(report.gross_profit)} bold hint={`Margin ${formatPercent(report.gross_margin)}`} />
 
                     <div className="my-3 border-t border-border" />
 
-                    {report.expenses_by_category.bahan_baku > 0 && (
-                        <>
-                            <p className="font-semibold text-blue-700">Bahan Baku</p>
-                            <Line label="  Biaya Bahan Baku" value={`(${formatRupiah(report.expenses_by_category.bahan_baku)})`} muted />
-                        </>
-                    )}
-                    {report.expenses_by_category.operasional > 0 && (
-                        <>
-                            <p className="font-semibold text-green-700">Operasional</p>
-                            <Line label="  Biaya Operasional" value={`(${formatRupiah(report.expenses_by_category.operasional)})`} muted />
-                        </>
-                    )}
-                    {report.expenses_by_category.overhead > 0 && (
-                        <>
-                            <p className="font-semibold text-orange-700">Overhead</p>
-                            <Line label="  Biaya Overhead" value={`(${formatRupiah(report.expenses_by_category.overhead)})`} muted />
-                        </>
-                    )}
-
-                    <p className="mt-2 font-semibold">Detail per Kategori</p>
-                    {report.expenses.length === 0 ? (
-                        <p className="py-1 text-muted-foreground">Belum ada biaya tercatat.</p>
-                    ) : (
-                        report.expenses.map((e) => (
-                            <Line key={e.category} label={`- ${capitalize(e.category)}`} value={`(${formatRupiah(e.amount)})`} muted />
-                        ))
-                    )}
-                    <Line label="Total Expenses" value={`(${formatRupiah(report.total_expenses)})`} bold muted />
+                    {/* Expenses Section */}
+                    <CollapsibleRow
+                        label="Expenses"
+                        value={`(${formatRupiah(report.total_expenses)})`}
+                        expanded={showExpenses}
+                        onToggle={() => setShowExpenses(!showExpenses)}
+                        count={report.expenses.length}
+                        muted
+                    >
+                        {Object.entries(expensesByCategory).map(([category, items]) => (
+                            <div key={category} className="mt-2">
+                                <p className={cn('font-semibold text-xs', categoryColors[category] ?? 'text-slate-700')}>
+                                    {categoryLabels[category] ?? category}
+                                </p>
+                                {items.map((item, idx) => (
+                                    <div key={idx} className="flex items-center justify-between py-0.5 pl-4">
+                                        <span className="text-muted-foreground">{item.description}</span>
+                                        <span className="text-muted-foreground">({formatRupiah(item.amount)})</span>
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+                    </CollapsibleRow>
 
                     <Line
                         label="Laba (Rugi) bersih"
@@ -132,8 +196,40 @@ export default function Pnl({ report, period, periodLabel }: Props) {
     );
 }
 
-function capitalize(s: string) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
+function CollapsibleRow({
+    label,
+    value,
+    expanded,
+    onToggle,
+    count,
+    muted,
+    children,
+}: {
+    label: string;
+    value: string;
+    expanded: boolean;
+    onToggle: () => void;
+    count: number;
+    muted?: boolean;
+    children: React.ReactNode;
+}) {
+    return (
+        <div>
+            <button
+                type="button"
+                onClick={onToggle}
+                className="flex w-full items-center justify-between py-0.5 hover:bg-muted/50 rounded"
+            >
+                <span className={cn(muted ? 'text-muted-foreground' : '', 'flex items-center gap-1')}>
+                    {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                    {label}
+                    <span className="text-xs text-muted-foreground">({count})</span>
+                </span>
+                <span className={cn(muted ? 'text-muted-foreground' : '')}>{value}</span>
+            </button>
+            {expanded && <div className="ml-2 mt-1 space-y-0.5">{children}</div>}
+        </div>
+    );
 }
 
 function Line({
