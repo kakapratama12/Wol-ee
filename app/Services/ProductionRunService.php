@@ -61,23 +61,25 @@ class ProductionRunService
             ];
         })->toArray();
 
-        // Validate: stock sufficient for all items
-        foreach ($items as $item) {
-            $ingredient = Ingredient::find($item['ingredient_id']);
-            $ingredient->refresh();
-            if ((float) $ingredient->current_stock < (float) $item['quantity_used']) {
-                throw new InvalidArgumentException(
-                    "Stok \"{$ingredient->name}\" tidak cukup. " .
-                    "Tersedia: {$ingredient->current_stock} {$ingredient->base_unit}, " .
-                    "diperlukan: {$item['quantity_used']} {$ingredient->base_unit}."
-                );
-            }
-        }
-
         return DB::transaction(function () use (
             $product, $batchCount, $items, $notes, $producedAt
         ) {
             $producedAt = $producedAt ?? Carbon::now();
+
+            // Validate stock INSIDE transaction with lockForUpdate (prevent TOCTOU)
+            foreach ($items as $item) {
+                $locked = Ingredient::where('id', $item['ingredient_id'])->lockForUpdate()->first();
+                if (! $locked) {
+                    throw new InvalidArgumentException("Bahan ID {$item['ingredient_id']} tidak ditemukan.");
+                }
+                if ((float) $locked->current_stock < (float) $item['quantity_used']) {
+                    throw new InvalidArgumentException(
+                        "Stok \"{$locked->name}\" tidak cukup. " .
+                        "Tersedia: {$locked->current_stock} {$locked->base_unit}, " .
+                        "diperlukan: {$item['quantity_used']} {$locked->base_unit}."
+                    );
+                }
+            }
 
             // 1. Create production run (yield_actual = 0, waste_count = 0)
             $totalCost = 0;

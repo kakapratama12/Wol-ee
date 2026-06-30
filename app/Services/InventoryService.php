@@ -96,21 +96,24 @@ class InventoryService
     ): StockMovement {
         $occurredAt = $occurredAt ?? Carbon::now();
 
-        $ingredient->refresh();
-        $ingredient->current_stock = (float) $ingredient->current_stock - $quantity;
-        $ingredient->save();
+        return DB::transaction(function () use ($ingredient, $quantity, $sourceType, $sourceId, $note, $occurredAt, $userId) {
+            // Lock row to prevent race condition (concurrent sales/production)
+            $locked = Ingredient::where('id', $ingredient->id)->lockForUpdate()->first();
+            $locked->current_stock = (float) $locked->current_stock - $quantity;
+            $locked->save();
 
-        return StockMovement::create([
-            'ingredient_id' => $ingredient->id,
-            'user_id' => $userId,
-            'type' => StockMovement::TYPE_USAGE,
-            'quantity' => -1 * $quantity,
-            'stock_after' => $ingredient->current_stock,
-            'source_type' => $sourceType,
-            'source_id' => $sourceId,
-            'note' => $note,
-            'occurred_at' => $occurredAt,
-        ]);
+            return StockMovement::create([
+                'ingredient_id' => $locked->id,
+                'user_id' => $userId,
+                'type' => StockMovement::TYPE_USAGE,
+                'quantity' => -1 * $quantity,
+                'stock_after' => $locked->current_stock,
+                'source_type' => $sourceType,
+                'source_id' => $sourceId,
+                'note' => $note,
+                'occurred_at' => $occurredAt,
+            ]);
+        });
     }
 
     /**
@@ -140,41 +143,44 @@ class InventoryService
      */
     public function reversePurchase(Transaction $transaction, ?int $userId = null): void
     {
-        $ingredient = $transaction->ingredient ?? Ingredient::find($transaction->ingredient_id);
+        DB::transaction(function () use ($transaction, $userId) {
+            $ingredient = $transaction->ingredient ?? Ingredient::find($transaction->ingredient_id);
 
-        if (! $ingredient) {
-            throw new InvalidArgumentException('Bahan pembelian tidak ditemukan.');
-        }
+            if (! $ingredient) {
+                throw new InvalidArgumentException('Bahan pembelian tidak ditemukan.');
+            }
 
-        $ingredient->refresh();
-        $quantity = (float) $transaction->quantity;
+            // Lock row to prevent race condition
+            $locked = Ingredient::where('id', $ingredient->id)->lockForUpdate()->first();
+            $quantity = (float) $transaction->quantity;
 
-        if ((float) $ingredient->current_stock < $quantity) {
-            throw new InvalidArgumentException(
-                'Stok tidak cukup untuk membatalkan pembelian ini. Sebagian bahan sudah terpakai.'
-            );
-        }
+            if ((float) $locked->current_stock < $quantity) {
+                throw new InvalidArgumentException(
+                    'Stok tidak cukup untuk membatalkan pembelian ini. Sebagian bahan sudah terpakai.'
+                );
+            }
 
-        $ingredient->current_stock = (float) $ingredient->current_stock - $quantity;
-        $ingredient->save();
+            $locked->current_stock = (float) $locked->current_stock - $quantity;
+            $locked->save();
 
-        StockMovement::create([
-            'ingredient_id' => $ingredient->id,
-            'user_id' => $userId,
-            'type' => StockMovement::TYPE_REVERSAL,
-            'quantity' => -1 * $quantity,
-            'stock_after' => $ingredient->current_stock,
-            'source_type' => Transaction::class,
-            'source_id' => $transaction->id,
-            'note' => "Reversal pembelian #{$transaction->id}",
-            'occurred_at' => Carbon::now(),
-        ]);
+            StockMovement::create([
+                'ingredient_id' => $locked->id,
+                'user_id' => $userId,
+                'type' => StockMovement::TYPE_REVERSAL,
+                'quantity' => -1 * $quantity,
+                'stock_after' => $locked->current_stock,
+                'source_type' => Transaction::class,
+                'source_id' => $transaction->id,
+                'note' => "Reversal pembelian #{$transaction->id}",
+                'occurred_at' => Carbon::now(),
+            ]);
 
-        StockMovement::query()
-            ->where('source_type', Transaction::class)
-            ->where('source_id', $transaction->id)
-            ->where('type', StockMovement::TYPE_PURCHASE)
-            ->delete();
+            StockMovement::query()
+                ->where('source_type', Transaction::class)
+                ->where('source_id', $transaction->id)
+                ->where('type', StockMovement::TYPE_PURCHASE)
+                ->delete();
+        });
     }
 
     /**
@@ -182,24 +188,27 @@ class InventoryService
      */
     public function reverseSaleUsage(Sale $sale): void
     {
-        $movements = StockMovement::query()
-            ->where('source_type', Sale::class)
-            ->where('source_id', $sale->id)
-            ->get();
+        DB::transaction(function () use ($sale) {
+            $movements = StockMovement::query()
+                ->where('source_type', Sale::class)
+                ->where('source_id', $sale->id)
+                ->get();
 
-        foreach ($movements as $movement) {
-            $ingredient = $movement->ingredient;
+            foreach ($movements as $movement) {
+                $ingredient = $movement->ingredient;
 
-            if (! $ingredient) {
+                if (! $ingredient) {
+                    $movement->delete();
+                    continue;
+                }
+
+                // Lock row to prevent race condition
+                $locked = Ingredient::where('id', $ingredient->id)->lockForUpdate()->first();
+                $locked->current_stock = (float) $locked->current_stock + abs((float) $movement->quantity);
+                $locked->save();
                 $movement->delete();
-                continue;
             }
-
-            $ingredient->refresh();
-            $ingredient->current_stock = (float) $ingredient->current_stock + abs((float) $movement->quantity);
-            $ingredient->save();
-            $movement->delete();
-        }
+        });
     }
 
     /**
@@ -267,15 +276,16 @@ class InventoryService
             ]);
         }
 
-        $finishedGoods->refresh();
-        $oldStock = (float) $finishedGoods->current_stock;
+        // Lock row to prevent race condition on concurrent sales
+        $locked = Ingredient::where('id', $finishedGoods->id)->lockForUpdate()->first();
+        $oldStock = (float) $locked->current_stock;
         $newStock = $oldStock - $quantity;
 
-        $finishedGoods->current_stock = $newStock;
-        $finishedGoods->save();
+        $locked->current_stock = $newStock;
+        $locked->save();
 
         StockMovement::create([
-            'ingredient_id' => $finishedGoods->id,
+            'ingredient_id' => $locked->id,
             'user_id' => $userId,
             'type' => StockMovement::TYPE_USAGE,
             'quantity' => -$quantity,
