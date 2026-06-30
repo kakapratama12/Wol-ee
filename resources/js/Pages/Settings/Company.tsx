@@ -184,7 +184,7 @@ export default function Company({ tenant }: Props) {
                                     className="bg-muted"
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    Nama usaha hanya bisa diubah oleh super admin.
+                                    Hubungi tim support apabila ingin mengganti nama usaha.
                                 </p>
                             </div>
 
