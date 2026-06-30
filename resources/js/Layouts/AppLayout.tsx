@@ -272,7 +272,7 @@ export default function AppLayout({ title, children }: PropsWithChildren<{ title
                 )}
             >
                 <div className="flex h-16 items-center border-b border-border px-6">
-                    <img src="/logo.png" alt="Wol-ee" className="h-8 w-auto" />
+                    <img src="/logo.png" alt="Wol-ee" className="h-10 w-auto" />
                 </div>
                 {renderNav()}
             </aside>
