@@ -51,6 +51,9 @@ class PlatformController extends Controller
         $today = Carbon::now('Asia/Jakarta')->toDateString();
 
         $tenants = Tenant::query()
+            ->with([
+                'users as pengelola_users' => fn ($query) => $query->where('role', User::ROLE_PENGELOLA)->select('id', 'name', 'email'),
+            ])
             ->withCount([
                 'users',
                 'users as pengelola_count' => fn ($query) => $query->where('role', User::ROLE_PENGELOLA),
@@ -73,6 +76,7 @@ class PlatformController extends Controller
                     'status' => $tenant->status,
                     'users_count' => $tenant->users_count,
                     'pengelola_count' => $tenant->pengelola_count,
+                    'pengelola_users' => $tenant->pengelola_users,
                     'staff_count' => $tenant->staff_count,
                     'has_bot_token' => ! empty($tenant->bot_token),
                     'ai_usage_today' => $aiUsageToday,
