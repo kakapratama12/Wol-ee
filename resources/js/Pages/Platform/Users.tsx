@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
-import { Plus, Pencil, Key, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Pencil, Key, Search, Filter } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -37,6 +37,8 @@ export default function Users({ users, tenants, roles }: Props) {
     const [showAdd, setShowAdd] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [resetPasswordUser, setResetPasswordUser] = useState<User | null>(null);
+    const [search, setSearch] = useState('');
+    const [filterTenant, setFilterTenant] = useState<number | ''>('');
 
     const addForm = useForm({
         name: '',
@@ -56,6 +58,16 @@ export default function Users({ users, tenants, roles }: Props) {
         password: '',
         password_confirmation: '',
     });
+
+    const filteredUsers = useMemo(() => {
+        return users.filter((user) => {
+            const matchSearch = search === '' || 
+                user.name.toLowerCase().includes(search.toLowerCase()) ||
+                user.email.toLowerCase().includes(search.toLowerCase());
+            const matchTenant = filterTenant === '' || user.tenant_id === filterTenant;
+            return matchSearch && matchTenant;
+        });
+    }, [users, search, filterTenant]);
 
     const handleAdd = (e: React.FormEvent) => {
         e.preventDefault();
@@ -103,12 +115,46 @@ export default function Users({ users, tenants, roles }: Props) {
         <AppLayout title="User Management">
             <Head title="User Management" />
 
-            <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">{users.length} user terdaftar</p>
+            <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                    {filteredUsers.length} user dari {users.length} total
+                </p>
                 <Button onClick={() => setShowAdd(!showAdd)}>
                     <Plus className="mr-2 h-4 w-4" /> Tambah User
                 </Button>
             </div>
+
+            {/* Filters */}
+            <Card className="mb-6">
+                <CardContent className="p-4">
+                    <div className="flex flex-col gap-4 sm:flex-row">
+                        <div className="flex-1">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                    placeholder="Cari nama atau email..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="pl-9"
+                                />
+                            </div>
+                        </div>
+                        <div className="w-full sm:w-48">
+                            <Select
+                                value={filterTenant}
+                                onChange={(e) => setFilterTenant(e.target.value === '' ? '' : Number(e.target.value))}
+                            >
+                                <option value="">Semua Usaha</option>
+                                {tenants.map((t) => (
+                                    <option key={t.id} value={t.id}>
+                                        {t.name}
+                                    </option>
+                                ))}
+                            </Select>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Add User Form */}
             {showAdd && (
@@ -226,7 +272,7 @@ export default function Users({ users, tenants, roles }: Props) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {users.map((user) => (
+                            {filteredUsers.map((user) => (
                                 <TableRow key={user.id}>
                                     <TableCell className="font-medium">{user.name}</TableCell>
                                     <TableCell className="text-muted-foreground">{user.email}</TableCell>
