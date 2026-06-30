@@ -26,6 +26,7 @@ interface Props {
     expenses: Expense[];
     total: number;
     categories: Record<string, string>;
+    categoryDescriptions: Record<string, string>;
     period: { month: number; year: number };
     periodLabel: string;
 }
@@ -33,6 +34,7 @@ interface Props {
 const categoryColors: Record<string, string> = {
     bahan_baku: 'bg-blue-100 text-blue-800',
     operasional: 'bg-green-100 text-green-800',
+    logistik: 'bg-purple-100 text-purple-800',
     overhead: 'bg-orange-100 text-orange-800',
     non_operasional: 'bg-slate-100 text-slate-800',
 };
@@ -54,7 +56,7 @@ function getPeriodFromDate(dateStr: string): { month: number; year: number } {
     return { month: d.getMonth() + 1, year: d.getFullYear() };
 }
 
-export default function ExpensesIndex({ expenses, total, categories, period, periodLabel }: Props) {
+export default function ExpensesIndex({ expenses, total, categories, categoryDescriptions, period, periodLabel }: Props) {
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     const defaultDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
@@ -162,6 +164,9 @@ export default function ExpensesIndex({ expenses, total, categories, period, per
                                         </option>
                                     ))}
                                 </Select>
+                                {form.data.category && categoryDescriptions[form.data.category] && (
+                                    <p className="mt-1 text-xs text-muted-foreground">{categoryDescriptions[form.data.category]}</p>
+                                )}
                             </div>
                             <div>
                                 <Label htmlFor="description">Deskripsi (opsional)</Label>
@@ -251,6 +256,9 @@ export default function ExpensesIndex({ expenses, total, categories, period, per
                                 </option>
                             ))}
                         </Select>
+                        {editForm.data.category && categoryDescriptions[editForm.data.category] && (
+                            <p className="mt-1 text-xs text-muted-foreground">{categoryDescriptions[editForm.data.category]}</p>
+                        )}
                     </div>
                     <div>
                         <Label>Deskripsi</Label>

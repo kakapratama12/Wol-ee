@@ -38,6 +38,7 @@ class ExpenseController extends Controller
             'expenses' => $expenses,
             'total' => round((float) $expenses->sum('amount'), 2),
             'categories' => Expense::CATEGORIES,
+            'categoryDescriptions' => Expense::CATEGORY_DESCRIPTIONS,
             'period' => ['month' => $month, 'year' => $year],
             'periodLabel' => Carbon::create($year, $month)->translatedFormat('F Y'),
         ]);
