@@ -32,7 +32,23 @@ class InvoiceService
     }
 
     /**
-     * @param  array{partner_id: int, amount?: float|int|string, due_date: string, note?: ?string, items?: array}  $data
+     * Calculate total amount including fees.
+     */
+    public function calculateTotal(float $subtotal, array $fees): float
+    {
+        $totalFees = 0;
+        foreach ($fees as $fee) {
+            if (($fee['type'] ?? 'fixed') === 'percentage') {
+                $totalFees += round($subtotal * (float) $fee['value'] / 100, 2);
+            } else {
+                $totalFees += (float) $fee['value'];
+            }
+        }
+        return round($subtotal + $totalFees, 2);
+    }
+
+    /**
+     * @param  array{partner_id: int, due_date: string, note?: ?string, items?: array, fees?: array}  $data
      */
     public function create(array $data): Invoice
     {
@@ -44,13 +60,17 @@ class InvoiceService
 
         $tenantId = $partner->tenant_id;
         $items = $data['items'] ?? [];
+        $fees = $data['fees'] ?? [];
 
-        // Calculate amount from line items if provided, otherwise use manual amount
-        $amount = count($items) > 0
+        // Calculate subtotal from line items
+        $subtotal = count($items) > 0
             ? round(array_sum(array_map(fn ($item) => (float) $item['quantity'] * (float) $item['unit_price'], $items)), 2)
-            : round((float) ($data['amount'] ?? 0), 2);
+            : 0;
 
-        return DB::transaction(function () use ($data, $amount, $tenantId, $partner, $items) {
+        // Calculate total with fees
+        $amount = $this->calculateTotal($subtotal, $fees);
+
+        return DB::transaction(function () use ($data, $amount, $tenantId, $partner, $items, $fees) {
             $attempts = 0;
 
             while ($attempts < 3) {
@@ -74,6 +94,22 @@ class InvoiceService
                             'quantity' => $item['quantity'],
                             'unit_price' => $item['unit_price'],
                             'total' => $itemTotal,
+                        ]);
+                    }
+
+                    // Create fees if provided
+                    foreach ($fees as $fee) {
+                        $feeType = $fee['type'] ?? 'fixed';
+                        $feeValue = (float) $fee['value'];
+                        $feeAmount = $feeType === 'percentage'
+                            ? round($subtotal * $feeValue / 100, 2)
+                            : $feeValue;
+
+                        $invoice->fees()->create([
+                            'name' => $fee['name'],
+                            'type' => $feeType,
+                            'value' => $feeValue,
+                            'amount' => $feeAmount,
                         ]);
                     }
 
@@ -135,13 +171,14 @@ class InvoiceService
     }
 
     /**
-     * Update invoice line items and recalculate amount.
+     * Update invoice line items and fees, recalculate amount.
      */
-    public function updateItems(Invoice $invoice, array $items): Invoice
+    public function updateItems(Invoice $invoice, array $items, array $fees = []): Invoice
     {
-        return DB::transaction(function () use ($invoice, $items) {
-            // Delete existing items
+        return DB::transaction(function () use ($invoice, $items, $fees) {
+            // Delete existing items and fees
             $invoice->items()->delete();
+            $invoice->fees()->delete();
 
             // Create new items
             foreach ($items as $item) {
@@ -154,11 +191,30 @@ class InvoiceService
                 ]);
             }
 
-            // Recalculate amount
-            $newAmount = $invoice->items()->sum('total');
+            // Calculate subtotal
+            $subtotal = $invoice->items()->sum('total');
+
+            // Create new fees
+            foreach ($fees as $fee) {
+                $feeType = $fee['type'] ?? 'fixed';
+                $feeValue = (float) $fee['value'];
+                $feeAmount = $feeType === 'percentage'
+                    ? round($subtotal * $feeValue / 100, 2)
+                    : $feeValue;
+
+                $invoice->fees()->create([
+                    'name' => $fee['name'],
+                    'type' => $feeType,
+                    'value' => $feeValue,
+                    'amount' => $feeAmount,
+                ]);
+            }
+
+            // Recalculate total amount
+            $newAmount = $this->calculateTotal((float) $subtotal, $fees);
             $invoice->update(['amount' => $newAmount]);
 
-            return $invoice->fresh(['items', 'partner']);
+            return $invoice->fresh(['items', 'fees', 'partner']);
         });
     }
 

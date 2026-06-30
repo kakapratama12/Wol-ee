@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { FileText, Plus, Trash2 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
@@ -37,6 +37,12 @@ interface Props {
     filters: { status: string };
 }
 
+interface FeeRow {
+    name: string;
+    type: 'fixed' | 'percentage';
+    value: string;
+}
+
 export default function InvoicesIndex({ invoices, customers: initialCustomers, filters }: Props) {
     const { props } = usePage<PageProps>();
     const isOwner = props.auth.user.role === 'owner';
@@ -49,12 +55,14 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
         due_date: string;
         note: string;
         items: { description: string; quantity: string; unit_price: string }[];
+        fees: FeeRow[];
     }>({
         partner_id: '',
         amount: '',
         due_date: '',
         note: '',
         items: [],
+        fees: [],
     });
 
     const [useItems, setUseItems] = useState(false);
@@ -69,9 +77,29 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
         form.setData('items', form.data.items.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)));
     };
 
+    const addFee = () => {
+        form.setData('fees', [...form.data.fees, { name: '', type: 'fixed', value: '' }]);
+    };
+    const removeFee = (i: number) => {
+        form.setData('fees', form.data.fees.filter((_, idx) => idx !== i));
+    };
+    const updateFee = (i: number, key: keyof FeeRow, value: string) => {
+        form.setData('fees', form.data.fees.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)));
+    };
+
     const subtotal = form.data.items.reduce((sum, row) => {
         return sum + (parseFloat(row.quantity) || 0) * (parseFloat(row.unit_price) || 0);
     }, 0);
+
+    const totalFees = form.data.fees.reduce((sum, fee) => {
+        const val = parseFloat(fee.value) || 0;
+        if (fee.type === 'percentage') {
+            return sum + (subtotal * val / 100);
+        }
+        return sum + val;
+    }, 0);
+
+    const total = subtotal + totalFees;
 
     const setFilter = (status: string) => {
         router.get('/invoices', status ? { status } : {}, { preserveState: true });
@@ -180,7 +208,7 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                                     headers: {
                                         'Content-Type': 'application/json',
                                         'X-Requested-With': 'XMLHttpRequest',
-                                        'X-XSRF-TOKEN': decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? ''),
+                                        'X-XSRF-TOKEN': decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || ''),
                                     },
                                     body: JSON.stringify({ name, type: 'customer' }),
                                 });
@@ -277,6 +305,76 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                             )}
                         </div>
                     )}
+
+                    {/* Extra Charges / Fees */}
+                    {useItems && (
+                        <div className="space-y-3 border-t pt-4">
+                            <div className="flex items-center justify-between">
+                                <Label>Biaya Tambahan</Label>
+                                <Button type="button" variant="outline" size="sm" onClick={addFee}>
+                                    <Plus className="mr-1 h-4 w-4" />
+                                    Tambah Biaya
+                                </Button>
+                            </div>
+                            {form.data.fees.length > 0 && (
+                                <div className="space-y-2">
+                                    {form.data.fees.map((fee, i) => (
+                                        <div key={i} className="flex items-end gap-2">
+                                            <div className="flex-1">
+                                                <Label className="text-xs">Nama</Label>
+                                                <Input
+                                                    value={fee.name}
+                                                    onChange={(e) => updateFee(i, 'name', e.target.value)}
+                                                    placeholder="Delivery Fee, PPN, dll"
+                                                />
+                                            </div>
+                                            <div className="w-32">
+                                                <Label className="text-xs">Tipe</Label>
+                                                <Select
+                                                    value={fee.type}
+                                                    onChange={(e) => updateFee(i, 'type', e.target.value as 'fixed' | 'percentage')}
+                                                >
+                                                    <option value="fixed">Nominal (Rp)</option>
+                                                    <option value="percentage">Persen (%)</option>
+                                                </Select>
+                                            </div>
+                                            <div className="w-36">
+                                                <Label className="text-xs">{fee.type === 'percentage' ? 'Persen' : 'Nominal'}</Label>
+                                                <CurrencyInput
+                                                    value={fee.value}
+                                                    onChange={(v) => updateFee(i, 'value', v)}
+                                                />
+                                            </div>
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeFee(i)}>
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Total */}
+                    {useItems && subtotal > 0 && (
+                        <div className="space-y-2 border-t pt-4">
+                            <div className="flex justify-end text-sm">
+                                <span className="text-muted-foreground">Subtotal:</span>
+                                <span className="ml-4 font-medium">{formatRupiah(subtotal)}</span>
+                            </div>
+                            {totalFees > 0 && (
+                                <div className="flex justify-end text-sm">
+                                    <span className="text-muted-foreground">Biaya Tambahan:</span>
+                                    <span className="ml-4 font-medium">{formatRupiah(totalFees)}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-end text-base font-bold">
+                                <span>Total:</span>
+                                <span className="ml-4">{formatRupiah(total)}</span>
+                            </div>
+                        </div>
+                    )}
+
                     <div>
                         <Label htmlFor="due_date">Jatuh Tempo</Label>
                         <Input id="due_date" type="date" value={form.data.due_date} onChange={(e) => form.setData('due_date', e.target.value)} />

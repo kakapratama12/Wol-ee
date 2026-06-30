@@ -13,9 +13,7 @@ class Invoice extends Model
     use BelongsToTenant, HasFactory;
 
     public const STATUS_OUTSTANDING = 'outstanding';
-
     public const STATUS_PARTIAL = 'partial';
-
     public const STATUS_PAID = 'paid';
 
     protected $fillable = [
@@ -45,5 +43,10 @@ class Invoice extends Model
     public function items(): HasMany
     {
         return $this->hasMany(InvoiceItem::class);
+    }
+
+    public function fees(): HasMany
+    {
+        return $this->hasMany(InvoiceFee::class);
     }
 }
