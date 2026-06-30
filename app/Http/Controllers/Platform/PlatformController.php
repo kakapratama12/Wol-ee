@@ -296,4 +296,81 @@ class PlatformController extends Controller
             'byProvider' => $byProvider,
         ]);
     }
+
+    public function users(): Response
+    {
+         = User::query()
+            ->with('tenant:id,name')
+            ->where('role', '!=', User::ROLE_SUPER_ADMIN)
+            ->orderBy('name')
+            ->get()
+            ->map(fn (User $user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'tenant_id' => $user->tenant_id,
+                'tenant' => $user->tenant?->name,
+                'email_verified' => ! is_null($user->email_verified_at),
+                'created_at' => $user->created_at?->toIso8601String(),
+            ]);
+
+        return Inertia::render('Platform/Users', [
+            'users' => $users,
+            'tenants' => Tenant::query()->orderBy('name')->get(['id', 'name']),
+            'roles' => [
+                User::ROLE_OWNER => 'Owner',
+                User::ROLE_ADMIN => 'Admin',
+            ],
+        ]);
+    }
+
+    public function storeUser(Request ): RedirectResponse
+    {
+         = ->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'role' => ['required', 'in:owner,admin'],
+            'tenant_id' => ['required', 'exists:tenants,id'],
+        ]);
+
+        User::create([
+            'name' => ['name'],
+            'email' => ['email'],
+            'password' => ['password'],
+            'role' => ['role'],
+            'tenant_id' => ['tenant_id'],
+        ]);
+
+        return back()->with('success', 'User berhasil dibuat.');
+    }
+
+    public function updateUser(Request , User ): RedirectResponse
+    {
+         = ->validate([
+            'role' => ['required', 'in:owner,admin'],
+            'tenant_id' => ['required', 'exists:tenants,id'],
+        ]);
+
+        ->update([
+            'role' => ['role'],
+            'tenant_id' => ['tenant_id'],
+        ]);
+
+        return back()->with('success', 'User berhasil diperbarui.');
+    }
+
+    public function resetPassword(Request , User ): RedirectResponse
+    {
+         = ->validate([
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        ->update([
+            'password' => ['password'],
+        ]);
+
+        return back()->with('success', 'Password berhasil direset.');
+    }
 }

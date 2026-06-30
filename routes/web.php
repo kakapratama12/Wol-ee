@@ -126,6 +126,10 @@ Route::middleware(['auth', 'verified', 'super_admin'])
         Route::put('/feedback/{feedback}', [PlatformController::class, 'updateFeedback'])->name('feedback.update');
         Route::get('/ai-usage', [PlatformController::class, 'aiUsage'])->name('ai-usage');
         Route::get('/bot-skills', [PlatformController::class, 'botSkills'])->name('bot-skills');
+        Route::get("/users", [PlatformController::class, "users"])->name("users");
+        Route::post("/users", [PlatformController::class, "storeUser"])->name("users.store");
+        Route::put("/users/{user}", [PlatformController::class, "updateUser"])->name("users.update");
+        Route::put("/users/{user}/password", [PlatformController::class, "resetPassword"])->name("users.password");
     });
 
 Route::middleware('auth')->group(function () {
