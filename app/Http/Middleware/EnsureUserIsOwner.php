@@ -10,8 +10,8 @@ class EnsureUserIsOwner
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user() || ! $request->user()->isOwner()) {
-            abort(403, 'Hanya Owner yang dapat mengakses halaman ini.');
+        if (! $request->user() || ! $request->user()->isPengelola()) {
+            abort(403, 'Hanya Pengelola yang dapat mengakses halaman ini.');
         }
 
         return $next($request);

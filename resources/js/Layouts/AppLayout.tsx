@@ -21,14 +21,14 @@ interface NavSingle {
     label: string;
     href: string;
     icon: ReactNode;
-    ownerOnly?: boolean;
+    pengelolaOnly?: boolean;
     superAdminOnly?: boolean;
 }
 
 interface NavLink {
     label: string;
     href: string;
-    ownerOnly?: boolean;
+    pengelolaOnly?: boolean;
     superAdminOnly?: boolean;
     hideIfNoInvoices?: boolean;
 }
@@ -36,7 +36,7 @@ interface NavLink {
 interface NavGroup {
     label: string;
     icon: ReactNode;
-    ownerOnly?: boolean;
+    pengelolaOnly?: boolean;
     superAdminOnly?: boolean;
     children: NavLink[];
 }
@@ -49,7 +49,7 @@ const navigation: (NavSingle | NavGroup)[] = [
         children: [
             { label: 'Pembelian', href: '/transactions' },
             { label: 'Penjualan', href: '/sales' },
-            { label: 'Biaya', href: '/expenses', ownerOnly: true },
+            { label: 'Biaya', href: '/expenses', pengelolaOnly: true },
         ],
     },
     {
@@ -58,13 +58,13 @@ const navigation: (NavSingle | NavGroup)[] = [
         children: [
             { label: 'Stok Bahan Dasar', href: '/inventory?type=raw_material' },
             { label: 'Stok Prep', href: '/prep-stocks' },
-            { label: 'Stok Produk Jadi', href: '/finished-goods', ownerOnly: true },
+            { label: 'Stok Produk Jadi', href: '/finished-goods', pengelolaOnly: true },
         ],
     },
     {
         label: 'Produk',
         icon: <Utensils className="h-4 w-4" />,
-        ownerOnly: true,
+        pengelolaOnly: true,
         children: [
             { label: 'Produk & Resep', href: '/products' },
             { label: 'Produksi', href: '/production-runs' },
@@ -73,7 +73,7 @@ const navigation: (NavSingle | NavGroup)[] = [
     {
         label: 'Laporan',
         icon: <FileSpreadsheet className="h-4 w-4" />,
-        ownerOnly: true,
+        pengelolaOnly: true,
         children: [
             { label: 'Laporan P&L', href: '/pnl' },
             { label: 'Laporan Cashflow', href: '/reports/cashflow' },
@@ -93,7 +93,7 @@ const navigation: (NavSingle | NavGroup)[] = [
     {
         label: 'Settings',
         icon: <Settings className="h-4 w-4" />,
-        ownerOnly: true,
+        pengelolaOnly: true,
         children: [
             { label: 'Bot Integration', href: '/settings/bot' },
             { label: 'Perusahaan', href: '/settings/company' },
@@ -105,7 +105,7 @@ const navigation: (NavSingle | NavGroup)[] = [
         superAdminOnly: true,
         children: [
             { label: 'Overview', href: '/platform' },
-            { label: 'Tenants', href: '/platform/tenants' },
+            { label: 'Usaha', href: '/platform/tenants' },
             { label: 'Feedback', href: '/platform/feedback' },
             { label: 'AI Usage', href: '/platform/ai-usage' },
             { label: 'Bot Skills', href: '/platform/bot-skills' },
@@ -129,7 +129,7 @@ function groupHasActiveChild(url: string, children: NavLink[]): boolean {
 export default function AppLayout({ title, children }: PropsWithChildren<{ title?: string }>) {
     const { props, url } = usePage<PageProps>();
     const user = props.auth.user;
-    const isOwner = user.role === 'owner';
+    const isPengelola = user.role === 'pengelola';
     const isSuperAdmin = user.role === 'super_admin';
     const hasInvoices = props.hasInvoices ?? false;
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -152,18 +152,18 @@ export default function AppLayout({ title, children }: PropsWithChildren<{ title
         return navigation
             .map((item) => {
                 if (!isNavGroup(item)) {
-                    if ('ownerOnly' in item && item.ownerOnly && !isOwner) return null;
+                    if ('pengelolaOnly' in item && item.pengelolaOnly && !isPengelola) return null;
                     if ('superAdminOnly' in item && item.superAdminOnly && !isSuperAdmin) return null;
                     if (isSuperAdmin && !item.superAdminOnly) return null;
                     return item;
                 }
 
-                if (item.ownerOnly && !isOwner) return null;
+                if (item.pengelolaOnly && !isPengelola) return null;
                 if (item.superAdminOnly && !isSuperAdmin) return null;
                 if (isSuperAdmin && !item.superAdminOnly) return null;
 
                 const children = item.children.filter((child) => {
-                    if (child.ownerOnly && !isOwner) return false;
+                    if (child.pengelolaOnly && !isPengelola) return false;
                     if (child.superAdminOnly && !isSuperAdmin) return false;
                     if (child.hideIfNoInvoices && !hasInvoices) return false;
                     return true;
@@ -174,7 +174,7 @@ export default function AppLayout({ title, children }: PropsWithChildren<{ title
                 return { ...item, children };
             })
             .filter(Boolean) as (NavSingle | NavGroup)[];
-    }, [isOwner, isSuperAdmin, hasInvoices]);
+    }, [isPengelola, isSuperAdmin, hasInvoices]);
 
     useEffect(() => {
         const initial: Record<string, boolean> = {};

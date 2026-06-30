@@ -39,7 +39,7 @@ interface Props {
 
 export default function InvoicesIndex({ invoices, customers: initialCustomers, filters }: Props) {
     const { props } = usePage<PageProps>();
-    const isOwner = props.auth.user.role === 'owner';
+    const isOwner = props.auth.user.role === 'pengelola';
     const [formOpen, setFormOpen] = useState(false);
     const [customers, setCustomers] = useState(initialCustomers);
 

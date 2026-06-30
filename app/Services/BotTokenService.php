@@ -47,7 +47,7 @@ class BotTokenService
     public function resolveOwner(Tenant $tenant): ?User
     {
         return $tenant->users()
-            ->where('role', User::ROLE_OWNER)
+            ->where('role', User::ROLE_PENGELOLA)
             ->first();
     }
 }

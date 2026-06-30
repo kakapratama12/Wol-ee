@@ -51,7 +51,7 @@ class IngredientController extends Controller
             'itemType' => $itemType,
             'counts' => $counts,
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
-            'canManage' => $this->isOwner(),
+            'canManage' => $this->isPengelola(),
         ]);
     }
 
@@ -134,8 +134,8 @@ class IngredientController extends Controller
         return back()->with('success', 'Bahan dihapus.');
     }
 
-    private function isOwner(): bool
+    private function isPengelola(): bool
     {
-        return (bool) request()->user()?->isOwner();
+        return (bool) request()->user()?->isPengelola();
     }
 }

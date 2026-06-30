@@ -44,7 +44,7 @@ class PrepStockController extends Controller
 
         return Inertia::render('PrepStock/Index', [
             'prepItems' => $prepItems,
-            'canManage' => $this->isOwner(),
+            'canManage' => $this->isPengelola(),
         ]);
     }
 
@@ -65,8 +65,8 @@ class PrepStockController extends Controller
         return back()->with('success', 'Stok prep disesuaikan.');
     }
 
-    private function isOwner(): bool
+    private function isPengelola(): bool
     {
-        return (bool) request()->user()?->isOwner();
+        return (bool) request()->user()?->isPengelola();
     }
 }

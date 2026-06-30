@@ -19,7 +19,7 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
-    public const ROLE_OWNER = 'owner';
+    public const ROLE_PENGELOLA = 'pengelola';
     public const ROLE_ADMIN = 'admin';
     public const ROLE_SUPER_ADMIN = 'super_admin';
 
@@ -34,9 +34,9 @@ class User extends Authenticatable
         ];
     }
 
-    public function isOwner(): bool
+    public function isPengelola(): bool
     {
-        return $this->role === self::ROLE_OWNER;
+        return $this->role === self::ROLE_PENGELOLA;
     }
 
     public function isAdmin(): bool

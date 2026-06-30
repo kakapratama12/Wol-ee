@@ -32,7 +32,7 @@ interface Props {
 
 export default function PartnersIndex({ partners, filters }: Props) {
     const { props } = usePage<PageProps>();
-    const isOwner = props.auth.user.role === 'owner';
+    const isOwner = props.auth.user.role === 'pengelola';
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState<Partner | null>(null);
     const [search, setSearch] = useState(filters.q ?? '');

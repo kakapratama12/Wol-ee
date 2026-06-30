@@ -11,7 +11,7 @@ interface TenantRow {
     plan: string;
     status: string;
     users_count: number;
-    owner_count: number;
+    pengelola_count: number;
     admin_count: number;
     has_bot_token: boolean;
     ai_usage_today: number;
@@ -21,18 +21,18 @@ interface TenantRow {
 
 export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
     return (
-        <AppLayout title="Tenants">
-            <Head title="Platform Tenants" />
+        <AppLayout title="Usaha">
+            <Head title="Platform Usaha" />
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Tenant Overview</CardTitle>
+                    <CardTitle>Daftar Usaha</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Tenant</TableHead>
+                                <TableHead>Usaha</TableHead>
                                 <TableHead>Plan</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead>Users</TableHead>
@@ -53,7 +53,7 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                     <TableCell className="uppercase text-xs text-muted-foreground">{tenant.status}</TableCell>
                                     <TableCell>
                                         {formatNumber(tenant.users_count)}
-                                        <span className="ml-1 text-xs text-muted-foreground">({tenant.owner_count} owner, {tenant.admin_count} admin)</span>
+                                        <span className="ml-1 text-xs text-muted-foreground">({tenant.pengelola_count} pengelola, {tenant.admin_count} admin)</span>
                                     </TableCell>
                                     <TableCell>{tenant.has_bot_token ? 'Aktif' : '-'}</TableCell>
                                     <TableCell>{formatNumber(tenant.ai_usage_today)}</TableCell>

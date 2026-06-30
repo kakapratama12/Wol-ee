@@ -53,7 +53,7 @@ class PlatformController extends Controller
         $tenants = Tenant::query()
             ->withCount([
                 'users',
-                'users as owner_count' => fn ($query) => $query->where('role', User::ROLE_OWNER),
+                'users as pengelola_count' => fn ($query) => $query->where('role', User::ROLE_PENGELOLA),
                 'users as admin_count' => fn ($query) => $query->where('role', User::ROLE_ADMIN),
                 'feedback as feedback_count',
             ])
@@ -72,7 +72,7 @@ class PlatformController extends Controller
                     'plan' => $tenant->plan,
                     'status' => $tenant->status,
                     'users_count' => $tenant->users_count,
-                    'owner_count' => $tenant->owner_count,
+                    'pengelola_count' => $tenant->pengelola_count,
                     'admin_count' => $tenant->admin_count,
                     'has_bot_token' => ! empty($tenant->bot_token),
                     'ai_usage_today' => $aiUsageToday,
@@ -319,7 +319,7 @@ class PlatformController extends Controller
             'users' => $users,
             'tenants' => Tenant::query()->orderBy('name')->get(['id', 'name']),
             'roles' => [
-                User::ROLE_OWNER => 'Owner',
+                User::ROLE_PENGELOLA => 'Pengelola',
                 User::ROLE_ADMIN => 'Admin',
             ],
         ]);
@@ -331,7 +331,7 @@ class PlatformController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'in:owner,admin'],
+            'role' => ['required', 'in:pengelola,admin'],
             'tenant_id' => ['required', 'exists:tenants,id'],
         ]);
 
@@ -349,7 +349,7 @@ class PlatformController extends Controller
     public function updateUser(Request $request, User $user): RedirectResponse
     {
         $data = $request->validate([
-            'role' => ['required', 'in:owner,admin'],
+            'role' => ['required', 'in:pengelola,admin'],
             'tenant_id' => ['required', 'exists:tenants,id'],
         ]);
 

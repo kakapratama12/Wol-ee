@@ -52,7 +52,7 @@ const agingLabels: Record<string, string> = {
 
 export default function PartnersShow({ partner, outstandingInvoices, aging, totalOutstanding }: Props) {
     const { props } = usePage<PageProps>();
-    const isOwner = props.auth.user.role === 'owner';
+    const isOwner = props.auth.user.role === 'pengelola';
 
     const remove = () => {
         if (confirm(`Hapus partner "${partner.name}"?`)) {

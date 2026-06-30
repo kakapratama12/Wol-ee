@@ -43,7 +43,7 @@ export default function Users({ users, tenants, roles }: Props) {
         email: '',
         password: '',
         password_confirmation: '',
-        role: 'owner',
+        role: 'pengelola',
         tenant_id: tenants[0]?.id ?? '',
     });
 
@@ -183,7 +183,7 @@ export default function Users({ users, tenants, roles }: Props) {
                                     </Select>
                                 </div>
                                 <div>
-                                    <Label htmlFor="add-tenant">Tenant</Label>
+                                    <Label htmlFor="add-tenant">Usaha</Label>
                                     <Select
                                         id="add-tenant"
                                         value={addForm.data.tenant_id}
@@ -220,7 +220,7 @@ export default function Users({ users, tenants, roles }: Props) {
                                 <TableHead>Nama</TableHead>
                                 <TableHead>Email</TableHead>
                                 <TableHead>Role</TableHead>
-                                <TableHead>Tenant</TableHead>
+                                <TableHead>Usaha</TableHead>
                                 <TableHead>Verified</TableHead>
                                 <TableHead className="w-24">Aksi</TableHead>
                             </TableRow>
@@ -234,7 +234,7 @@ export default function Users({ users, tenants, roles }: Props) {
                                         <span
                                             className={cn(
                                                 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                                                user.role === 'owner'
+                                                user.role === 'pengelola'
                                                     ? 'bg-primary/10 text-primary'
                                                     : 'bg-muted text-muted-foreground',
                                             )}
@@ -301,7 +301,7 @@ export default function Users({ users, tenants, roles }: Props) {
                                     </Select>
                                 </div>
                                 <div>
-                                    <Label>Tenant</Label>
+                                    <Label>Usaha</Label>
                                     <Select
                                         value={editForm.data.tenant_id}
                                         onChange={(e) => editForm.setData('tenant_id', Number(e.target.value))}

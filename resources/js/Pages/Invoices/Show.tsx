@@ -57,7 +57,7 @@ export default function InvoicesShow({ invoice, payments }: Props) {
     const fees = invoice.fees ?? [];
     const [previewOpen, setPreviewOpen] = useState(false);
     const { props } = usePage<PageProps>();
-    const isOwner = props.auth.user.role === 'owner';
+    const isOwner = props.auth.user.role === 'pengelola';
     const canPay = isOwner && invoice.status !== 'paid';
 
     const form = useForm({

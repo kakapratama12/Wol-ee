@@ -45,7 +45,7 @@ class DatabaseSeeder extends Seeder
     {
         User::updateOrCreate(
             ['email' => 'owner@wol-ee.local', 'tenant_id' => $tenant->id],
-            ['name' => 'Owner Wol-ee', 'password' => Hash::make('password'), 'role' => User::ROLE_OWNER],
+            ['name' => 'Pengelola Wol-ee', 'password' => Hash::make('password'), 'role' => User::ROLE_PENGELOLA],
         );
 
         User::updateOrCreate(
