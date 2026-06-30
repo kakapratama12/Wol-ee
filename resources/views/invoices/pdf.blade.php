@@ -37,9 +37,11 @@
         .item-desc { font-weight: 500; }
         
         /* Summary */
-        .summary { display: flex; justify-content: flex-end; margin-top: 16px; }
-        .summary-box { width: 260px; }
-        .summary-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; color: #6b7280; }
+        .summary { margin-top: 16px; text-align: right; }
+        .summary-box { display: inline-block; width: 260px; text-align: left; }
+        .summary-row { display: block; overflow: hidden; padding: 5px 0; font-size: 13px; color: #6b7280; }
+        .summary-row .label { float: left; }
+        .summary-row .value { float: right; }
         .summary-row.fee { padding-left: 12px; font-size: 12px; }
         .summary-row.total { font-size: 15px; font-weight: 500; color: #111; border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 4px; }
         
@@ -145,20 +147,20 @@
     <div class="summary">
         <div class="summary-box">
             <div class="summary-row">
-                <span>Subtotal</span>
-                <span>Rp {{ number_format($subtotal ?? $invoice->amount, 0, ',', '.') }}</span>
+                <span class="label">Subtotal</span>
+                <span class="value">Rp {{ number_format($subtotal ?? $invoice->amount, 0, ',', '.') }}</span>
             </div>
             @if($invoice->fees->count() > 0)
                 @foreach($invoice->fees as $fee)
                 <div class="summary-row fee">
-                    <span>{{ $fee->name }}{{ $fee->type === 'percentage' ? ' (' . $fee->value . '%)' : '' }}</span>
-                    <span>Rp {{ number_format($fee->amount, 0, ',', '.') }}</span>
+                    <span class="label">{{ $fee->name }}{{ $fee->type === 'percentage' ? ' (' . $fee->value . '%)' : '' }}</span>
+                    <span class="value">Rp {{ number_format($fee->amount, 0, ',', '.') }}</span>
                 </div>
                 @endforeach
             @endif
             <div class="summary-row total">
-                <span>Total</span>
-                <span>Rp {{ number_format($invoice->amount, 0, ',', '.') }}</span>
+                <span class="label">Total</span>
+                <span class="value">Rp {{ number_format($invoice->amount, 0, ',', '.') }}</span>
             </div>
         </div>
     </div>
