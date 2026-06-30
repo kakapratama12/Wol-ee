@@ -15,7 +15,7 @@ import {
     Utensils,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ThemeProvider } from '@/Components/ThemeProvider';
+import { ThemeProvider, useTheme } from '@/Components/ThemeProvider';
 import ThemeToggle from '@/Components/ThemeToggle';
 import type { PageProps } from '@/types';
 
@@ -129,6 +129,7 @@ function groupHasActiveChild(url: string, children: NavLink[]): boolean {
 }
 
 function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string }>) {
+    const { theme } = useTheme();
     const { props, url } = usePage<PageProps>();
     const user = props.auth.user;
     const isPengelola = user.role === 'pengelola';
@@ -275,7 +276,7 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
                 )}
             >
                 <div className="flex h-16 items-center border-b border-border px-6">
-                    <img src="/logo.png" alt="Wol-ee" className="h-10 w-auto" />
+                    <img src={theme === "dark" ? "/logo-white.png" : "/logo.png"} alt="Wol-ee" className="h-10 w-auto" />
                 </div>
                 {renderNav()}
             </aside>

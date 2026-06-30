@@ -4,6 +4,7 @@ import { ThemeProvider, useTheme } from '@/Components/ThemeProvider';
 import ThemeToggle from '@/Components/ThemeToggle';
 
 function GuestInner({ children }: PropsWithChildren) {
+    const { theme } = useTheme();
     return (
         <div className="flex min-h-screen flex-col items-center bg-muted/30 pt-6 sm:justify-center sm:pt-0">
             <div className="fixed top-4 right-4">
@@ -11,7 +12,7 @@ function GuestInner({ children }: PropsWithChildren) {
             </div>
             <div>
                 <Link href="/">
-                    <img src="/logo.png" alt="Wol-ee" className="h-16 w-auto" />
+                    <img src={theme === "dark" ? "/logo-white.png" : "/logo.png"} alt="Wol-ee" className="h-16 w-auto" />
                 </Link>
             </div>
 
