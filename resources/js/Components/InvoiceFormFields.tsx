@@ -2,7 +2,6 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { CurrencyInput } from '@/Components/ui/currency-input';
 import { Input } from '@/Components/ui/input';
-import { Label } from '@/Components/ui/label';
 import { Select } from '@/Components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { formatRupiah } from '@/lib/format';
@@ -57,12 +56,12 @@ export default function InvoiceFormFields({
     return (
         <div className="space-y-4">
             {/* Items */}
-            <div className="space-y-3">
+            <div className="space-y-2">
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-1/3">Deskripsi</TableHead>
-                            <TableHead className="w-20">Qty</TableHead>
+                            <TableHead className="flex-1">Deskripsi</TableHead>
+                            <TableHead className="w-28">Qty</TableHead>
                             <TableHead className="w-36">Harga Satuan</TableHead>
                             <TableHead className="w-10"></TableHead>
                         </TableRow>
@@ -117,26 +116,27 @@ export default function InvoiceFormFields({
             </div>
 
             {/* Fees */}
-            <div className="space-y-3 border-t pt-4">
-                <Label>Biaya Tambahan</Label>
-                {fees.length > 0 && (
-                    <div className="space-y-2">
-                        <div className="flex items-end gap-3 text-xs text-muted-foreground px-1">
-                            <div className="flex-1">Nama</div>
-                            <div className="w-28">Tipe</div>
-                            <div className="w-28">Nilai</div>
-                            <div className="w-10"></div>
-                        </div>
+            <div className="space-y-2 border-t pt-4">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="flex-1">Nama</TableHead>
+                            <TableHead className="w-28">Tipe</TableHead>
+                            <TableHead className="w-36">Nilai</TableHead>
+                            <TableHead className="w-10"></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
                         {fees.map((fee, i) => (
-                            <div key={i} className="flex items-end gap-3">
-                                <div className="flex-1">
+                            <TableRow key={i}>
+                                <TableCell>
                                     <Input
                                         value={fee.name}
                                         onChange={(e) => onUpdateFee(i, 'name', e.target.value)}
                                         placeholder="Delivery Fee, PPN, dll"
                                     />
-                                </div>
-                                <div className="w-28">
+                                </TableCell>
+                                <TableCell>
                                     <Select
                                         value={fee.type}
                                         onChange={(e) => onUpdateFee(i, 'type', e.target.value as 'fixed' | 'percentage')}
@@ -144,8 +144,8 @@ export default function InvoiceFormFields({
                                         <option value="fixed">Nominal (Rp)</option>
                                         <option value="percentage">Persen (%)</option>
                                     </Select>
-                                </div>
-                                <div className="w-28">
+                                </TableCell>
+                                <TableCell>
                                     <Input
                                         type="number"
                                         min="0"
@@ -154,14 +154,16 @@ export default function InvoiceFormFields({
                                         onChange={(e) => onUpdateFee(i, 'value', e.target.value)}
                                         placeholder={fee.type === 'percentage' ? '11' : '0'}
                                     />
-                                </div>
-                                <Button type="button" variant="ghost" size="icon" onClick={() => onRemoveFee(i)}>
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                            </div>
+                                </TableCell>
+                                <TableCell>
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => onRemoveFee(i)}>
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
                         ))}
-                    </div>
-                )}
+                    </TableBody>
+                </Table>
                 <Button type="button" variant="outline" size="sm" onClick={onAddFee}>
                     <Plus className="mr-1 h-4 w-4" />
                     Tambah Biaya
