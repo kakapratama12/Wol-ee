@@ -78,7 +78,7 @@ export default function PrepStockIndex({ prepItems, canManage }: Props) {
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Stok Prep</h1>
+                        <h1 className="text-headline">Stok Prep</h1>
                         <p className="text-sm text-muted-foreground">
                             {prepItems.length} bahan prep
                         </p>
@@ -116,7 +116,7 @@ export default function PrepStockIndex({ prepItems, canManage }: Props) {
                                             </p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-2xl font-bold">
+                                            <p className="text-headline">
                                                 {formatNumber(item.current_stock, 2)}{' '}
                                                 <span className="text-sm font-normal text-muted-foreground">
                                                     {item.base_unit}

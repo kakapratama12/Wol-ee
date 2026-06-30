@@ -75,7 +75,7 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Stok Produk Jadi</h1>
+                        <h1 className="text-headline">Stok Produk Jadi</h1>
                         <p className="text-sm text-muted-foreground">
                             {batchProducts.length} produk batch
                         </p>
@@ -120,7 +120,7 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                             </p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-2xl font-bold">
+                                            <p className="text-headline">
                                                 {formatNumber(product.current_stock)} <span className="text-sm font-normal text-muted-foreground">{product.unit}</span>
                                             </p>
                                             <p className="text-xs text-muted-foreground">

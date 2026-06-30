@@ -214,7 +214,7 @@ export default function ProductionRunsIndex({ runs, batchProducts, ingredients }
 
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Produksi</h1>
+                    <h1 className="text-headline">Produksi</h1>
                     {batchProducts.length > 0 && (
                         <Button onClick={() => { setShowForm(true); form.reset(); }}>
                             <Plus className="mr-2 h-4 w-4" />
