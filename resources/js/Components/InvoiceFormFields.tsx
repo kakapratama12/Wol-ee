@@ -61,8 +61,8 @@ export default function InvoiceFormFields({
                     <TableHeader>
                         <TableRow>
                             <TableHead className="flex-1">Deskripsi</TableHead>
-                            <TableHead className="w-28">Qty</TableHead>
-                            <TableHead className="w-36">Harga Satuan</TableHead>
+                            <TableHead className="w-36">Qty</TableHead>
+                            <TableHead className="w-72">Harga Satuan</TableHead>
                             <TableHead className="w-10"></TableHead>
                         </TableRow>
                     </TableHeader>
@@ -121,8 +121,8 @@ export default function InvoiceFormFields({
                     <TableHeader>
                         <TableRow>
                             <TableHead className="flex-1">Nama</TableHead>
-                            <TableHead className="w-28">Tipe</TableHead>
-                            <TableHead className="w-36">Nilai</TableHead>
+                            <TableHead className="w-36">Tipe</TableHead>
+                            <TableHead className="w-72">Nilai</TableHead>
                             <TableHead className="w-10"></TableHead>
                         </TableRow>
                     </TableHeader>
