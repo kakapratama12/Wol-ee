@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Ingredient;
 use App\Models\Product;
 use App\Models\ProductionRun;
+use App\Services\CogsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,10 @@ use Inertia\Response;
 
 class FinishedGoodsController extends Controller
 {
+    public function __construct(
+        private readonly CogsService $cogs,
+    ) {}
+
     public function index(): Response
     {
         // Get all batch products with their finished goods ingredients
@@ -33,15 +38,9 @@ class FinishedGoodsController extends Controller
 
                 $currentStock = $finishedGoods ? (float) $finishedGoods->current_stock : 0;
 
-                // Calculate average COGS from production runs
-                $totalCost = 0;
-                $totalYield = 0;
+                // Build production details from model accessors
                 $productionDetails = [];
-
                 foreach ($product->productionRuns as $run) {
-                    $totalCost += (float) $run->total_cost;
-                    $totalYield += $run->yield_actual;
-
                     $productionDetails[] = [
                         'id' => $run->id,
                         'produced_at' => $run->produced_at?->toIso8601String(),
@@ -49,12 +48,13 @@ class FinishedGoodsController extends Controller
                         'waste_count' => $run->waste_count,
                         'yield_recorded' => ($run->yield_actual ?? 0) > 0,
                         'total_cost' => (float) $run->total_cost,
-                        'cost_per_unit' => $run->yield_actual > 0 ? round((float) $run->total_cost / $run->yield_actual, 2) : 0,
+                        'cost_per_unit' => $run->cost_per_unit,
                         'notes' => $run->notes,
                     ];
                 }
 
-                $avgCogs = $totalYield > 0 ? round($totalCost / $totalYield, 2) : 0;
+                // Average COGS via service (overall, no date filter)
+                $avgCogs = $this->cogs->averageCogsForBatchProduct($product);
 
                 return [
                     'id' => $product->id,
