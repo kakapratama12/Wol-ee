@@ -23,6 +23,7 @@ interface Invoice {
     status: string;
     note: string | null;
     paid_at: string | null;
+    subtotal: number;
 }
 
 interface Payment {
@@ -38,13 +39,22 @@ interface InvoiceItem {
     total: number;
 }
 
+interface InvoiceFee {
+    id: number;
+    name: string;
+    type: 'fixed' | 'percentage';
+    value: number;
+    amount: number;
+}
+
 interface Props {
-    invoice: Invoice & { items?: InvoiceItem[] };
+    invoice: Invoice & { items?: InvoiceItem[]; fees?: InvoiceFee[] };
     payments: Payment[];
 }
 
 export default function InvoicesShow({ invoice, payments }: Props) {
     const items = invoice.items ?? [];
+    const fees = invoice.fees ?? [];
     const [previewOpen, setPreviewOpen] = useState(false);
     const { props } = usePage<PageProps>();
     const isOwner = props.auth.user.role === 'owner';
@@ -187,6 +197,55 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                                 ))}
                             </TableBody>
                         </Table>
+
+                        {/* Fees */}
+                        {fees.length > 0 && (
+                            <div className="mt-4 border-t pt-4">
+                                <p className="mb-2 text-sm font-medium text-muted-foreground">Biaya Tambahan</p>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Nama</TableHead>
+                                            <TableHead className="text-right">Tipe</TableHead>
+                                            <TableHead className="text-right">Nilai</TableHead>
+                                            <TableHead className="text-right">Jumlah</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {fees.map((fee) => (
+                                            <TableRow key={fee.id}>
+                                                <TableCell>{fee.name}</TableCell>
+                                                <TableCell className="text-right">
+                                                    {fee.type === 'percentage' ? `${fee.value}%` : 'Nominal'}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    {fee.type === 'percentage' ? `${fee.value}%` : formatRupiah(fee.value)}
+                                                </TableCell>
+                                                <TableCell className="text-right">{formatRupiah(fee.amount)}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
+
+                        {/* Summary */}
+                        <div className="mt-4 border-t pt-4 space-y-2">
+                            <div className="flex justify-end text-sm">
+                                <span className="text-muted-foreground">Subtotal:</span>
+                                <span className="ml-4 font-medium">{formatRupiah(invoice.subtotal ?? items.reduce((sum, i) => sum + i.total, 0))}</span>
+                            </div>
+                            {fees.length > 0 && (
+                                <div className="flex justify-end text-sm">
+                                    <span className="text-muted-foreground">Biaya Tambahan:</span>
+                                    <span className="ml-4 font-medium">{formatRupiah(fees.reduce((sum, f) => sum + f.amount, 0))}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-end text-base font-bold">
+                                <span>Total:</span>
+                                <span className="ml-4">{formatRupiah(invoice.amount)}</span>
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
 

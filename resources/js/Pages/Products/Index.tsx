@@ -3,6 +3,7 @@ import { Head, useForm, router } from '@inertiajs/react';
 import { Plus, Pencil, Trash2, Utensils, X } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import Modal from '@/Components/ui/modal';
+import CreateProductModal from '@/Components/CreateProductModal';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
@@ -24,7 +25,7 @@ interface Product {
     id: number;
     name: string;
     unit: string;
-    selling_price: number;
+    selling_price: number | null;
     recipe_type: 'unit' | 'batch';
     estimated_yield_per_batch: number | null;
     is_active: boolean;
@@ -53,7 +54,6 @@ interface EditableRow {
 }
 
 export default function ProductsIndex({ products, ingredients }: Props) {
-    // Group ingredients by item_type for the recipe dropdown
     const ingredientGroups = useMemo(() => {
         const groups: Record<string, { label: string; items: IngredientOption[] }> = {
             raw_material: { label: 'Bahan Dasar', items: [] },
@@ -70,8 +70,8 @@ export default function ProductsIndex({ products, ingredients }: Props) {
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState<Product | null>(null);
     const [recipeProduct, setRecipeProduct] = useState<Product | null>(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
-    // Filtered groups for prep products (only raw_material)
     const filteredIngredientGroups = useMemo(() => {
         if (!recipeProduct?.is_prep) return ingredientGroups;
         return { raw_material: ingredientGroups.raw_material };
@@ -89,17 +89,21 @@ export default function ProductsIndex({ products, ingredients }: Props) {
 
     const openEdit = (p: Product) => {
         setEditing(p);
-        productForm.setData({ name: p.name, unit: p.unit, selling_price: String(p.selling_price), recipe_type: p.recipe_type, is_prep: p.is_prep });
+        productForm.setData({ name: p.name, unit: p.unit, selling_price: p.selling_price ? String(p.selling_price) : '', recipe_type: p.recipe_type, is_prep: p.is_prep });
         productForm.clearErrors();
         setFormOpen(true);
     };
 
     const submitProduct = (e: React.FormEvent) => {
         e.preventDefault();
+        const data = {
+            ...productForm.data,
+            selling_price: productForm.data.selling_price ? Number(productForm.data.selling_price) : null,
+        };
         if (editing) {
-            productForm.put(`/products/${editing.id}`, { onSuccess: () => setFormOpen(false) });
+            router.put(`/products/${editing.id}`, data, { onSuccess: () => setFormOpen(false) });
         } else {
-            productForm.post('/products', { onSuccess: () => setFormOpen(false) });
+            router.post('/products', data, { onSuccess: () => setFormOpen(false) });
         }
     };
 
@@ -125,7 +129,6 @@ export default function ProductsIndex({ products, ingredients }: Props) {
             recipeForm.data.items.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)),
         );
 
-    // Preview COGS/margin live (otoritatif tetap di backend saat disimpan).
     const preview = useMemo(() => {
         const cogs = recipeForm.data.items.reduce((sum, row) => {
             const ing = ingredients.find((x) => String(x.id) === row.ingredient_id);
@@ -149,13 +152,17 @@ export default function ProductsIndex({ products, ingredients }: Props) {
         recipeForm.put(`/products/${recipeProduct.id}/recipe`, { onSuccess: () => setRecipeProduct(null) });
     };
 
+    const handleCreateSuccess = (data: { id: number; name: string; selling_price: number }) => {
+        window.location.reload();
+    };
+
     return (
         <AppLayout title="Produk & Resep">
             <Head title="Produk & Resep" />
 
             <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">{products.length} produk</p>
-                <Button onClick={openCreate}>
+                <Button onClick={() => setShowCreateModal(true)}>
                     <Plus className="h-4 w-4" /> Tambah Produk
                 </Button>
             </div>
@@ -177,7 +184,7 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                                     )}
                                 </CardTitle>
                                 <p className="mt-1 text-sm text-muted-foreground">
-                                    {formatRupiah(p.selling_price)} / {p.unit}
+                                    {p.selling_price ? `${formatRupiah(p.selling_price)} / ${p.unit}` : p.unit}
                                 </p>
                                 {p.recipe_type === 'batch' && p.estimated_yield_per_batch && (
                                     <p className="mt-1 text-xs text-blue-600">
@@ -191,12 +198,14 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                             <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/50 p-3">
                                 <div>
                                     <p className="text-xs text-muted-foreground">COGS</p>
-                                    <p className="font-semibold">{formatRupiah(p.cogs)}</p>
+                                    <p className="font-semibold text-number">{formatRupiah(p.cogs)}</p>
                                 </div>
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Margin</p>
-                                    <p className="font-semibold text-success">{formatPercent(p.margin)}</p>
-                                </div>
+                                {!p.is_prep && (
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Margin</p>
+                                        <p className="font-semibold text-success text-number">{formatPercent(p.margin)}</p>
+                                    </div>
+                                )}
                             </div>
                             <p className="mt-3 text-xs text-muted-foreground">{p.recipe.length} bahan dalam resep</p>
                             <div className="mt-3 flex gap-2">
@@ -248,14 +257,16 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                     )}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <Label htmlFor="unit">Satuan jual</Label>
+                            <Label htmlFor="unit">Satuan</Label>
                             <Input id="unit" value={productForm.data.unit} onChange={(e) => productForm.setData('unit', e.target.value)} placeholder="pcs, cup, porsi" />
                         </div>
-                        <div>
-                            <Label htmlFor="selling_price">Harga jual (Rp)</Label>
-                            <Input id="selling_price" type="number" step="1" value={productForm.data.selling_price} onChange={(e) => productForm.setData('selling_price', e.target.value)} />
-                            {productForm.errors.selling_price && <p className="mt-1 text-xs text-destructive">{productForm.errors.selling_price}</p>}
-                        </div>
+                        {!productForm.data.is_prep && (
+                            <div>
+                                <Label htmlFor="selling_price">Harga jual (Rp) <span className="text-muted-foreground text-xs">(opsional)</span></Label>
+                                <Input id="selling_price" type="number" step="1" value={productForm.data.selling_price} onChange={(e) => productForm.setData('selling_price', e.target.value)} placeholder="nanti aja" />
+                                {productForm.errors.selling_price && <p className="mt-1 text-xs text-destructive">{productForm.errors.selling_price}</p>}
+                            </div>
+                        )}
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
@@ -280,7 +291,7 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                             Produk prep hanya boleh menggunakan bahan baku (raw material). Bahan prep lainnya tidak tersedia.
                         </p>
                     )}
-                    <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                    <div className="space-y-2">
                         {recipeForm.data.items.map((row, i) => {
                             const ing = ingredients.find((x) => String(x.id) === row.ingredient_id);
                             const cost = ing ? ing.unit_price * (parseFloat(row.quantity) || 0) : 0;
@@ -343,12 +354,14 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                     <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/50 p-3">
                         <div>
                             <p className="text-xs text-muted-foreground">COGS / porsi</p>
-                            <p className="text-lg font-bold">{formatRupiah(preview.cogs)}</p>
+                            <p className="text-number-lg font-bold">{formatRupiah(preview.cogs)}</p>
                         </div>
-                        <div>
-                            <p className="text-xs text-muted-foreground">Margin (harga {formatRupiah(recipeProduct?.selling_price ?? 0)})</p>
-                            <p className="text-lg font-bold text-success">{formatPercent(preview.margin)}</p>
-                        </div>
+                        {!recipeProduct?.is_prep && (
+                            <div>
+                                <p className="text-xs text-muted-foreground">Margin (harga {formatRupiah(recipeProduct?.selling_price ?? 0)})</p>
+                                <p className="text-number-lg font-bold text-success">{formatPercent(preview.margin)}</p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex justify-end gap-2">
@@ -361,6 +374,13 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                     </div>
                 </form>
             </Modal>
+
+            {/* Shared Create Product Modal */}
+            <CreateProductModal
+                open={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                onSuccess={handleCreateSuccess}
+            />
         </AppLayout>
     );
 }

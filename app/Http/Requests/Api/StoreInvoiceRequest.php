@@ -20,13 +20,20 @@ class StoreInvoiceRequest extends FormRequest
     {
         return [
             'partner_id' => [
-                'required',
-                'integer',
+                'required', 'integer',
                 Rule::exists('partners', 'id')->where('type', Partner::TYPE_CUSTOMER),
             ],
-            'amount' => ['nullable', 'numeric', 'min:0'],
+            'amount' => ['nullable', 'numeric', 'min:0', 'max:99999999999'],
             'due_date' => ['required', 'date'],
             'note' => ['nullable', 'string', 'max:1000'],
+            'items' => ['nullable', 'array', 'max:50'],
+            'items.*.description' => ['required_with:items', 'string'],
+            'items.*.quantity' => ['required_with:items', 'numeric', 'gt:0'],
+            'items.*.unit_price' => ['required_with:items', 'numeric', 'min:0'],
+            'fees' => ['nullable', 'array', 'max:20'],
+            'fees.*.name' => ['required_with:fees', 'string'],
+            'fees.*.type' => ['required_with:fees', 'in:fixed,percentage'],
+            'fees.*.value' => ['required_with:fees', 'numeric', 'min:0'],
         ];
     }
 

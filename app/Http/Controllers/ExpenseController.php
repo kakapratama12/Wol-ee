@@ -31,12 +31,14 @@ class ExpenseController extends Controller
                 'amount' => (float) $e->amount,
                 'period_month' => $e->period_month,
                 'period_year' => $e->period_year,
+                'occurred_at' => $e->occurred_at?->toIso8601String(),
             ]);
 
         return Inertia::render('Expenses/Index', [
             'expenses' => $expenses,
             'total' => round((float) $expenses->sum('amount'), 2),
             'categories' => Expense::CATEGORIES,
+            'categoryDescriptions' => Expense::CATEGORY_DESCRIPTIONS,
             'period' => ['month' => $month, 'year' => $year],
             'periodLabel' => Carbon::create($year, $month)->translatedFormat('F Y'),
         ]);
@@ -44,14 +46,20 @@ class ExpenseController extends Controller
 
     public function store(StoreExpenseRequest $request): RedirectResponse
     {
-        Expense::create($request->validated());
+        $data = $request->validated();
+        $data['occurred_at'] = $request->date('occurred_at') ?? now();
+        Expense::create($data);
 
         return back()->with('success', 'Biaya ditambahkan.');
     }
 
     public function update(UpdateExpenseRequest $request, Expense $expense): RedirectResponse
     {
-        $expense->update($request->validated());
+        $data = $request->validated();
+        if ($request->has('occurred_at')) {
+            $data['occurred_at'] = $request->date('occurred_at');
+        }
+        $expense->update($data);
 
         return back()->with('success', 'Biaya diperbarui.');
     }

@@ -23,7 +23,7 @@ class UpdateIngredientRequest extends FormRequest
             'name' => ['required', 'string', 'max:255', Rule::unique('ingredients', 'name')->ignore($id)],
             'unit_type' => ['required', Rule::in(['gramasi', 'packaged'])],
             'base_unit' => ['required', 'string', 'max:20'],
-            'unit_price' => ['required', 'numeric', 'gte:0'],
+            'unit_price' => ['required', 'numeric', 'gte:0', 'max:99999999999'],
             'minimum_stock' => ['required', 'numeric', 'gte:0'],
             'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
         ];

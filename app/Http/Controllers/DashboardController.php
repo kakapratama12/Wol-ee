@@ -7,15 +7,47 @@ use App\Models\Ingredient;
 use App\Models\Sale;
 use App\Models\Transaction;
 use App\Services\PnlService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(PnlService $pnl): Response
+    public function index(Request $request, PnlService $pnl): Response
     {
         $now = Carbon::now();
+        $period = $request->input('period', 'this_month');
+
+        // Determine date range based on period
+        switch ($period) {
+            case 'this_week':
+                $start = $now->copy()->startOfWeek();
+                $end = $now->copy()->endOfWeek();
+                $label = $start->translatedFormat('d M') . ' – ' . $end->translatedFormat('d M Y');
+                break;
+            case 'last_3_months':
+                $start = $now->copy()->subMonths(3)->startOfMonth();
+                $end = $now->copy()->endOfMonth();
+                $label = $start->translatedFormat('M Y') . ' – ' . $end->translatedFormat('M Y');
+                break;
+            case 'custom':
+                $start = $request->input('start_date')
+                    ? Carbon::parse($request->input('start_date'))
+                    : $now->copy()->startOfMonth();
+                $end = $request->input('end_date')
+                    ? Carbon::parse($request->input('end_date'))
+                    : $now->copy()->endOfMonth();
+                $label = $start->translatedFormat('d M Y') . ' – ' . $end->translatedFormat('d M Y');
+                break;
+            default: // this_month
+                $start = $now->copy()->startOfMonth();
+                $end = $now->copy()->endOfMonth();
+                $label = $now->translatedFormat('F Y');
+                break;
+        }
+
+        // PnL report (monthly, for overview metrics)
         $report = $pnl->report($now->month, $now->year);
 
         $lowStock = Ingredient::query()
@@ -33,6 +65,7 @@ class DashboardController extends Controller
 
         $recentSales = Sale::query()
             ->with('product:id,name')
+            ->whereBetween('occurred_at', [$start->toDateString(), $end->endOfDay()->toIso8601String()])
             ->latest('occurred_at')
             ->take(8)
             ->get()
@@ -48,6 +81,7 @@ class DashboardController extends Controller
 
         $recentPurchases = Transaction::query()
             ->with('ingredient:id,name,base_unit')
+            ->whereBetween('occurred_at', [$start->toDateString(), $end->endOfDay()->toIso8601String()])
             ->latest('occurred_at')
             ->take(8)
             ->get()
@@ -60,6 +94,24 @@ class DashboardController extends Controller
                 'source' => $t->source,
                 'occurred_at' => $t->occurred_at?->toIso8601String(),
             ]);
+
+        // Metrics for selected period
+        $periodRevenue = round((float) Sale::query()
+            ->whereBetween('occurred_at', [$start->toDateString(), $end->endOfDay()->toIso8601String()])
+            ->sum('revenue'), 2);
+
+        $periodCogs = round((float) Sale::query()
+            ->whereBetween('occurred_at', [$start->toDateString(), $end->endOfDay()->toIso8601String()])
+            ->sum('cogs'), 2);
+
+        $periodExpenses = round((float) Expense::query()
+            ->where('period_year', $now->year)
+            ->where('period_month', $now->month)
+            ->sum('amount'), 2);
+
+        $grossProfit = round($periodRevenue - $periodCogs, 2);
+        $grossMargin = $periodRevenue > 0 ? round(($grossProfit / $periodRevenue) * 100, 2) : 0.0;
+        $netProfit = round($grossProfit - $periodExpenses, 2);
 
         $monthlyChart = collect(range(5, 0))
             ->map(function (int $monthsAgo) use ($now) {
@@ -83,13 +135,16 @@ class DashboardController extends Controller
             });
 
         return Inertia::render('Dashboard', [
-            'month' => $now->translatedFormat('F Y'),
+            'period' => $period,
+            'periodLabel' => $label,
+            'startDate' => $start->toDateString(),
+            'endDate' => $end->toDateString(),
             'metrics' => [
-                'revenue' => $report['revenue'],
-                'cogs' => $report['cogs'],
-                'gross_profit' => $report['gross_profit'],
-                'gross_margin' => $report['gross_margin'],
-                'net_profit' => $report['net_profit'],
+                'revenue' => $periodRevenue,
+                'cogs' => $periodCogs,
+                'gross_profit' => $grossProfit,
+                'gross_margin' => $grossMargin,
+                'net_profit' => $netProfit,
             ],
             'lowStock' => $lowStock,
             'recentSales' => $recentSales,

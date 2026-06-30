@@ -85,10 +85,10 @@ class TransactionController extends Controller
         return back()->with('success', 'Pembelian diperbarui & stok disesuaikan.');
     }
 
-    public function destroy(Transaction $transaction, PurchaseService $purchases): RedirectResponse
+    public function destroy(Transaction $transaction, PurchaseService $purchases, Request $request): RedirectResponse
     {
         try {
-            $purchases->void($transaction);
+            $purchases->void($transaction, $request->user()->id);
         } catch (InvalidArgumentException $e) {
             return back()->withErrors(['quantity' => $e->getMessage()]);
         }

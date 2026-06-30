@@ -94,17 +94,27 @@ class CogsService
     }
 
     /**
-     * Average COGS for batch products from production runs.
-     * Returns total cost / total yield across all production runs.
+     * Average COGS for batch products from production runs in the same
+     * month as the sale. Returns total cost / total yield for that period.
      */
-    public function averageCogsForBatchProduct(Product $product): float
+    public function averageCogsForBatchProduct(Product $product, ?\Carbon\CarbonInterface $occurredAt = null): float
     {
         $product->loadMissing('productionRuns');
+
+        $runs = $product->productionRuns;
+
+        // Filter by month if date provided
+        if ($occurredAt) {
+            $runs = $runs->filter(function ($run) use ($occurredAt) {
+                return $run->created_at->month === $occurredAt->month
+                    && $run->created_at->year === $occurredAt->year;
+            });
+        }
 
         $totalCost = 0;
         $totalYield = 0;
 
-        foreach ($product->productionRuns as $run) {
+        foreach ($runs as $run) {
             $totalCost += (float) $run->total_cost;
             $totalYield += $run->yield_actual;
         }

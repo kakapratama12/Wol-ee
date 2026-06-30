@@ -3,6 +3,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { Pencil, Trash2 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import Modal from '@/Components/ui/modal';
+import CreateIngredientModal from '@/Components/CreateIngredientModal';
 import Pagination from '@/Components/Pagination';
 import { Button } from '@/Components/ui/button';
 import { CurrencyInput } from '@/Components/ui/currency-input';
@@ -48,11 +49,11 @@ function toDatetimeLocal(iso: string | null): string {
 export default function TransactionsIndex({ transactions, ingredients: initialIngredients }: Props) {
     const [ingredients, setIngredients] = useState(initialIngredients);
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [newIngredient, setNewIngredient] = useState({ name: '', unit_type: 'gramasi', base_unit: '', unit_price: '', minimum_stock: '0' });
-    const [creating, setCreating] = useState(false);
-    const [createError, setCreateError] = useState('');
 
-    const form = useForm({ ingredient_id: '', quantity: '', total: '', note: '' });
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const defaultDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const form = useForm({ ingredient_id: '', quantity: '', total: '', note: '', occurred_at: defaultDate });
     const editForm = useForm({
         ingredient_id: '',
         quantity: '',
@@ -96,36 +97,11 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
         }
     };
 
-    const handleCreateIngredient = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setCreating(true);
-        setCreateError('');
-        try {
-            const res = await fetch('/inventory/json', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-XSRF-TOKEN': decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? ''),
-                },
-                body: JSON.stringify(newIngredient),
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                setCreateError(data.message || 'Gagal menyimpan');
-                return;
-            }
-            // Add to list & auto-select
-            const updated = [...ingredients, data].sort((a, b) => a.name.localeCompare(b.name));
-            setIngredients(updated);
-            form.setData('ingredient_id', String(data.id));
-            setShowCreateModal(false);
-            setNewIngredient({ name: '', unit_type: 'gramasi', base_unit: '', unit_price: '', minimum_stock: '0' });
-        } catch {
-            setCreateError('Terjadi kesalahan');
-        } finally {
-            setCreating(false);
-        }
+    const handleCreateSuccess = (data: { id: number; name: string; base_unit: string }) => {
+        const updated = [...ingredients, data].sort((a, b) => a.name.localeCompare(b.name));
+        setIngredients(updated);
+        form.setData('ingredient_id', String(data.id));
+        setShowCreateModal(false);
     };
 
     return (
@@ -165,6 +141,15 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                                 <Label htmlFor="note">Catatan (opsional)</Label>
                                 <Input id="note" value={form.data.note} onChange={(e) => form.setData('note', e.target.value)} />
                             </div>
+                            <div>
+                                <Label htmlFor="occurred_at">Tanggal</Label>
+                                <Input
+                                    id="occurred_at"
+                                    type="datetime-local"
+                                    value={form.data.occurred_at}
+                                    onChange={(e) => form.setData('occurred_at', e.target.value)}
+                                />
+                            </div>
                             <Button type="submit" className="w-full" disabled={form.processing}>
                                 Simpan & Tambah Stok
                             </Button>
@@ -190,8 +175,8 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                                     <TableRow key={t.id}>
                                         <TableCell className="text-sm">{formatDate(t.occurred_at)}</TableCell>
                                         <TableCell className="font-medium">{t.ingredient}</TableCell>
-                                        <TableCell>{formatNumber(t.quantity)} {t.base_unit}</TableCell>
-                                        <TableCell>{formatRupiah(t.total)}</TableCell>
+                                        <TableCell className="text-number">{formatNumber(t.quantity)} {t.base_unit}</TableCell>
+                                        <TableCell className="text-number">{formatRupiah(t.total)}</TableCell>
                                         <TableCell>
                                             <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
                                                 {t.source}
@@ -264,42 +249,12 @@ export default function TransactionsIndex({ transactions, ingredients: initialIn
                 </Modal>
             )}
 
-            {/* Create Ingredient Modal */}
-            <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} title="Bahan Baru">
-                <form onSubmit={handleCreateIngredient} className="space-y-4">
-                    <div>
-                        <Label htmlFor="ing-name">Nama Bahan</Label>
-                        <Input id="ing-name" value={newIngredient.name} onChange={(e) => setNewIngredient({ ...newIngredient, name: e.target.value })} required />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <Label htmlFor="ing-unit">Satuan</Label>
-                            <Input id="ing-unit" value={newIngredient.base_unit} onChange={(e) => setNewIngredient({ ...newIngredient, base_unit: e.target.value })} placeholder="kg, liter, pcs" required />
-                        </div>
-                        <div>
-                            <Label htmlFor="ing-price">Harga / satuan (Rp)</Label>
-                            <CurrencyInput id="ing-price" value={newIngredient.unit_price} onChange={(v) => setNewIngredient({ ...newIngredient, unit_price: v })} required />
-                        </div>
-                    </div>
-                    <div>
-                        <Label htmlFor="ing-type">Tipe</Label>
-                        <select
-                            id="ing-type"
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            value={newIngredient.unit_type}
-                            onChange={(e) => setNewIngredient({ ...newIngredient, unit_type: e.target.value })}
-                        >
-                            <option value="gramasi">Gramasi (timbang)</option>
-                            <option value="packaged">Packaged (pcs/kg)</option>
-                        </select>
-                    </div>
-                    {createError && <p className="text-sm text-destructive">{createError}</p>}
-                    <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>Batal</Button>
-                        <Button type="submit" disabled={creating}>{creating ? 'Menyimpan...' : 'Simpan'}</Button>
-                    </div>
-                </form>
-            </Modal>
+            {/* Shared Create Ingredient Modal */}
+            <CreateIngredientModal
+                open={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                onSuccess={handleCreateSuccess}
+            />
         </AppLayout>
     );
 }

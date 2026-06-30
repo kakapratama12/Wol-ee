@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { useState, useMemo, useEffect } from 'react';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { Trash2, Plus, Factory, AlertTriangle, Pencil, FlaskConical } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
@@ -52,9 +52,18 @@ interface ProductionRun {
     items: RunItem[];
 }
 
+interface Ingredient {
+    id: number;
+    name: string;
+    base_unit: string;
+    unit_price: number;
+    current_stock: number;
+}
+
 interface Props {
     runs: ProductionRun[];
     batchProducts: BatchProduct[];
+    ingredients: Ingredient[];
 }
 
 interface EditItemRow {
@@ -65,7 +74,8 @@ interface EditItemRow {
     unit_price: number;
 }
 
-export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
+export default function ProductionRunsIndex({ runs, batchProducts, ingredients }: Props) {
+    const { url } = usePage();
     const [showForm, setShowForm] = useState(false);
     const [editingRun, setEditingRun] = useState<ProductionRun | null>(null);
     const [editingItemsRun, setEditingItemsRun] = useState<ProductionRun | null>(null);
@@ -75,6 +85,16 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
         batch_count: '1',
         notes: '',
     });
+
+    // Auto-open form when navigated with ?produce=<product_id>
+    useEffect(() => {
+        const params = new URLSearchParams(url.split('?')[1] || '');
+        const produceId = params.get('produce');
+        if (produceId && batchProducts.some((p) => p.id === Number(produceId))) {
+            setShowForm(true);
+            form.setData('product_id', produceId);
+        }
+    }, []);
 
     const yieldForm = useForm({
         yield_actual: '',
@@ -143,6 +163,31 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
         itemsForm.setData('items', items);
     };
 
+    const removeEditItem = (index: number) => {
+        itemsForm.setData('items', itemsForm.data.items.filter((_, idx) => idx !== index));
+    };
+
+    const [addIngredientId, setAddIngredientId] = useState<string>('');
+
+    const addExtraIngredient = () => {
+        if (!addIngredientId) return;
+        const ing = ingredients.find((i) => i.id === Number(addIngredientId));
+        if (!ing) return;
+        // Check if already in list
+        if (itemsForm.data.items.some((item) => item.ingredient_id === ing.id)) return;
+        itemsForm.setData('items', [
+            ...itemsForm.data.items,
+            {
+                ingredient_id: ing.id,
+                ingredient: ing.name,
+                base_unit: ing.base_unit,
+                quantity_used: '1',
+                unit_price: ing.unit_price,
+            },
+        ]);
+        setAddIngredientId('');
+    };
+
     const editItemsTotalCost = useMemo(() => {
         return itemsForm.data.items.reduce((sum, item) => {
             return sum + (parseFloat(item.quantity_used) || 0) * item.unit_price;
@@ -169,7 +214,7 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
 
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Produksi</h1>
+                    <h1 className="text-headline">Produksi</h1>
                     {batchProducts.length > 0 && (
                         <Button onClick={() => { setShowForm(true); form.reset(); }}>
                             <Plus className="mr-2 h-4 w-4" />
@@ -402,7 +447,18 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                             <div key={item.ingredient_id} className="rounded-lg border p-3">
                                 <div className="flex items-center justify-between mb-2">
                                     <p className="font-medium text-sm">{item.ingredient}</p>
-                                    <p className="text-xs text-muted-foreground">{formatRupiah(item.unit_price)}/{item.base_unit}</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-xs text-muted-foreground">{formatRupiah(item.unit_price)}/{item.base_unit}</p>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6"
+                                            onClick={() => removeEditItem(i)}
+                                        >
+                                            <Trash2 className="h-3 w-3 text-destructive" />
+                                        </Button>
+                                    </div>
                                 </div>
                                 <div className="flex items-end gap-2">
                                     <div className="flex-1">
@@ -423,6 +479,31 @@ export default function ProductionRunsIndex({ runs, batchProducts }: Props) {
                                 <p className="text-xs text-muted-foreground mt-1">{item.base_unit}</p>
                             </div>
                         ))}
+
+                    {/* Add Extra Ingredient */}
+                    <div className="flex items-end gap-2 rounded-lg border border-dashed p-3">
+                        <div className="flex-1">
+                            <Label className="text-xs text-muted-foreground">Tambah Bahan</Label>
+                            <select
+                                className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                value={addIngredientId}
+                                onChange={(e) => setAddIngredientId(e.target.value)}
+                            >
+                                <option value="">Pilih bahan dari inventory...</option>
+                                {ingredients
+                                    .filter((ing) => !itemsForm.data.items.some((item) => item.ingredient_id === ing.id))
+                                    .map((ing) => (
+                                        <option key={ing.id} value={ing.id}>
+                                            {ing.name} ({ing.base_unit}) — Stok: {formatNumber(ing.current_stock)}
+                                        </option>
+                                    ))}
+                            </select>
+                        </div>
+                        <Button type="button" variant="outline" size="sm" onClick={addExtraIngredient} disabled={!addIngredientId}>
+                            <Plus className="mr-1 h-4 w-4" />
+                            Tambah
+                        </Button>
+                    </div>
                     </div>
 
                     <div className="flex justify-end rounded-lg bg-muted/50 p-3">

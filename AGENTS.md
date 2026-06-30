@@ -65,6 +65,7 @@ docs/                   # PRD, sequence diagram, dev context
 
 - **Uang**: simpan sebagai integer rupiah (atau `decimal`), **JANGAN PERNAH float**. Hitung di backend, frontend hanya format tampilan.
 - **Controller tipis**: business logic hidup di `app/Services`. Bot (API) dan web (Inertia) memakai service yang sama — jangan duplikasi logika.
+- **Loose coupling, high cohesion**: Fungsi yang sama HARUS satu component. Jangan duplikasi modal/form/logic di tempat berbeda. Satu sumber kebenaran = satu component. Prinsip: DRY (Don't Repeat Yourself). Kalau fungsi sama, extract ke shared component. Ini mencegah bug fix harus dua kali dan regression risk.
 - **Validasi**: selalu via Form Request, bukan di controller.
 - **Atomic**: setiap mutasi stok + pencatatan sale/transaction dibungkus `DB::transaction()`.
 - **Stok sebagai ledger**: tulis `stock_movements`; `ingredients.current_stock` adalah turunan yang di-update di transaksi yang sama.

@@ -68,9 +68,15 @@ class ProductionRunController extends Controller
                 ])->values(),
             ]);
 
+        // All ingredients for "Tambah Bahan" dropdown
+        $ingredients = Ingredient::query()
+            ->orderBy('name')
+            ->get(['id', 'name', 'base_unit', 'unit_price', 'current_stock']);
+
         return Inertia::render('ProductionRuns/Index', [
             'runs' => $runs,
             'batchProducts' => $batchProducts,
+            'ingredients' => $ingredients,
         ]);
     }
 
@@ -135,7 +141,7 @@ class ProductionRunController extends Controller
     public function updateItems(Request $request, ProductionRun $productionRun, ProductionRunService $service): RedirectResponse
     {
         $validated = $request->validate([
-            'items' => ['required', 'array', 'min:1'],
+            'items' => ['required', 'array', 'min:1', 'max:50'],
             'items.*.ingredient_id' => ['required', 'integer', 'exists:ingredients,id'],
             'items.*.quantity_used' => ['required', 'numeric', 'gt:0'],
         ]);

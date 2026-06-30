@@ -54,7 +54,7 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice): Response
     {
-        $invoice->load('partner', 'items');
+        $invoice->load('partner', 'items', 'fees');
 
         $payments = [];
         if ((float) $invoice->paid_amount > 0) {
@@ -63,6 +63,9 @@ class InvoiceController extends Controller
                 'amount' => (float) $invoice->paid_amount,
             ];
         }
+
+        // Calculate subtotal
+        $subtotal = $invoice->items->sum('total');
 
         return Inertia::render('Invoices/Show', [
             'invoice' => [
@@ -77,12 +80,20 @@ class InvoiceController extends Controller
                 'status' => $invoice->status,
                 'note' => $invoice->note,
                 'paid_at' => $invoice->paid_at?->toDateString(),
+                'subtotal' => (float) $subtotal,
                 'items' => $invoice->items->map(fn ($item) => [
                     'id' => $item->id,
                     'description' => $item->description,
                     'quantity' => (float) $item->quantity,
                     'unit_price' => (float) $item->unit_price,
                     'total' => (float) $item->total,
+                ]),
+                'fees' => $invoice->fees->map(fn ($fee) => [
+                    'id' => $fee->id,
+                    'name' => $fee->name,
+                    'type' => $fee->type,
+                    'value' => (float) $fee->value,
+                    'amount' => (float) $fee->amount,
                 ]),
             ],
             'payments' => $payments,
@@ -91,12 +102,15 @@ class InvoiceController extends Controller
 
     public function edit(Invoice $invoice): Response
     {
-        $invoice->load('partner', 'items');
+        $invoice->load('partner', 'items', 'fees');
 
         $customers = Partner::query()
             ->where('type', Partner::TYPE_CUSTOMER)
             ->orderBy('name')
             ->get(['id', 'name']);
+
+        // Calculate subtotal
+        $subtotal = $invoice->items->sum('total');
 
         return Inertia::render('Invoices/Edit', [
             'invoice' => [
@@ -109,12 +123,20 @@ class InvoiceController extends Controller
                 'due_date' => $invoice->due_date->toDateString(),
                 'status' => $invoice->status,
                 'note' => $invoice->note,
+                'subtotal' => (float) $subtotal,
                 'items' => $invoice->items->map(fn ($item) => [
                     'id' => $item->id,
                     'description' => $item->description,
                     'quantity' => (float) $item->quantity,
                     'unit_price' => (float) $item->unit_price,
                     'total' => (float) $item->total,
+                ]),
+                'fees' => $invoice->fees->map(fn ($fee) => [
+                    'id' => $fee->id,
+                    'name' => $fee->name,
+                    'type' => $fee->type,
+                    'value' => (float) $fee->value,
+                    'amount' => (float) $fee->amount,
                 ]),
             ],
             'customers' => $customers,
@@ -126,12 +148,16 @@ class InvoiceController extends Controller
         $validated = $request->validate([
             'partner_id' => ['required', 'exists:partners,id'],
             'due_date' => ['required', 'date'],
-            'note' => ['nullable', 'string'],
+            'note' => ['nullable', 'string', 'max:1000'],
             'amount' => ['nullable', 'numeric', 'min:0'],
-            'items' => ['nullable', 'array'],
-            'items.*.description' => ['required_with:items', 'string'],
-            'items.*.quantity' => ['required_with:items', 'numeric', 'gt:0'],
-            'items.*.unit_price' => ['required_with:items', 'numeric', 'min:0'],
+            'items' => ['nullable', 'array', 'max:50'],
+            'items.*.description' => ['required_with:items', 'string', 'max:255'],
+            'items.*.quantity' => ['required_with:items', 'numeric', 'gt:0', 'max:9999999'],
+            'items.*.unit_price' => ['required_with:items', 'numeric', 'min:0', 'max:99999999999'],
+            'fees' => ['nullable', 'array', 'max:20'],
+            'fees.*.name' => ['required_with:fees', 'string'],
+            'fees.*.type' => ['required_with:fees', 'in:fixed,percentage'],
+            'fees.*.value' => ['required_with:fees', 'numeric', 'min:0', 'max:99999999999'],
         ]);
 
         // Validate partner is a customer
@@ -146,9 +172,9 @@ class InvoiceController extends Controller
             'note' => $validated['note'] ?? null,
         ]);
 
-        // Update items if provided
+        // Update items and fees if provided
         if (!empty($validated['items']) && count($validated['items']) > 0) {
-            $this->invoices->updateItems($invoice, $validated['items']);
+            $this->invoices->updateItems($invoice, $validated['items'], $validated['fees'] ?? []);
         } elseif (isset($validated['amount'])) {
             // If no items, update amount from request (only if no items were previously set)
             $invoice->update(['amount' => round((float) $validated['amount'], 2)]);
@@ -174,12 +200,16 @@ class InvoiceController extends Controller
 
     public function pdf(Invoice $invoice)
     {
-        $invoice->load('partner', 'items');
+        $invoice->load('partner', 'items', 'fees');
         $tenant = $invoice->partner->tenant ?? auth()->user()->tenant;
+
+        // Calculate subtotal
+        $subtotal = $invoice->items->sum('total');
 
         $pdf = Pdf::loadView('invoices.pdf', [
             'invoice' => $invoice,
             'tenant' => $tenant,
+            'subtotal' => $subtotal,
         ]);
 
         return $pdf->download($invoice->invoice_number . '.pdf');
@@ -187,12 +217,16 @@ class InvoiceController extends Controller
 
     public function pdfPreview(Invoice $invoice)
     {
-        $invoice->load('partner', 'items');
+        $invoice->load('partner', 'items', 'fees');
         $tenant = $invoice->partner->tenant ?? auth()->user()->tenant;
+
+        // Calculate subtotal
+        $subtotal = $invoice->items->sum('total');
 
         $pdf = Pdf::loadView('invoices.pdf', [
             'invoice' => $invoice,
             'tenant' => $tenant,
+            'subtotal' => $subtotal,
         ]);
 
         return $pdf->stream($invoice->invoice_number . '.pdf');
@@ -200,12 +234,16 @@ class InvoiceController extends Controller
 
     public function kuitansi(Invoice $invoice)
     {
-        $invoice->load('partner', 'items');
+        $invoice->load('partner', 'items', 'fees');
         $tenant = $invoice->partner->tenant ?? auth()->user()->tenant;
+
+        // Calculate subtotal
+        $subtotal = $invoice->items->sum('total');
 
         $pdf = Pdf::loadView('invoices.kuitansi', [
             'invoice' => $invoice,
             'tenant' => $tenant,
+            'subtotal' => $subtotal,
         ]);
 
         return $pdf->download('Kuitansi-' . $invoice->invoice_number . '.pdf');

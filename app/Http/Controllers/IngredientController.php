@@ -121,6 +121,7 @@ class IngredientController extends Controller
             $ingredient,
             (float) $request->validated()['current_stock'],
             $request->input('note'),
+            $request->user()->id,
         );
 
         return back()->with('success', 'Stok disesuaikan.');

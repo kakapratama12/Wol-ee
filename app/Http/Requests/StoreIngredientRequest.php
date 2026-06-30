@@ -22,7 +22,7 @@ class StoreIngredientRequest extends FormRequest
             'item_type' => ['required', Rule::in(['raw_material', 'prep'])],
             'unit_type' => ['required', Rule::in(['gramasi', 'packaged'])],
             'base_unit' => ['required', 'string', 'max:20'],
-            'unit_price' => ['required', 'numeric', 'gte:0'],
+'unit_price' => ['required', 'numeric', 'min:0', 'max:99999999999'],
             'current_stock' => ['nullable', 'numeric', 'gte:0'],
             'minimum_stock' => ['required', 'numeric', 'gte:0'],
             'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],

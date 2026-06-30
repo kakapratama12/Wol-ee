@@ -271,11 +271,8 @@ export default function AppLayout({ title, children }: PropsWithChildren<{ title
                     sidebarOpen ? 'translate-x-0' : '-translate-x-full',
                 )}
             >
-                <div className="flex h-16 items-center gap-2 border-b border-border px-6">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground">
-                        W
-                    </div>
-                    <span className="text-lg font-bold tracking-tight">Wol-ee</span>
+                <div className="flex h-16 items-center border-b border-border px-6">
+                    <img src="/logo.png" alt="Wol-ee" className="h-10 w-auto" />
                 </div>
                 {renderNav()}
             </aside>

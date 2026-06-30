@@ -21,9 +21,10 @@ class UpdateExpenseRequest extends FormRequest
         return [
             'category' => ['required', 'string', Rule::in(array_keys(Expense::CATEGORIES))],
             'description' => ['nullable', 'string', 'max:255'],
-            'amount' => ['required', 'numeric', 'gt:0'],
+            'amount' => ['sometimes', 'numeric', 'min:0', 'max:99999999999'],
             'period_month' => ['required', 'integer', 'between:1,12'],
             'period_year' => ['required', 'integer', 'between:2000,2100'],
+            'occurred_at' => ['sometimes', 'date'],
         ];
     }
 }

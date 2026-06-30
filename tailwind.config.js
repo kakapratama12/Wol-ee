@@ -21,6 +21,7 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                mono: [...defaultTheme.fontFamily.mono],
             },
             colors: {
                 border: 'hsl(var(--border))',

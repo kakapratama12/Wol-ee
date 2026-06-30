@@ -3,6 +3,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { Pencil, Trash2 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import Modal from '@/Components/ui/modal';
+import CreateProductModal from '@/Components/CreateProductModal';
 import Pagination from '@/Components/Pagination';
 import { Button } from '@/Components/ui/button';
 import { CurrencyInput } from '@/Components/ui/currency-input';
@@ -50,11 +51,11 @@ function toDatetimeLocal(iso: string | null): string {
 export default function SalesIndex({ sales, products: initialProducts }: Props) {
     const [products, setProducts] = useState(initialProducts);
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [newProduct, setNewProduct] = useState({ name: '', unit: 'pcs', selling_price: '' });
-    const [creating, setCreating] = useState(false);
-    const [createError, setCreateError] = useState('');
 
-    const form = useForm({ product_id: '', quantity: '', unit_price: '', note: '' });
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const defaultDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const form = useForm({ product_id: '', quantity: '', unit_price: '', note: '', occurred_at: defaultDate });
     const editForm = useForm({
         product_id: '',
         quantity: '',
@@ -98,35 +99,11 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
         }
     };
 
-    const handleCreateProduct = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setCreating(true);
-        setCreateError('');
-        try {
-            const res = await fetch('/products/json', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-XSRF-TOKEN': decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? ''),
-                },
-                body: JSON.stringify(newProduct),
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                setCreateError(data.message || 'Gagal menyimpan');
-                return;
-            }
-            const updated = [...products, data].sort((a, b) => a.name.localeCompare(b.name));
-            setProducts(updated);
-            form.setData('product_id', String(data.id));
-            setShowCreateModal(false);
-            setNewProduct({ name: '', unit: 'pcs', selling_price: '' });
-        } catch {
-            setCreateError('Terjadi kesalahan');
-        } finally {
-            setCreating(false);
-        }
+    const handleCreateSuccess = (data: { id: number; name: string; selling_price: number }) => {
+        const updated = [...products, data].sort((a, b) => a.name.localeCompare(b.name));
+        setProducts(updated);
+        form.setData('product_id', String(data.id));
+        setShowCreateModal(false);
     };
 
     return (
@@ -166,6 +143,15 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                                     onChange={(v) => form.setData('unit_price', v)}
                                 />
                             </div>
+                            <div>
+                                <Label htmlFor="occurred_at">Tanggal</Label>
+                                <Input
+                                    id="occurred_at"
+                                    type="datetime-local"
+                                    value={form.data.occurred_at}
+                                    onChange={(e) => form.setData('occurred_at', e.target.value)}
+                                />
+                            </div>
                             <Button type="submit" className="w-full" disabled={form.processing}>
                                 Simpan & Kurangi Stok
                             </Button>
@@ -193,11 +179,11 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                                     <TableRow key={s.id}>
                                         <TableCell className="text-sm">{formatDate(s.occurred_at)}</TableCell>
                                         <TableCell className="font-medium">{s.product}</TableCell>
-                                        <TableCell>{s.quantity}</TableCell>
-                                        <TableCell>{formatRupiah(s.revenue)}</TableCell>
-                                        <TableCell>{formatRupiah(s.cogs)}</TableCell>
-                                        <TableCell>{formatRupiah(s.profit)}</TableCell>
-                                        <TableCell>{formatPercent(s.margin)}</TableCell>
+                                        <TableCell className="text-number">{s.quantity}</TableCell>
+                                        <TableCell className="text-number">{formatRupiah(s.revenue)}</TableCell>
+                                        <TableCell className="text-number">{formatRupiah(s.cogs)}</TableCell>
+                                        <TableCell className="text-number">{formatRupiah(s.profit)}</TableCell>
+                                        <TableCell className="text-number">{formatPercent(s.margin)}</TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-1">
                                                 <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>
@@ -265,30 +251,12 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                 </Modal>
             )}
 
-            {/* Create Product Modal */}
-            <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} title="Produk Baru">
-                <form onSubmit={handleCreateProduct} className="space-y-4">
-                    <div>
-                        <Label htmlFor="prod-name">Nama Produk</Label>
-                        <Input id="prod-name" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} required />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <Label htmlFor="prod-unit">Satuan</Label>
-                            <Input id="prod-unit" value={newProduct.unit} onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })} placeholder="pcs, porsi, gelas" required />
-                        </div>
-                        <div>
-                            <Label htmlFor="prod-price">Harga Jual (Rp)</Label>
-                            <CurrencyInput id="prod-price" value={newProduct.selling_price} onChange={(v) => setNewProduct({ ...newProduct, selling_price: v })} required />
-                        </div>
-                    </div>
-                    {createError && <p className="text-sm text-destructive">{createError}</p>}
-                    <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>Batal</Button>
-                        <Button type="submit" disabled={creating}>{creating ? 'Menyimpan...' : 'Simpan'}</Button>
-                    </div>
-                </form>
-            </Modal>
+            {/* Shared Create Product Modal */}
+            <CreateProductModal
+                open={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                onSuccess={handleCreateSuccess}
+            />
         </AppLayout>
     );
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
-import { Package, ChevronDown, ChevronUp, Pencil, Factory } from 'lucide-react';
+import { Head, useForm, router, Link } from '@inertiajs/react';
+import { Package, ChevronDown, ChevronUp, Pencil, Factory, Plus } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -75,11 +75,19 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Stok Produk Jadi</h1>
+                        <h1 className="text-headline">Stok Produk Jadi</h1>
                         <p className="text-sm text-muted-foreground">
                             {batchProducts.length} produk batch
                         </p>
                     </div>
+                    {batchProducts.length > 0 && (
+                        <Link href="/production-runs">
+                            <Button>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Tambah Produksi
+                            </Button>
+                        </Link>
+                    )}
                 </div>
 
                 {batchProducts.length === 0 ? (
@@ -112,8 +120,8 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                             </p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-2xl font-bold">
-                                                {formatNumber(product.current_stock)} <span className="text-sm font-normal text-muted-foreground">{product.unit}</span>
+                                            <p className="text-headline">
+                                                <span className="text-number-lg">{formatNumber(product.current_stock)}</span> <span className="text-sm font-normal text-muted-foreground">{product.unit}</span>
                                             </p>
                                             <p className="text-xs text-muted-foreground">
                                                 Stok saat ini
@@ -125,11 +133,11 @@ export default function FinishedGoodsIndex({ batchProducts }: Props) {
                                     <div className="grid grid-cols-3 gap-4 rounded-lg bg-muted/50 p-3 mb-3">
                                         <div>
                                             <p className="text-xs text-muted-foreground">Harga Jual</p>
-                                            <p className="font-semibold">{formatRupiah(product.selling_price)}</p>
+                                            <p className="font-semibold text-number">{formatRupiah(product.selling_price)}</p>
                                         </div>
                                         <div>
                                             <p className="text-xs text-muted-foreground">COGS Rata-rata</p>
-                                            <p className="font-semibold">{formatRupiah(product.avg_cogs)}</p>
+                                            <p className="font-semibold text-number">{formatRupiah(product.avg_cogs)}</p>
                                         </div>
                                         <div>
                                             <p className="text-xs text-muted-foreground">Margin</p>
