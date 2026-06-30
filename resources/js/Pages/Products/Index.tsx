@@ -3,6 +3,7 @@ import { Head, useForm, router } from '@inertiajs/react';
 import { Plus, Pencil, Trash2, Utensils, X } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import Modal from '@/Components/ui/modal';
+import CreateProductModal from '@/Components/CreateProductModal';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
@@ -53,7 +54,6 @@ interface EditableRow {
 }
 
 export default function ProductsIndex({ products, ingredients }: Props) {
-    // Group ingredients by item_type for the recipe dropdown
     const ingredientGroups = useMemo(() => {
         const groups: Record<string, { label: string; items: IngredientOption[] }> = {
             raw_material: { label: 'Bahan Dasar', items: [] },
@@ -70,8 +70,8 @@ export default function ProductsIndex({ products, ingredients }: Props) {
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState<Product | null>(null);
     const [recipeProduct, setRecipeProduct] = useState<Product | null>(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
-    // Filtered groups for prep products (only raw_material)
     const filteredIngredientGroups = useMemo(() => {
         if (!recipeProduct?.is_prep) return ingredientGroups;
         return { raw_material: ingredientGroups.raw_material };
@@ -125,7 +125,6 @@ export default function ProductsIndex({ products, ingredients }: Props) {
             recipeForm.data.items.map((row, idx) => (idx === i ? { ...row, [key]: value } : row)),
         );
 
-    // Preview COGS/margin live (otoritatif tetap di backend saat disimpan).
     const preview = useMemo(() => {
         const cogs = recipeForm.data.items.reduce((sum, row) => {
             const ing = ingredients.find((x) => String(x.id) === row.ingredient_id);
@@ -149,13 +148,17 @@ export default function ProductsIndex({ products, ingredients }: Props) {
         recipeForm.put(`/products/${recipeProduct.id}/recipe`, { onSuccess: () => setRecipeProduct(null) });
     };
 
+    const handleCreateSuccess = (data: { id: number; name: string; selling_price: number }) => {
+        window.location.reload();
+    };
+
     return (
         <AppLayout title="Produk & Resep">
             <Head title="Produk & Resep" />
 
             <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">{products.length} produk</p>
-                <Button onClick={openCreate}>
+                <Button onClick={() => setShowCreateModal(true)}>
                     <Plus className="h-4 w-4" /> Tambah Produk
                 </Button>
             </div>
@@ -280,7 +283,7 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                             Produk prep hanya boleh menggunakan bahan baku (raw material). Bahan prep lainnya tidak tersedia.
                         </p>
                     )}
-                    <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                    <div className="space-y-2">
                         {recipeForm.data.items.map((row, i) => {
                             const ing = ingredients.find((x) => String(x.id) === row.ingredient_id);
                             const cost = ing ? ing.unit_price * (parseFloat(row.quantity) || 0) : 0;
@@ -361,6 +364,13 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                     </div>
                 </form>
             </Modal>
+
+            {/* Shared Create Product Modal */}
+            <CreateProductModal
+                open={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                onSuccess={handleCreateSuccess}
+            />
         </AppLayout>
     );
 }
