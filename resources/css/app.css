@@ -69,7 +69,7 @@
 /* Typography System */
 @layer components {
     .text-headline {
-        @apply font-headline text-2xl font-bold tracking-tight;
+        @apply text-2xl font-bold tracking-tight;
     }
 
     .text-section {
@@ -85,18 +85,18 @@
     }
 
     .text-metric {
-        @apply font-headline text-2xl font-bold tabular-nums;
+        @apply text-2xl font-bold tabular-nums;
     }
 
     .text-number {
-        @apply font-mono text-sm tabular-nums tracking-wide;
+        @apply text-sm tabular-nums;
     }
 
     .text-number-sm {
-        @apply font-mono text-xs tabular-nums tracking-wide;
+        @apply text-xs tabular-nums;
     }
 
     .text-number-lg {
-        @apply font-mono text-base font-semibold tabular-nums tracking-wide;
+        @apply text-base font-semibold tabular-nums;
     }
 }
