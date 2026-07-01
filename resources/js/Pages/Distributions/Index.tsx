@@ -74,10 +74,9 @@ export default function DistributionsIndex({ distributions, outlets, products, i
         to_outlet_id: '',
         distributed_at: defaultDate,
         notes: '',
-        items: [{ item_type: 'ingredient', product_id: '', ingredient_id: '', quantity: '', unit: 'gram' }] as Array<{
-            item_type: string;
-            product_id: string;
-            ingredient_id: string;
+        items: [{ item_id: '', item_source: '', quantity: '', unit: 'gram' }] as Array<{
+            item_id: string;
+            item_source: string;
             quantity: string;
             unit: string;
         }>,
@@ -86,7 +85,7 @@ export default function DistributionsIndex({ distributions, outlets, products, i
     const addItem = () => {
         form.setData('items', [
             ...form.data.items,
-            { item_type: 'ingredient', product_id: '', ingredient_id: '', quantity: '', unit: 'gram' },
+            { item_id: '', item_source: '', quantity: '', unit: 'gram' },
         ]);
     };
 
@@ -100,22 +99,19 @@ export default function DistributionsIndex({ distributions, outlets, products, i
         const items = [...form.data.items];
         (items[index] as any)[field] = value;
 
-        // Auto-fill unit when item changes
-        if (field === 'product_id') {
-            const product = products.find((p) => p.id === Number(value));
-            if (product) {
-                items[index].unit = product.unit;
-            }
-        } else if (field === 'ingredient_id') {
+        // Auto-detect source and fill unit when item changes
+        if (field === 'item_id' && value) {
             const ingredient = ingredients.find((i) => i.id === Number(value));
             if (ingredient) {
+                items[index].item_source = 'ingredient';
                 items[index].unit = ingredient.base_unit;
+            } else {
+                const product = products.find((p) => p.id === Number(value));
+                if (product) {
+                    items[index].item_source = 'product';
+                    items[index].unit = product.unit;
+                }
             }
-        } else if (field === 'item_type') {
-            // Reset selections when type changes
-            items[index].product_id = '';
-            items[index].ingredient_id = '';
-            items[index].unit = value === 'product' ? 'cup' : 'gram';
         }
 
         form.setData('items', items);
@@ -257,36 +253,35 @@ export default function DistributionsIndex({ distributions, outlets, products, i
                                 {form.data.items.map((item, index) => (
                                     <div key={index} className="flex items-center gap-2">
                                         <select
-                                            value={item.item_type}
-                                            onChange={(e) => updateItem(index, 'item_type', e.target.value)}
-                                            className="w-28 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                            value={item.item_id ? `${item.item_source}:${item.item_id}` : ''}
+                                            onChange={(e) => {
+                                                const [source, id] = e.target.value.split(':');
+                                                updateItem(index, 'item_id', id);
+                                                updateItem(index, 'item_source', source);
+                                            }}
+                                            className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                                         >
-                                            <option value="ingredient">Bahan Baku</option>
-                                            <option value="product">Produk</option>
-                                        </select>
-                                        {item.item_type === 'ingredient' ? (
-                                            <select
-                                                value={item.ingredient_id}
-                                                onChange={(e) => updateItem(index, 'ingredient_id', e.target.value)}
-                                                className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                            >
-                                                <option value="">Pilih bahan baku</option>
-                                                {ingredients.map((i) => (
-                                                    <option key={i.id} value={i.id}>{i.name}</option>
-                                                ))}
-                                            </select>
-                                        ) : (
-                                            <select
-                                                value={item.product_id}
-                                                onChange={(e) => updateItem(index, 'product_id', e.target.value)}
-                                                className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                            >
-                                                <option value="">Pilih produk</option>
+                                            <option value="">Pilih item</option>
+                                            <optgroup label="Bahan Baku">
+                                                {ingredients
+                                                    .filter((i) => i.item_type === 'raw_material')
+                                                    .map((i) => (
+                                                        <option key={`raw:${i.id}`} value={`ingredient:${i.id}`}>{i.name}</option>
+                                                    ))}
+                                            </optgroup>
+                                            <optgroup label="Prep">
+                                                {ingredients
+                                                    .filter((i) => i.item_type === 'prep')
+                                                    .map((i) => (
+                                                        <option key={`prep:${i.id}`} value={`ingredient:${i.id}`}>{i.name}</option>
+                                                    ))}
+                                            </optgroup>
+                                            <optgroup label="Produk Jadi">
                                                 {products.map((p) => (
-                                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                                    <option key={`prod:${p.id}`} value={`product:${p.id}`}>{p.name}</option>
                                                 ))}
-                                            </select>
-                                        )}
+                                            </optgroup>
+                                        </select>
                                         <Input
                                             type="number"
                                             value={item.quantity}

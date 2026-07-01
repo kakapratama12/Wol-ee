@@ -40,9 +40,8 @@ class DistributionController extends Controller
             'distributed_at' => 'required|date',
             'notes' => 'nullable|string|max:500',
             'items' => 'required|array|min:1',
-            'items.*.item_type' => 'required|in:product,ingredient',
-            'items.*.product_id' => 'nullable|required_if:items.*.item_type,product|exists:products,id',
-            'items.*.ingredient_id' => 'nullable|required_if:items.*.item_type,ingredient|exists:ingredients,id',
+            'items.*.item_id' => 'required|numeric',
+            'items.*.item_source' => 'required|in:ingredient,product',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.unit' => 'required|string|max:20',
         ]);
@@ -57,24 +56,26 @@ class DistributionController extends Controller
             ]);
 
             foreach ($validated['items'] as $item) {
+                $isIngredient = $item['item_source'] === 'ingredient';
+
                 DistributionItem::create([
                     'distribution_id' => $distribution->id,
-                    'product_id' => $item['item_type'] === 'product' ? $item['product_id'] : null,
-                    'ingredient_id' => $item['item_type'] === 'ingredient' ? $item['ingredient_id'] : null,
+                    'product_id' => $isIngredient ? null : $item['item_id'],
+                    'ingredient_id' => $isIngredient ? $item['item_id'] : null,
                     'quantity' => $item['quantity'],
                     'unit' => $item['unit'],
                 ]);
 
-                if ($item['item_type'] === 'ingredient') {
+                if ($isIngredient) {
                     // Deduct from source ingredient stock
-                    $ingredient = Ingredient::findOrFail($item['ingredient_id']);
+                    $ingredient = Ingredient::findOrFail($item['item_id']);
                     $ingredient->decrement('current_stock', $item['quantity']);
 
                     // Add to outlet ingredient inventory
                     OutletInventory::updateOrCreate(
                         [
                             'outlet_id' => $validated['to_outlet_id'],
-                            'ingredient_id' => $item['ingredient_id'],
+                            'ingredient_id' => $item['item_id'],
                             'product_id' => null,
                         ],
                         [
@@ -88,7 +89,7 @@ class DistributionController extends Controller
                     OutletInventory::updateOrCreate(
                         [
                             'outlet_id' => $validated['to_outlet_id'],
-                            'product_id' => $item['product_id'],
+                            'product_id' => $item['item_id'],
                             'ingredient_id' => null,
                         ],
                         [
