@@ -16,6 +16,7 @@ import {
     TableRow,
 } from '@/Components/ui/table';
 import { formatDate } from '@/lib/format';
+import GroupedSelect from '@/Components/ui/grouped-select';
 
 interface Outlet {
     id: number;
@@ -252,36 +253,34 @@ export default function DistributionsIndex({ distributions, outlets, products, i
                             <div className="space-y-2">
                                 {form.data.items.map((item, index) => (
                                     <div key={index} className="flex items-center gap-2">
-                                        <select
+                                        <GroupedSelect
+                                            className="flex-1"
                                             value={item.item_id ? `${item.item_source}:${item.item_id}` : ''}
-                                            onChange={(e) => {
-                                                const [source, id] = e.target.value.split(':');
+                                            onChange={(val) => {
+                                                const [source, id] = val.split(':');
                                                 updateItem(index, 'item_id', id);
                                                 updateItem(index, 'item_source', source);
                                             }}
-                                            className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                        >
-                                            <option value="">Pilih item</option>
-                                            <optgroup label="Bahan Baku">
-                                                {ingredients
-                                                    .filter((i) => i.item_type === 'raw_material')
-                                                    .map((i) => (
-                                                        <option key={`raw:${i.id}`} value={`ingredient:${i.id}`}>{i.name}</option>
-                                                    ))}
-                                            </optgroup>
-                                            <optgroup label="Prep">
-                                                {ingredients
-                                                    .filter((i) => i.item_type === 'prep')
-                                                    .map((i) => (
-                                                        <option key={`prep:${i.id}`} value={`ingredient:${i.id}`}>{i.name}</option>
-                                                    ))}
-                                            </optgroup>
-                                            <optgroup label="Produk Jadi">
-                                                {products.map((p) => (
-                                                    <option key={`prod:${p.id}`} value={`product:${p.id}`}>{p.name}</option>
-                                                ))}
-                                            </optgroup>
-                                        </select>
+                                            placeholder="Pilih item"
+                                            groups={[
+                                                {
+                                                    label: 'Bahan Baku',
+                                                    options: ingredients
+                                                        .filter((i) => i.item_type === 'raw_material')
+                                                        .map((i) => ({ value: `ingredient:${i.id}`, label: i.name })),
+                                                },
+                                                {
+                                                    label: 'Prep',
+                                                    options: ingredients
+                                                        .filter((i) => i.item_type === 'prep')
+                                                        .map((i) => ({ value: `ingredient:${i.id}`, label: i.name })),
+                                                },
+                                                {
+                                                    label: 'Produk Jadi',
+                                                    options: products.map((p) => ({ value: `product:${p.id}`, label: p.name })),
+                                                },
+                                            ]}
+                                        />
                                         <Input
                                             type="number"
                                             value={item.quantity}
