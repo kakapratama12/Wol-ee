@@ -253,7 +253,7 @@ export default function DistributionsIndex({ distributions, outlets, products, i
                             </div>
                             <div className="space-y-2">
                                 {form.data.items.map((item, index) => (
-                                    <div key={index} className="flex items-center gap-2">
+                                    <div key={index} className="flex items-center gap-2 flex-wrap">
                                         <GroupedSelect
                                             className="flex-1"
                                             value={item.item_id ? `${item.item_source}:${item.item_id}` : ''}
@@ -287,7 +287,7 @@ export default function DistributionsIndex({ distributions, outlets, products, i
                                             value={item.quantity}
                                             onChange={(e) => updateItem(index, 'quantity', e.target.value)}
                                             placeholder="Qty"
-                                            className="w-24"
+                                            className="w-24 min-w-[6rem]"
                                         />
                                         <span className="text-sm text-gray-500 w-12">{item.unit}</span>
                                         {form.data.items.length > 1 && (
@@ -302,7 +302,7 @@ export default function DistributionsIndex({ distributions, outlets, products, i
                                         )}
                                         {item.item_id && item.item_source === 'ingredient' && (
                                             <span className="text-xs text-gray-400 whitespace-nowrap">
-                                                Stok: {ingredients.find((i) => i.id === Number(item.item_id))?.current_stock ?? 0}
+                                                Stok: {Number(ingredients.find((i) => i.id === Number(item.item_id))?.current_stock ?? 0)}
                                             </span>
                                         )}
                                         {item.item_id && item.item_source === 'product' && (

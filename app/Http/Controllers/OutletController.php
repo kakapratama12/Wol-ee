@@ -10,7 +10,7 @@ class OutletController extends Controller
 {
     public function index()
     {
-        $outlets = Outlet::withCount('inventory')
+        $outlets = Outlet::where('is_active', true)->withCount('inventory')
             ->orderBy('type')
             ->orderBy('name')
             ->get();
