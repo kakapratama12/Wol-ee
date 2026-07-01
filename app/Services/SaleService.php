@@ -31,7 +31,7 @@ class SaleService
         bool $dispatchSaleRecorded = true,
         ?string $idempotencyKey = null,
     ): Sale {
-        $sale = DB::transaction(function () use ($product, $quantity, $unitPrice, $source, $userId, $note, $occurredAt) {
+        $sale = DB::transaction(function () use ($product, $quantity, $unitPrice, $source, $userId, $note, $occurredAt, $idempotencyKey) {
             return $this->persistSale(
                 product: $product,
                 quantity: $quantity,

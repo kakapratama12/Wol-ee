@@ -29,7 +29,7 @@ class InventoryService
         ?CarbonInterface $occurredAt = null,
         ?string $idempotencyKey = null,
     ): Transaction {
-        return DB::transaction(function () use ($ingredient, $quantity, $unitPrice, $source, $userId, $note, $occurredAt) {
+        return DB::transaction(function () use ($ingredient, $quantity, $unitPrice, $source, $userId, $note, $occurredAt, $idempotencyKey) {
             $occurredAt = $occurredAt ?? Carbon::now();
             $total = round($quantity * $unitPrice, 2);
 
