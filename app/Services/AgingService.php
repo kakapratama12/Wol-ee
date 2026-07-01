@@ -4,14 +4,13 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\Partner;
+use App\Models\Payable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class AgingService
 {
-    /**
-     * @return array{current: float, 1-2_months: float, 2-3_months: float, 3_plus: float}
-     */
+    /** @return array{current: float, 1-2_months: float, 2-3_months: float, 3_plus: float} */
     public function emptyBuckets(): array
     {
         return [
@@ -25,6 +24,11 @@ class AgingService
     public function remainingAmount(Invoice $invoice): float
     {
         return max(0, round((float) $invoice->amount - (float) $invoice->paid_amount, 2));
+    }
+
+    public function remainingPayableAmount(Payable $payable): float
+    {
+        return max(0, round((float) $payable->amount - (float) $payable->paid_amount, 2));
     }
 
     public function bucketForDueDate(Carbon $dueDate): string
@@ -46,9 +50,7 @@ class AgingService
         return '3_plus';
     }
 
-    /**
-     * @return array{current: float, 1-2_months: float, 2-3_months: float, 3_plus: float}
-     */
+    /** @return array{current: float, 1-2_months: float, 2-3_months: float, 3_plus: float} */
     public function bucketsForInvoices(Collection $invoices): array
     {
         $buckets = $this->emptyBuckets();
@@ -70,15 +72,44 @@ class AgingService
         return $buckets;
     }
 
-    /**
-     * @return array{current: float, 1-2_months: float, 2-3_months: float, 3_plus: float}
-     */
+    /** @return array{current: float, 1-2_months: float, 2-3_months: float, 3_plus: float} */
+    public function bucketsForPayables(Collection $payables): array
+    {
+        $buckets = $this->emptyBuckets();
+
+        foreach ($payables as $payable) {
+            if ($payable->status === Payable::STATUS_PAID) {
+                continue;
+            }
+
+            $remaining = $this->remainingPayableAmount($payable);
+            if ($remaining <= 0) {
+                continue;
+            }
+
+            $dueDate = $payable->due_date ? $payable->due_date->copy() : now();
+            $bucket = $this->bucketForDueDate($dueDate);
+            $buckets[$bucket] = round($buckets[$bucket] + $remaining, 2);
+        }
+
+        return $buckets;
+    }
+
+    /** @return array{current: float, 1-2_months: float, 2-3_months: float, 3_plus: float} */
     public function partnerAging(Partner $partner): array
     {
         return $this->bucketsForInvoices($partner->invoices()->get());
     }
 
+    /** @return array{current: float, 1-2_months: float, 2-3_months: float, 3_plus: float} */
+    public function partnerPayableAging(Partner $partner): array
+    {
+        return $this->bucketsForPayables($partner->payables()->get());
+    }
+
     /**
+     * AR Aging Report (existing).
+     *
      * @return array{
      *     summary: array{total_outstanding: float, total_partners: int},
      *     by_partner: list<array{partner_id: int, partner: string, total: float, current: float, 1-2_months: float, 2-3_months: float, 3_plus: float}>,
@@ -124,6 +155,60 @@ class AgingService
             'summary' => [
                 'total_outstanding' => $totalOutstanding,
                 'total_partners' => count($byPartner),
+            ],
+            'by_partner' => $byPartner,
+            'by_aging' => $byAging,
+        ];
+    }
+
+    /**
+     * AP Aging Report (mirror of AR).
+     *
+     * @return array{
+     *     summary: array{total_outstanding: float, total_suppliers: int},
+     *     by_partner: list<array{partner_id: int, partner: string, total: float, current: float, 1-2_months: float, 2-3_months: float, 3_plus: float}>,
+     *     by_aging: array{current: float, 1-2_months: float, 2-3_months: float, 3_plus: float}
+     * }
+     */
+    public function payableReport(): array
+    {
+        $partners = Partner::query()
+            ->where('type', Partner::TYPE_SUPPLIER)
+            ->with(['payables' => fn ($q) => $q->where('status', '!=', Payable::STATUS_PAID)])
+            ->get();
+
+        $byPartner = [];
+        $byAging = $this->emptyBuckets();
+        $totalOutstanding = 0.0;
+
+        foreach ($partners as $partner) {
+            $aging = $this->bucketsForPayables($partner->payables);
+            $total = round(array_sum($aging), 2);
+
+            if ($total <= 0) {
+                continue;
+            }
+
+            $byPartner[] = [
+                'partner_id' => $partner->id,
+                'partner' => $partner->name,
+                'total' => $total,
+                ...$aging,
+            ];
+
+            foreach ($aging as $bucket => $amount) {
+                $byAging[$bucket] = round($byAging[$bucket] + $amount, 2);
+            }
+
+            $totalOutstanding = round($totalOutstanding + $total, 2);
+        }
+
+        usort($byPartner, fn (array $a, array $b) => $b['total'] <=> $a['total']);
+
+        return [
+            'summary' => [
+                'total_outstanding' => $totalOutstanding,
+                'total_suppliers' => count($byPartner),
             ],
             'by_partner' => $byPartner,
             'by_aging' => $byAging,
