@@ -115,6 +115,9 @@
         @if($invoice->partner?->email)
             <div class="bill-to-detail">{{ $invoice->partner->email }}</div>
         @endif
+        @if($invoice->po_number)
+            <div class="bill-to-detail" style="margin-top: 8px;"><strong>Nomor PO:</strong> {{ $invoice->po_number }}</div>
+        @endif
     </div>
 
     @if($invoice->items->count() > 0)

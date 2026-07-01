@@ -15,18 +15,21 @@ class Invoice extends Model
     public const STATUS_OUTSTANDING = 'outstanding';
     public const STATUS_PARTIAL = 'partial';
     public const STATUS_PAID = 'paid';
+    public const STATUS_DRAFT = 'draft';
 
     protected $fillable = [
         'idempotency_key',
         'tenant_id',
         'partner_id',
         'invoice_number',
+        'po_number',
         'amount',
         'paid_amount',
         'due_date',
         'status',
         'note',
         'paid_at',
+        'archived_at',
     ];
 
     protected $casts = [
@@ -34,6 +37,7 @@ class Invoice extends Model
         'paid_amount' => 'decimal:2',
         'due_date' => 'date',
         'paid_at' => 'datetime',
+        'archived_at' => 'datetime',
     ];
 
     public function partner(): BelongsTo

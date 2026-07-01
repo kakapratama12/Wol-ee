@@ -34,6 +34,7 @@ interface InvoiceFee {
 interface Invoice {
     id: number;
     invoice_number: string;
+    po_number: string | null;
     partner_id: number;
     partner: string | null;
     amount: number;
@@ -57,6 +58,7 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
 
     const form = useForm<{
         partner_id: string;
+        po_number: string;
         amount: string;
         due_date: string;
         note: string;
@@ -64,6 +66,7 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
         fees: FeeRow[];
     }>({
         partner_id: String(invoice.partner_id),
+        po_number: invoice.po_number ?? '',
         amount: hasItems ? '' : String(invoice.amount),
         due_date: invoice.due_date,
         note: invoice.note ?? '',
@@ -175,6 +178,15 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
                                     {form.errors.partner_id}
                                 </p>
                             )}
+                        </div>
+                        <div>
+                            <Label htmlFor="po_number">Nomor PO (opsional)</Label>
+                            <Input
+                                id="po_number"
+                                value={form.data.po_number}
+                                onChange={(e) => form.setData('po_number', e.target.value)}
+                                placeholder="Masukkan nomor PO dari customer"
+                            />
                         </div>
 
                         <div className="flex items-center gap-2">
