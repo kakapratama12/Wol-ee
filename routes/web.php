@@ -69,6 +69,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/invoices/{invoice}/pdf/preview', [InvoiceController::class, 'pdfPreview'])->name('invoices.pdf-preview');
     Route::get('/invoices/{invoice}/kuitansi', [InvoiceController::class, 'kuitansi'])->name('invoices.kuitansi');
 
+    // Multi-outlet
+    Route::get('/outlets', [\App\Http\Controllers\OutletController::class, 'index'])->name('outlets.index');
+    Route::get('/distributions', [\App\Http\Controllers\DistributionController::class, 'index'])->name('distributions.index');
+    Route::middleware('owner')->group(function () {
+        Route::post('/outlets', [\App\Http\Controllers\OutletController::class, 'store'])->name('outlets.store');
+        Route::put('/outlets/{outlet}', [\App\Http\Controllers\OutletController::class, 'update'])->name('outlets.update');
+        Route::delete('/outlets/{outlet}', [\App\Http\Controllers\OutletController::class, 'destroy'])->name('outlets.destroy');
+        Route::post('/distributions', [\App\Http\Controllers\DistributionController::class, 'store'])->name('distributions.store');
+    });
+
     // Owner only
     Route::middleware('owner')->group(function () {
         Route::get('/products', [ProductController::class, 'index'])->name('products.index');
