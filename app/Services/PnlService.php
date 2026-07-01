@@ -16,6 +16,7 @@ class PnlService
     {
         // Revenue breakdown per product
         $revenueByProduct = Sale::query()
+            ->active()
             ->whereYear('occurred_at', $year)
             ->whereMonth('occurred_at', $month)
             ->join('products', 'sales.product_id', '=', 'products.id')
@@ -31,6 +32,7 @@ class PnlService
 
         // COGS breakdown per product
         $cogsByProduct = Sale::query()
+            ->active()
             ->whereYear('occurred_at', $year)
             ->whereMonth('occurred_at', $month)
             ->join('products', 'sales.product_id', '=', 'products.id')

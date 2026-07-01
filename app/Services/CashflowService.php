@@ -25,6 +25,7 @@ class CashflowService
 
         // ── Kas Masuk ──
         $penjualan = (float) Sale::query()
+            ->active()
             ->whereBetween('occurred_at', [$start, $end])
             ->sum('revenue');
 
@@ -89,6 +90,7 @@ class CashflowService
 
         // Total kas masuk dari awal sampai akhir bulan ini
         $totalMasuk = (float) Sale::query()
+            ->active()
             ->where('occurred_at', '<=', $end)
             ->sum('revenue');
 

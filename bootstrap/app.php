@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -11,6 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function () {
+            Route::middleware('web')
+                ->prefix('pos')
+                ->name('pos.')
+                ->group(base_path('routes/pos.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
@@ -22,6 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'owner' => \App\Http\Middleware\EnsureUserIsOwner::class,
+            'cashier' => \App\Http\Middleware\EnsureUserIsCashier::class,
+            'pos.session' => \App\Http\Middleware\EnsurePosSessionOpen::class,
             'super_admin' => \App\Http\Middleware\EnsureUserIsSuperAdmin::class,
             'bot.token' => \App\Http\Middleware\BotTokenAuth::class,
         ]);

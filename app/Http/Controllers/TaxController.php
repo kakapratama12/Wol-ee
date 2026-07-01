@@ -47,8 +47,8 @@ class TaxController extends Controller
     {
         $year = Carbon::now()->year;
 
-        $omset = (float) Sale::whereYear('occurred_at', $year)->sum('revenue');
-        $cogs = (float) Sale::whereYear('occurred_at', $year)->sum('cogs');
+        $omset = (float) Sale::query()->active()->whereYear('occurred_at', $year)->sum('revenue');
+        $cogs = (float) Sale::query()->active()->whereYear('occurred_at', $year)->sum('cogs');
         $expense = (float) Expense::where('period_year', $year)->sum('amount');
 
         return [

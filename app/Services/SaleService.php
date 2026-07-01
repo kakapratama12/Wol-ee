@@ -8,6 +8,7 @@ use App\Models\Sale;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class SaleService
 {
@@ -30,8 +31,18 @@ class SaleService
         ?CarbonInterface $occurredAt = null,
         bool $dispatchSaleRecorded = true,
         ?string $idempotencyKey = null,
+        ?int $posOrderId = null,
+        ?int $branchId = null,
     ): Sale {
-        $sale = DB::transaction(function () use ($product, $quantity, $unitPrice, $source, $userId, $note, $occurredAt) {
+        if ($idempotencyKey !== null) {
+            $existing = Sale::query()->where('idempotency_key', $idempotencyKey)->first();
+
+            if ($existing) {
+                return $existing;
+            }
+        }
+
+        $sale = DB::transaction(function () use ($product, $quantity, $unitPrice, $source, $userId, $note, $occurredAt, $idempotencyKey, $posOrderId, $branchId) {
             return $this->persistSale(
                 product: $product,
                 quantity: $quantity,
@@ -41,6 +52,8 @@ class SaleService
                 note: $note,
                 occurredAt: $occurredAt ?? Carbon::now(),
                 idempotencyKey: $idempotencyKey,
+                posOrderId: $posOrderId,
+                branchId: $branchId,
             );
         });
 
@@ -53,9 +66,13 @@ class SaleService
 
     public function void(Sale $sale): void
     {
+        if ($sale->isVoid()) {
+            throw new InvalidArgumentException('Penjualan sudah di-void.');
+        }
+
         DB::transaction(function () use ($sale) {
             $this->inventory->reverseSaleUsage($sale);
-            $sale->delete();
+            $sale->update(['status' => Sale::STATUS_VOID]);
         });
     }
 
@@ -68,10 +85,16 @@ class SaleService
         ?CarbonInterface $occurredAt = null,
         ?int $userId = null,
     ): Sale {
+        if ($sale->isVoid()) {
+            throw new InvalidArgumentException('Penjualan void tidak bisa diubah.');
+        }
+
         return DB::transaction(function () use ($sale, $product, $quantity, $unitPrice, $note, $occurredAt, $userId) {
             $source = $sale->source;
             $resolvedUserId = $userId ?? $sale->user_id;
             $resolvedOccurredAt = $occurredAt ?? $sale->occurred_at;
+            $posOrderId = $sale->pos_order_id;
+            $branchId = $sale->branch_id;
 
             $this->inventory->reverseSaleUsage($sale);
             $sale->delete();
@@ -84,6 +107,8 @@ class SaleService
                 userId: $resolvedUserId,
                 note: $note,
                 occurredAt: $resolvedOccurredAt,
+                posOrderId: $posOrderId,
+                branchId: $branchId,
             );
         });
     }
@@ -97,17 +122,16 @@ class SaleService
         ?string $note,
         CarbonInterface $occurredAt,
         ?string $idempotencyKey = null,
+        ?int $posOrderId = null,
+        ?int $branchId = null,
     ): Sale {
         $product->loadMissing('recipeItems.ingredient');
 
         $unitPrice = $unitPrice ?? (float) $product->selling_price;
 
-        // Calculate COGS based on product type
         if ($product->isBatch()) {
-            // For batch products: use average COGS from production runs
             $cogsPerUnit = $this->cogs->averageCogsForBatchProduct($product, $occurredAt);
         } else {
-            // For unit products: use recipe-based COGS
             $cogsPerUnit = $this->cogs->cogsForProduct($product);
         }
 
@@ -120,6 +144,8 @@ class SaleService
             'idempotency_key' => $idempotencyKey,
             'user_id' => $userId,
             'product_id' => $product->id,
+            'pos_order_id' => $posOrderId,
+            'branch_id' => $branchId,
             'quantity' => $quantity,
             'unit_price' => $unitPrice,
             'revenue' => $revenue,
@@ -127,16 +153,14 @@ class SaleService
             'profit' => $profit,
             'margin' => $margin,
             'source' => $source,
+            'status' => Sale::STATUS_ACTIVE,
             'note' => $note,
             'occurred_at' => $occurredAt,
         ]);
 
-        // Deduct stock based on product type
         if ($product->isBatch()) {
-            // For batch products: deduct from finished goods stock
             $this->inventory->deductFinishedGoods($product, $quantity, $sale, $occurredAt, $userId);
         } else {
-            // For unit products: deduct from raw materials based on recipe
             foreach ($product->recipeItems as $item) {
                 if (! $item->ingredient) {
                     continue;
@@ -158,9 +182,6 @@ class SaleService
     }
 
     /**
-     * Estimasi pemakaian bahan untuk penjualan (tanpa menyimpan) — dipakai
-     * untuk preview / respon bot.
-     *
      * @return array<int, array<string, mixed>>
      */
     public function usageBreakdown(Product $product, int $quantity): array

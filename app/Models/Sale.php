@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,10 +12,19 @@ class Sale extends Model
 {
     use BelongsToTenant, HasFactory;
 
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_VOID = 'void';
+
+    public const SOURCE_WEB = 'web';
+    public const SOURCE_BOT = 'bot';
+    public const SOURCE_POS = 'pos';
+
     protected $fillable = [
         'idempotency_key',
         'user_id',
         'product_id',
+        'pos_order_id',
+        'branch_id',
         'quantity',
         'unit_price',
         'revenue',
@@ -22,6 +32,7 @@ class Sale extends Model
         'profit',
         'margin',
         'source',
+        'status',
         'note',
         'occurred_at',
         'tenant_id',
@@ -37,6 +48,14 @@ class Sale extends Model
         'occurred_at' => 'datetime',
     ];
 
+    /**
+     * @param  Builder<Sale>  $query
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_ACTIVE);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -45,5 +64,20 @@ class Sale extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function posOrder(): BelongsTo
+    {
+        return $this->belongsTo(PosOrder::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function isVoid(): bool
+    {
+        return $this->status === self::STATUS_VOID;
     }
 }

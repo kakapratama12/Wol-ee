@@ -64,6 +64,7 @@ class DashboardController extends Controller
             ]);
 
         $recentSales = Sale::query()
+            ->active()
             ->with('product:id,name')
             ->whereBetween('occurred_at', [$start->toDateString(), $end->endOfDay()->toIso8601String()])
             ->latest('occurred_at')
@@ -97,10 +98,12 @@ class DashboardController extends Controller
 
         // Metrics for selected period
         $periodRevenue = round((float) Sale::query()
+            ->active()
             ->whereBetween('occurred_at', [$start->toDateString(), $end->endOfDay()->toIso8601String()])
             ->sum('revenue'), 2);
 
         $periodCogs = round((float) Sale::query()
+            ->active()
             ->whereBetween('occurred_at', [$start->toDateString(), $end->endOfDay()->toIso8601String()])
             ->sum('cogs'), 2);
 
@@ -124,6 +127,7 @@ class DashboardController extends Controller
                     'month' => $month,
                     'year' => $year,
                     'revenue' => round((float) Sale::query()
+                        ->active()
                         ->whereYear('occurred_at', $year)
                         ->whereMonth('occurred_at', $month)
                         ->sum('revenue'), 2),

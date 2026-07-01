@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Branch;
 use App\Models\Expense;
 use App\Models\Ingredient;
 use App\Models\PriceHistory;
@@ -51,6 +52,21 @@ class DatabaseSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'admin@wol-ee.local', 'tenant_id' => $tenant->id],
             ['name' => 'Staff', 'password' => Hash::make('password'), 'role' => User::ROLE_STAFF],
+        );
+
+        $branch = Branch::withoutGlobalScope('tenant')->firstOrCreate(
+            ['tenant_id' => $tenant->id, 'name' => 'Cabang Utama'],
+            ['is_active' => true],
+        );
+
+        User::updateOrCreate(
+            ['email' => 'cashier@wol-ee.local', 'tenant_id' => $tenant->id],
+            [
+                'name' => 'Kasir Demo',
+                'password' => Hash::make('password'),
+                'role' => User::ROLE_CASHIER,
+                'branch_id' => $branch->id,
+            ],
         );
     }
 

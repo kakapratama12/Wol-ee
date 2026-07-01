@@ -25,7 +25,7 @@ class ReportController extends Controller
     {
         $today = Carbon::today();
 
-        $sales = Sale::query()->whereDate('occurred_at', $today);
+        $sales = Sale::query()->active()->whereDate('occurred_at', $today);
 
         $revenue = (float) $sales->clone()->sum('revenue');
         $cogs = (float) $sales->clone()->sum('cogs');
@@ -153,6 +153,7 @@ class ReportController extends Controller
         }
 
         $query = Sale::query()
+            ->active()
             ->with('product:id,name')
             ->selectRaw('product_id, SUM(quantity) as total_quantity, SUM(revenue) as revenue, SUM(profit) as profit, COUNT(*) as transactions')
             ->whereYear('occurred_at', $year)

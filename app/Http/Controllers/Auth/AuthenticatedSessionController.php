@@ -39,6 +39,10 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route("platform.overview");
         }
 
+        if ($user->isCashier()) {
+            return redirect()->route('pos.entry');
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

@@ -14,6 +14,8 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 ## [Unreleased]
 ### Added
 
+- POS (Fase 1 foundation): cabang (`branches`), sesi kasir, order POS (`pos_orders`), role `cashier`, API `/pos/*` (buka/tutup sesi, checkout, void). Penjualan POS tercatat di `sales` dengan `source=pos`. Validasi stok keranjang holistik dengan pesan error per produk.
+- POS (Fase 2 UI): halaman kasir Inertia di `/pos` — buka/tutup sesi, ringkasan stok awal, register (grid produk + keranjang), modal pembayaran, halaman sukses transaksi. Login kasir redirect ke POS.
 - ESLint + Prettier: guardrails untuk code style konsisten. Frontend code otomatis ter-format.
 - Idempotency key di sales, transactions, invoices — mencegah duplikat dari double submit atau network retry. UUID di-generate otomatis di frontend, backend cek sebelum create.
 - Dark mode: toggle button di header, localStorage persistence, auto-detect system preference. Logo otomatis switch (navy → putih) berdasarkan theme.
@@ -26,6 +28,8 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 - Report design standard: angka operasional selalu positif (tanpa minus/kurung). Hanya Laba/Rugi yang pakai hijau/merah.
 
 ### Changed
+
+- Void penjualan: soft void (`status=void`) menggantikan hard delete; laporan hanya menghitung penjualan aktif.
 
 - Dashboard metrics, penjualan terbaru, dan pembelian terbaru sekarang ikut filter tanggal yang dipilih.
 - PnL: hapus kuantitas (pcs) dari breakdown revenue & COGS. COGS & Expenses tampil sebagai angka biasa.

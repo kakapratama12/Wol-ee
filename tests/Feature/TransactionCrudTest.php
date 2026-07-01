@@ -66,7 +66,8 @@ it('admin bisa update dan delete penjualan', function () {
         ->assertRedirect()
         ->assertSessionHas('success');
 
-    expect(Sale::count())->toBe(0);
+    expect(Sale::count())->toBe(1);
+    expect(Sale::first()->status)->toBe(Sale::STATUS_VOID);
 });
 
 it('admin bisa update dan delete pembelian', function () {
