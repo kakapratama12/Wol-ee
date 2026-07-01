@@ -14,6 +14,11 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 ## [Unreleased]
 ### Added
 
+- Nomor PO (opsional) di invoice — tampil di PDF dan halaman detail hanya jika diisi.
+- Status Draft invoice — flow: draft → outstanding → partial → paid. Draft bisa diedit bebas.
+- Hapus invoice (draft & outstanding) dan arsipkan invoice (partial & paid) dari halaman list & detail.
+- Filter arsip di halaman invoices — toggle "Tampilkan Arsip" / "Sembunyikan Arsip".
+- Tombol "Simpan Draft" & "Simpan & Kirim" di form buat invoice.
 - ESLint + Prettier: guardrails untuk code style konsisten. Frontend code otomatis ter-format.
 - Idempotency key di sales, transactions, invoices — mencegah duplikat dari double submit atau network retry. UUID di-generate otomatis di frontend, backend cek sebelum create.
 - Dark mode: toggle button di header, localStorage persistence, auto-detect system preference. Logo otomatis switch (navy → putih) berdasarkan theme.
@@ -35,6 +40,8 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 ### Fixed
 
+- 500 error saat simpan penjualan/pembelian — `$idempotencyKey` tidak di-pass ke closure `DB::transaction` di SaleService & InventoryService.
+- Quantity di PDF preview invoice tampil desimal (50.0000 → 50).
 - Race condition: stock deduction sekarang pake `lockForUpdate()` di InventoryService (recordUsage, reversePurchase, reverseSaleUsage, deductFinishedGoods) dan ProductionRunService. Mencegah oversell dari concurrent sales/production runs.
 - PnL server error: selectRaw terhapus oleh sed command, menyebabkan GROUP BY error.
 - Favicon background: dari abu-abu (JPEG) menjadi transparan.
