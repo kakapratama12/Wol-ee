@@ -15,6 +15,7 @@ class Sale extends Model
         'idempotency_key',
         'user_id',
         'product_id',
+        'outlet_id',
         'quantity',
         'unit_price',
         'revenue',
@@ -45,5 +46,10 @@ class Sale extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(Outlet::class);
     }
 }
