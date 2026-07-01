@@ -48,11 +48,14 @@ class OutletInventoryController extends Controller
         ]);
 
         DB::transaction(function () use ($outletId, $validated) {
+            $isIngredient = $validated['item_source'] === 'ingredient';
+            
+            // Find or create inventory record
             $inventory = OutletInventory::firstOrCreate(
                 [
                     'outlet_id' => $outletId,
-                    'item_id' => $validated['item_id'],
-                    'item_source' => $validated['item_source'],
+                    'product_id' => $isIngredient ? null : $validated['item_id'],
+                    'ingredient_id' => $isIngredient ? $validated['item_id'] : null,
                 ],
                 [
                     'quantity' => 0,
@@ -67,6 +70,6 @@ class OutletInventoryController extends Controller
             ]);
         });
 
-        return back()->with('success', 'Stock adjusted successfully.');
+        return back()->with('success', 'Stok berhasil disesuaikan.');
     }
 }
