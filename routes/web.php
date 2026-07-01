@@ -3,6 +3,7 @@
 use App\Http\Controllers\AgingReportController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PartnerController;
+use App\Http\Controllers\PayableController;
 use App\Http\Controllers\BotIntegrationController;
 use App\Http\Controllers\CashEntryController;
 use App\Http\Controllers\CashflowController;
@@ -116,6 +117,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
         Route::post('/invoices/{invoice}/archive', [InvoiceController::class, 'archive'])->name('invoices.archive');
     });
+
+    // AP — Tagihan Supplier
+    Route::get('/payables', [PayableController::class, 'index'])->name('payables.index');
+    Route::get('/payables/{payable}', [PayableController::class, 'show'])->name('payables.show');
+    Route::post('/payables', [PayableController::class, 'store'])->name('payables.store');
+    Route::post('/payables/{payable}/pay', [PayableController::class, 'pay'])->name('payables.pay');
+    Route::post('/payables/{payable}/archive', [PayableController::class, 'archive'])->name('payables.archive');
 });
 
 Route::middleware(['auth', 'verified', 'super_admin'])

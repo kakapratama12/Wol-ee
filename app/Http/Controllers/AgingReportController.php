@@ -12,6 +12,7 @@ class AgingReportController extends Controller
     {
         return Inertia::render('Reports/Aging', [
             'report' => $aging->report(),
+            'payableReport' => $aging->payableReport(),
         ]);
     }
 }
