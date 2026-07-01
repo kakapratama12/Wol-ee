@@ -34,15 +34,15 @@ export default function ForgotPassword() {
                     Hubungi tim support kami untuk bantuan reset password.
                 </p>
 
-                <Link
+                <a
                     href={whatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#25D366] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#1da851]"
                 >
                     <MessageCircle className="h-4 w-4" />
-                    Diskusikan via WhatsApp
-                </Link>
+                    Hubungi kami
+                </a>
 
                 <p className="mt-6 text-xs text-gray-500">
                     Klik tombol di atas untuk chat langsung dengan tim support.
