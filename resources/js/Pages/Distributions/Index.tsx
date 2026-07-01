@@ -120,25 +120,30 @@ export default function DistributionsIndex({ distributions, outlets, products, i
     };
 
     const [stockErrors, setStockErrors] = useState<Record<number, string>>({});
+    const [formErrors, setFormErrors] = useState<{ from?: string; to?: string }>({});
 
     const handleSubmit = () => {
         // Validate outlets
+        const newFormErrors: { from?: string; to?: string } = {};
         if (!form.data.from_outlet_id) {
-            alert('Pilih Dari Outlet terlebih dahulu');
-            return;
+            newFormErrors.from = 'Pilih Dari Outlet';
         }
         if (!form.data.to_outlet_id) {
-            alert('Pilih Ke Outlet terlebih dahulu');
+            newFormErrors.to = 'Pilih Ke Outlet';
+        }
+        if (Object.keys(newFormErrors).length > 0) {
+            setFormErrors(newFormErrors);
             return;
         }
+        setFormErrors({});
 
         // Validate stock
         const errors: Record<number, string> = {};
         form.data.items.forEach((item, index) => {
             if (item.item_id && item.item_source === 'ingredient' && item.quantity) {
                 const ingredient = ingredients.find((i) => i.id === Number(item.item_id));
-                if (ingredient && Number(item.quantity) > ingredient.current_stock) {
-                    errors[index] = `Stok ${ingredient.name} hanya ${ingredient.current_stock} ${ingredient.base_unit}`;
+                if (ingredient && Number(item.quantity) > Number(ingredient.current_stock)) {
+                    errors[index] = `Stok ${ingredient.name} hanya ${Number(ingredient.current_stock)} ${ingredient.base_unit}`;
                 }
             }
         });
@@ -229,21 +234,32 @@ export default function DistributionsIndex({ distributions, outlets, products, i
                                 <Label>Dari Outlet</Label>
                                 <select
                                     value={form.data.from_outlet_id}
-                                    onChange={(e) => form.setData('from_outlet_id', e.target.value)}
-                                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                    onChange={(e) => {
+                                        form.setData('from_outlet_id', e.target.value);
+                                        setFormErrors((prev) => ({ ...prev, from: undefined }));
+                                    }}
+                                    className={`w-full rounded-md border bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-white ${
+                                        formErrors.from ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                                    }`}
                                 >
                                     <option value="">Pilih outlet</option>
                                     {outlets.map((o) => (
                                         <option key={o.id} value={o.id}>{o.name}</option>
                                     ))}
                                 </select>
+                                {formErrors.from && <p className="text-xs text-red-500 mt-1">{formErrors.from}</p>}
                             </div>
                             <div>
                                 <Label>Ke Outlet</Label>
                                 <select
                                     value={form.data.to_outlet_id}
-                                    onChange={(e) => form.setData('to_outlet_id', e.target.value)}
-                                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                    onChange={(e) => {
+                                        form.setData('to_outlet_id', e.target.value);
+                                        setFormErrors((prev) => ({ ...prev, to: undefined }));
+                                    }}
+                                    className={`w-full rounded-md border bg-white px-3 py-2 text-sm dark:bg-gray-800 dark:text-white ${
+                                        formErrors.to ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                                    }`}
                                 >
                                     <option value="">Pilih outlet</option>
                                     {outlets
@@ -252,6 +268,7 @@ export default function DistributionsIndex({ distributions, outlets, products, i
                                             <option key={o.id} value={o.id}>{o.name}</option>
                                         ))}
                                 </select>
+                                {formErrors.to && <p className="text-xs text-red-500 mt-1">{formErrors.to}</p>}
                             </div>
                         </div>
 
