@@ -15,6 +15,7 @@ class Transaction extends Model
         'idempotency_key',
         'user_id',
         'ingredient_id',
+        'payable_id',
         'quantity',
         'unit_price',
         'total',
@@ -39,5 +40,10 @@ class Transaction extends Model
     public function ingredient(): BelongsTo
     {
         return $this->belongsTo(Ingredient::class);
+    }
+
+    public function payable(): BelongsTo
+    {
+        return $this->belongsTo(Payable::class);
     }
 }
