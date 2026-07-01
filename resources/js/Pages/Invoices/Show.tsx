@@ -251,7 +251,7 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                                     <TableRow key={item.id}>
                                         <TableCell>{item.description}</TableCell>
                                         <TableCell className="text-right">
-                                            {item.quantity}
+                                            {Math.round(item.quantity).toLocaleString('id-ID')}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             {formatRupiah(item.unit_price)}

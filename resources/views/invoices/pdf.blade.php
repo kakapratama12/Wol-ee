@@ -131,7 +131,7 @@
             @foreach($invoice->items as $item)
             <tr>
                 <td><span class="item-desc">{{ $item->description }}</span></td>
-                <td>{{ $item->quantity }}</td>
+                <td>{{ rtrim(rtrim(number_format((float) $item->quantity, 2, '.', ''), '0'), '.') }}</td>
                 <td>{{ number_format($item->unit_price, 0, ',', '.') }}</td>
                 <td>{{ number_format($item->total, 0, ',', '.') }}</td>
             </tr>
