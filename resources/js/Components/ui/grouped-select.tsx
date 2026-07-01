@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,6 +29,7 @@ export default function GroupedSelect({
 }: GroupedSelectProps) {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState('');
+    const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
     const containerRef = useRef<HTMLDivElement>(null);
     const searchRef = useRef<HTMLInputElement>(null);
 
@@ -36,6 +37,33 @@ export default function GroupedSelect({
     const selectedLabel = groups
         .flatMap((g) => g.options)
         .find((o) => o.value === value)?.label;
+
+    // Calculate position from trigger button
+    const updatePosition = useCallback(() => {
+        if (containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            setPosition({
+                top: rect.bottom + 4, // 4px gap below trigger
+                left: rect.left,
+                width: rect.width,
+            });
+        }
+    }, []);
+
+    // Update position on open and on scroll/resize
+    useEffect(() => {
+        if (!open) return;
+
+        updatePosition();
+
+        const handleReposition = () => updatePosition();
+        window.addEventListener('scroll', handleReposition, true);
+        window.addEventListener('resize', handleReposition);
+        return () => {
+            window.removeEventListener('scroll', handleReposition, true);
+            window.removeEventListener('resize', handleReposition);
+        };
+    }, [open, updatePosition]);
 
     // Close on outside click
     useEffect(() => {
@@ -77,7 +105,14 @@ export default function GroupedSelect({
             {/* Trigger */}
             <button
                 type="button"
-                onClick={() => setOpen(!open)}
+                onClick={() => {
+                    if (open) {
+                        setOpen(false);
+                        setSearch('');
+                    } else {
+                        setOpen(true);
+                    }
+                }}
                 className={cn(
                     'flex w-full items-center justify-between rounded-md border bg-white px-3 py-2 text-sm',
                     'border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white',
@@ -90,9 +125,16 @@ export default function GroupedSelect({
                 <ChevronDown className={cn('h-4 w-4 text-gray-400 transition-transform', open && 'rotate-180')} />
             </button>
 
-            {/* Dropdown */}
+            {/* Dropdown — FIXED position, escapes parent overflow */}
             {open && (
-                <div className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
+                <div
+                    className="fixed z-[100] rounded-md border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800"
+                    style={{
+                        top: position.top,
+                        left: position.left,
+                        width: position.width,
+                    }}
+                >
                     {/* Search */}
                     <div className="border-b border-gray-100 p-2 dark:border-gray-700">
                         <input
