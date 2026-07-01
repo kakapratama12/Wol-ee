@@ -345,7 +345,7 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
                                         className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-accent"
                                     >
                                         <User className="h-4 w-4" />
-                                        Profil
+                                        Ganti Password
                                     </Link>
                                     <Link
                                         href="/logout"
