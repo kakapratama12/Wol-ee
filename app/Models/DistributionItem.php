@@ -13,6 +13,7 @@ class DistributionItem extends Model
     protected $fillable = [
         'distribution_id',
         'product_id',
+        'ingredient_id',
         'quantity',
         'unit',
     ];
@@ -29,5 +30,10 @@ class DistributionItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function ingredient(): BelongsTo
+    {
+        return $this->belongsTo(Ingredient::class);
     }
 }

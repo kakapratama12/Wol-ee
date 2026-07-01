@@ -31,8 +31,10 @@ interface Product {
 
 interface DistributionItem {
     id: number;
-    product_id: number;
+    product_id: number | null;
+    ingredient_id: number | null;
     product: { name: string } | null;
+    ingredient: { name: string } | null;
     quantity: number;
     unit: string;
 }
@@ -46,13 +48,21 @@ interface Distribution {
     distributed_at: string;
 }
 
+interface Ingredient {
+    id: number;
+    name: string;
+    base_unit: string;
+    item_type: string;
+}
+
 interface Props {
     distributions: Distribution[];
     outlets: Outlet[];
     products: Product[];
+    ingredients: Ingredient[];
 }
 
-export default function DistributionsIndex({ distributions, outlets, products }: Props) {
+export default function DistributionsIndex({ distributions, outlets, products, ingredients }: Props) {
     const [showCreateModal, setShowCreateModal] = useState(false);
 
     const now = new Date();
@@ -64,8 +74,10 @@ export default function DistributionsIndex({ distributions, outlets, products }:
         to_outlet_id: '',
         distributed_at: defaultDate,
         notes: '',
-        items: [{ product_id: '', quantity: '', unit: 'cup' }] as Array<{
+        items: [{ item_type: 'ingredient', product_id: '', ingredient_id: '', quantity: '', unit: 'gram' }] as Array<{
+            item_type: string;
             product_id: string;
+            ingredient_id: string;
             quantity: string;
             unit: string;
         }>,
@@ -74,7 +86,7 @@ export default function DistributionsIndex({ distributions, outlets, products }:
     const addItem = () => {
         form.setData('items', [
             ...form.data.items,
-            { product_id: '', quantity: '', unit: 'cup' },
+            { item_type: 'ingredient', product_id: '', ingredient_id: '', quantity: '', unit: 'gram' },
         ]);
     };
 
@@ -88,12 +100,22 @@ export default function DistributionsIndex({ distributions, outlets, products }:
         const items = [...form.data.items];
         (items[index] as any)[field] = value;
 
-        // Auto-fill unit when product changes
+        // Auto-fill unit when item changes
         if (field === 'product_id') {
             const product = products.find((p) => p.id === Number(value));
             if (product) {
                 items[index].unit = product.unit;
             }
+        } else if (field === 'ingredient_id') {
+            const ingredient = ingredients.find((i) => i.id === Number(value));
+            if (ingredient) {
+                items[index].unit = ingredient.base_unit;
+            }
+        } else if (field === 'item_type') {
+            // Reset selections when type changes
+            items[index].product_id = '';
+            items[index].ingredient_id = '';
+            items[index].unit = value === 'product' ? 'cup' : 'gram';
         }
 
         form.setData('items', items);
@@ -154,7 +176,7 @@ export default function DistributionsIndex({ distributions, outlets, products }:
                                             <TableCell>
                                                 {dist.items.map((item) => (
                                                     <div key={item.id} className="text-sm">
-                                                        {item.product?.name || 'Produk'}: {item.quantity} {item.unit}
+                                                        {item.product?.name || item.ingredient?.name || '-'}: {item.quantity} {item.unit}
                                                     </div>
                                                 ))}
                                             </TableCell>
@@ -235,15 +257,36 @@ export default function DistributionsIndex({ distributions, outlets, products }:
                                 {form.data.items.map((item, index) => (
                                     <div key={index} className="flex items-center gap-2">
                                         <select
-                                            value={item.product_id}
-                                            onChange={(e) => updateItem(index, 'product_id', e.target.value)}
-                                            className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                            value={item.item_type}
+                                            onChange={(e) => updateItem(index, 'item_type', e.target.value)}
+                                            className="w-28 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                                         >
-                                            <option value="">Pilih produk</option>
-                                            {products.map((p) => (
-                                                <option key={p.id} value={p.id}>{p.name}</option>
-                                            ))}
+                                            <option value="ingredient">Bahan Baku</option>
+                                            <option value="product">Produk</option>
                                         </select>
+                                        {item.item_type === 'ingredient' ? (
+                                            <select
+                                                value={item.ingredient_id}
+                                                onChange={(e) => updateItem(index, 'ingredient_id', e.target.value)}
+                                                className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                            >
+                                                <option value="">Pilih bahan baku</option>
+                                                {ingredients.map((i) => (
+                                                    <option key={i.id} value={i.id}>{i.name}</option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <select
+                                                value={item.product_id}
+                                                onChange={(e) => updateItem(index, 'product_id', e.target.value)}
+                                                className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                            >
+                                                <option value="">Pilih produk</option>
+                                                {products.map((p) => (
+                                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                                ))}
+                                            </select>
+                                        )}
                                         <Input
                                             type="number"
                                             value={item.quantity}

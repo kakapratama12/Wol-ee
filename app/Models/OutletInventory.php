@@ -17,6 +17,7 @@ class OutletInventory extends Model
         'tenant_id',
         'outlet_id',
         'product_id',
+        'ingredient_id',
         'quantity',
         'unit',
         'last_updated',
@@ -35,6 +36,11 @@ class OutletInventory extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function ingredient(): BelongsTo
+    {
+        return $this->belongsTo(Ingredient::class);
     }
 
     public function addQuantity(float $amount): self

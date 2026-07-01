@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Distribution;
 use App\Models\DistributionItem;
+use App\Models\Ingredient;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
@@ -15,17 +16,19 @@ class DistributionController extends Controller
 {
     public function index()
     {
-        $distributions = Distribution::with(['fromOutlet', 'toOutlet', 'items.product'])
+        $distributions = Distribution::with(['fromOutlet', 'toOutlet', 'items.product', 'items.ingredient'])
             ->orderByDesc('distributed_at')
             ->get();
 
         $outlets = Outlet::where('is_active', true)->orderBy('type')->get();
         $products = Product::where('is_active', true)->orderBy('name')->get();
+        $ingredients = Ingredient::orderBy('name')->get();
 
         return Inertia::render('Distributions/Index', [
             'distributions' => $distributions,
             'outlets' => $outlets,
             'products' => $products,
+            'ingredients' => $ingredients,
         ]);
     }
 
@@ -37,7 +40,9 @@ class DistributionController extends Controller
             'distributed_at' => 'required|date',
             'notes' => 'nullable|string|max:500',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.item_type' => 'required|in:product,ingredient',
+            'items.*.product_id' => 'nullable|required_if:items.*.item_type,product|exists:products,id',
+            'items.*.ingredient_id' => 'nullable|required_if:items.*.item_type,ingredient|exists:ingredients,id',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.unit' => 'required|string|max:20',
         ]);
@@ -54,23 +59,45 @@ class DistributionController extends Controller
             foreach ($validated['items'] as $item) {
                 DistributionItem::create([
                     'distribution_id' => $distribution->id,
-                    'product_id' => $item['product_id'],
+                    'product_id' => $item['item_type'] === 'product' ? $item['product_id'] : null,
+                    'ingredient_id' => $item['item_type'] === 'ingredient' ? $item['ingredient_id'] : null,
                     'quantity' => $item['quantity'],
                     'unit' => $item['unit'],
                 ]);
 
-                // Update outlet inventory at destination
-                OutletInventory::updateOrCreate(
-                    [
-                        'outlet_id' => $validated['to_outlet_id'],
-                        'product_id' => $item['product_id'],
-                    ],
-                    [
-                        'quantity' => DB::raw("quantity + {$item['quantity']}"),
-                        'unit' => $item['unit'],
-                        'last_updated' => now(),
-                    ]
-                );
+                if ($item['item_type'] === 'ingredient') {
+                    // Deduct from source ingredient stock
+                    $ingredient = Ingredient::findOrFail($item['ingredient_id']);
+                    $ingredient->decrement('current_stock', $item['quantity']);
+
+                    // Add to outlet ingredient inventory
+                    OutletInventory::updateOrCreate(
+                        [
+                            'outlet_id' => $validated['to_outlet_id'],
+                            'ingredient_id' => $item['ingredient_id'],
+                            'product_id' => null,
+                        ],
+                        [
+                            'quantity' => DB::raw("quantity + {$item['quantity']}"),
+                            'unit' => $item['unit'],
+                            'last_updated' => now(),
+                        ]
+                    );
+                } else {
+                    // Product distribution
+                    OutletInventory::updateOrCreate(
+                        [
+                            'outlet_id' => $validated['to_outlet_id'],
+                            'product_id' => $item['product_id'],
+                            'ingredient_id' => null,
+                        ],
+                        [
+                            'quantity' => DB::raw("quantity + {$item['quantity']}"),
+                            'unit' => $item['unit'],
+                            'last_updated' => now(),
+                        ]
+                    );
+                }
             }
         });
 
