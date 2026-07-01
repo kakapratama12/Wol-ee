@@ -62,6 +62,14 @@ interface MonthlyChartPoint {
     expense: number;
 }
 
+interface UpcomingPayable {
+    id: number;
+    payable_number: string;
+    partner: string;
+    remaining: number;
+    due_date: string | null;
+}
+
 interface Props {
     period: string;
     periodLabel: string;
@@ -72,6 +80,7 @@ interface Props {
     recentSales: RecentSale[];
     recentPurchases: RecentPurchase[];
     monthlyChart: MonthlyChartPoint[];
+    upcomingPayables: UpcomingPayable[];
 }
 
 const periodOptions = [
@@ -91,6 +100,7 @@ export default function Dashboard({
     recentSales,
     recentPurchases,
     monthlyChart,
+    upcomingPayables,
 }: Props) {
     const maxChartValue = Math.max(
         1,
@@ -401,6 +411,48 @@ export default function Dashboard({
                             className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
                         >
                             Lihat semua pembelian
+                        </Link>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Tagihan Jatuh Tempo</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {upcomingPayables.length === 0 ? (
+                            <p className="py-6 text-center text-sm text-muted-foreground">
+                                Tidak ada tagihan jatuh tempo.
+                            </p>
+                        ) : (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Supplier</TableHead>
+                                        <TableHead>Sisa</TableHead>
+                                        <TableHead>Jatuh Tempo</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {upcomingPayables.map((p) => (
+                                        <TableRow key={p.id}>
+                                            <TableCell className="font-medium">
+                                                {p.partner}
+                                            </TableCell>
+                                            <TableCell>{formatRupiah(p.remaining)}</TableCell>
+                                            <TableCell className="text-muted-foreground">
+                                                {formatDate(p.due_date)}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
+                        <Link
+                            href="/payables"
+                            className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+                        >
+                            Lihat semua tagihan
                         </Link>
                     </CardContent>
                 </Card>

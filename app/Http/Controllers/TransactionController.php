@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePurchaseRequest;
 use App\Http\Requests\UpdatePurchaseRequest;
 use App\Models\Ingredient;
+use App\Models\Partner;
+use App\Models\Payable;
 use App\Models\Transaction;
 use App\Services\InventoryService;
+use App\Services\PayableService;
 use App\Services\PurchaseService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use InvalidArgumentException;
@@ -37,10 +41,13 @@ class TransactionController extends Controller
         return Inertia::render('Transactions/Index', [
             'transactions' => $transactions,
             'ingredients' => Ingredient::orderBy('name')->get(['id', 'name', 'base_unit']),
+            'suppliers' => Partner::where('type', Partner::TYPE_SUPPLIER)
+                ->orderBy('name')
+                ->get(['id', 'name']),
         ]);
     }
 
-    public function store(StorePurchaseRequest $request, InventoryService $inventory): RedirectResponse
+    public function store(StorePurchaseRequest $request, InventoryService $inventory, PayableService $payableService): RedirectResponse
     {
         $data = $request->validated();
         $ingredient = Ingredient::findOrFail($data['ingredient_id']);
@@ -48,7 +55,32 @@ class TransactionController extends Controller
         $quantity = (float) $data['quantity'];
         $unitPrice = round((float) $data['total'] / max($quantity, 1e-9), 4);
         $idempotencyKey = $data['idempotency_key'] ?? null;
+        $bayarNanti = $data['bayar_nanti'] ?? false;
 
+        // Create payable first if "Bayar Nanti"
+        $payableId = null;
+        if ($bayarNanti) {
+            $partner = Partner::findOrFail($data['partner_id']);
+            if ($partner->type !== Partner::TYPE_SUPPLIER) {
+                throw new InvalidArgumentException('Partner harus berupa supplier.');
+            }
+
+            $payable = $payableService->create([
+                'partner_id' => $data['partner_id'],
+                'due_date' => $data['due_date'] ?? null,
+                'note' => 'Pembelian bahan: ' . $ingredient->name,
+                'items' => [
+                    [
+                        'description' => $ingredient->name,
+                        'quantity' => $quantity,
+                        'unit_price' => $unitPrice,
+                    ],
+                ],
+            ]);
+            $payableId = $payable->id;
+        }
+
+        // Record purchase & update stock
         $inventory->recordPurchase(
             ingredient: $ingredient,
             quantity: $quantity,
@@ -60,7 +92,20 @@ class TransactionController extends Controller
             idempotencyKey: $idempotencyKey,
         );
 
-        return back()->with('success', 'Pembelian tercatat & stok diperbarui.');
+        // Link transaction to payable if exists
+        if ($payableId) {
+            Transaction::where('ingredient_id', $ingredient->id)
+                ->where('tenant_id', $request->user()->tenant_id)
+                ->latest()
+                ->first()
+                ?->update(['payable_id' => $payableId]);
+        }
+
+        $message = $bayarNanti
+            ? 'Pembelian tercatat & tagihan supplier dibuat.'
+            : 'Pembelian tercatat & stok diperbarui.';
+
+        return back()->with('success', $message);
     }
 
     public function update(UpdatePurchaseRequest $request, Transaction $transaction, PurchaseService $purchases): RedirectResponse
@@ -78,23 +123,20 @@ class TransactionController extends Controller
                 unitPrice: $unitPrice,
                 note: $data['note'] ?? null,
                 occurredAt: $request->date('occurred_at'),
-                userId: $request->user()->id,
             );
+
+            return back()->with('success', 'Pembelian diperbarui.');
         } catch (InvalidArgumentException $e) {
             return back()->withErrors(['quantity' => $e->getMessage()]);
         }
-
-        return back()->with('success', 'Pembelian diperbarui & stok disesuaikan.');
     }
 
-    public function destroy(Transaction $transaction, PurchaseService $purchases, Request $request): RedirectResponse
+    public function destroy(Transaction $transaction, InventoryService $inventory): RedirectResponse
     {
-        try {
-            $purchases->void($transaction, $request->user()->id);
-        } catch (InvalidArgumentException $e) {
-            return back()->withErrors(['quantity' => $e->getMessage()]);
-        }
+        $inventory->reversePurchase($transaction);
 
-        return back()->with('success', 'Pembelian dihapus & stok dikurangi.');
+        $transaction->delete();
+
+        return back()->with('success', 'Pembelian dihapus & stok dikembalikan.');
     }
 }

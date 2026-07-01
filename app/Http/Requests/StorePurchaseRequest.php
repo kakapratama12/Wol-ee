@@ -24,6 +24,10 @@ class StorePurchaseRequest extends FormRequest
             'total' => ['required', 'numeric', 'gte:0'],
             'note' => ['nullable', 'string', 'max:255'],
             'occurred_at' => ['nullable', 'date'],
+            // AP fields
+            'bayar_nanti' => ['nullable', 'boolean'],
+            'partner_id' => ['required_if:bayar_nanti,true', 'nullable', 'exists:partners,id'],
+            'due_date' => ['required_if:bayar_nanti,true', 'nullable', 'date'],
         ];
     }
 }
