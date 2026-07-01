@@ -154,7 +154,7 @@ export default function GroupedSelect({
                         ) : (
                             filteredGroups.map((group) => (
                                 <div key={group.label}>
-                                    <div className="px-3 pt-2 pb-1 text-[11px] font-bold tracking-wide text-gray-400 dark:text-gray-500 uppercase">
+                                    <div className="mx-1 mt-2 mb-1 rounded bg-gray-100 dark:bg-gray-700/50 px-2 py-1 text-[11px] font-bold tracking-wide text-gray-500 dark:text-gray-400 uppercase">
                                         {group.label}
                                     </div>
                                     {group.options.map((option) => (
@@ -163,7 +163,7 @@ export default function GroupedSelect({
                                             type="button"
                                             onClick={() => handleSelect(option.value)}
                                             className={cn(
-                                                'w-full rounded px-3 py-1.5 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700',
+                                                'w-full rounded pl-6 pr-3 py-1.5 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700',
                                                 value === option.value && 'bg-blue-50 font-medium text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
                                             )}
                                         >
