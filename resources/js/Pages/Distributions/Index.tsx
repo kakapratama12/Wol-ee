@@ -54,6 +54,7 @@ interface Ingredient {
     name: string;
     base_unit: string;
     item_type: string;
+    current_stock: number;
 }
 
 interface Props {
@@ -173,7 +174,7 @@ export default function DistributionsIndex({ distributions, outlets, products, i
                                             <TableCell>
                                                 {dist.items.map((item) => (
                                                     <div key={item.id} className="text-sm">
-                                                        {item.product?.name || item.ingredient?.name || '-'}: {item.quantity} {item.unit}
+                                                        {item.product?.name || item.ingredient?.name || '-'}: {Number(item.quantity)} {item.unit}
                                                     </div>
                                                 ))}
                                             </TableCell>
@@ -298,6 +299,16 @@ export default function DistributionsIndex({ distributions, outlets, products, i
                                             >
                                                 <X className="h-4 w-4 text-red-500" />
                                             </Button>
+                                        )}
+                                        {item.item_id && item.item_source === 'ingredient' && (
+                                            <span className="text-xs text-gray-400 whitespace-nowrap">
+                                                Stok: {ingredients.find((i) => i.id === Number(item.item_id))?.current_stock ?? 0}
+                                            </span>
+                                        )}
+                                        {item.item_id && item.item_source === 'product' && (
+                                            <span className="text-xs text-gray-400 whitespace-nowrap">
+                                                Produk jadi
+                                            </span>
                                         )}
                                     </div>
                                 ))}

@@ -19,7 +19,7 @@ class DistributionItem extends Model
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:4',
+        'quantity' => 'float',
     ];
 
     public function distribution(): BelongsTo

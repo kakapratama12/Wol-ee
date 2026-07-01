@@ -72,32 +72,36 @@ class DistributionController extends Controller
                     $ingredient->decrement('current_stock', $item['quantity']);
 
                     // Add to outlet ingredient inventory
-                    OutletInventory::updateOrCreate(
+                    $inventory = OutletInventory::firstOrCreate(
                         [
                             'outlet_id' => $validated['to_outlet_id'],
                             'ingredient_id' => $item['item_id'],
                             'product_id' => null,
                         ],
                         [
-                            'quantity' => DB::raw("quantity + {$item['quantity']}"),
+                            'quantity' => 0,
                             'unit' => $item['unit'],
                             'last_updated' => now(),
                         ]
                     );
+                    $inventory->increment('quantity', $item['quantity']);
+                    $inventory->update(['unit' => $item['unit'], 'last_updated' => now()]);
                 } else {
                     // Product distribution
-                    OutletInventory::updateOrCreate(
+                    $inventory = OutletInventory::firstOrCreate(
                         [
                             'outlet_id' => $validated['to_outlet_id'],
                             'product_id' => $item['item_id'],
                             'ingredient_id' => null,
                         ],
                         [
-                            'quantity' => DB::raw("quantity + {$item['quantity']}"),
+                            'quantity' => 0,
                             'unit' => $item['unit'],
                             'last_updated' => now(),
                         ]
                     );
+                    $inventory->increment('quantity', $item['quantity']);
+                    $inventory->update(['unit' => $item['unit'], 'last_updated' => now()]);
                 }
             }
         });
@@ -194,32 +198,36 @@ class DistributionController extends Controller
                     $ingredient->decrement('current_stock', $item['quantity']);
 
                     // Add to outlet ingredient inventory
-                    OutletInventory::updateOrCreate(
+                    $inventory = OutletInventory::firstOrCreate(
                         [
                             'outlet_id' => $validated['to_outlet_id'],
                             'ingredient_id' => $item['item_id'],
                             'product_id' => null,
                         ],
                         [
-                            'quantity' => DB::raw("quantity + {$item['quantity']}"),
+                            'quantity' => 0,
                             'unit' => $item['unit'],
                             'last_updated' => now(),
                         ]
                     );
+                    $inventory->increment('quantity', $item['quantity']);
+                    $inventory->update(['unit' => $item['unit'], 'last_updated' => now()]);
                 } else {
                     // Product distribution — add to outlet product inventory
-                    OutletInventory::updateOrCreate(
+                    $inventory = OutletInventory::firstOrCreate(
                         [
                             'outlet_id' => $validated['to_outlet_id'],
                             'product_id' => $item['item_id'],
                             'ingredient_id' => null,
                         ],
                         [
-                            'quantity' => DB::raw("quantity + {$item['quantity']}"),
+                            'quantity' => 0,
                             'unit' => $item['unit'],
                             'last_updated' => now(),
                         ]
                     );
+                    $inventory->increment('quantity', $item['quantity']);
+                    $inventory->update(['unit' => $item['unit'], 'last_updated' => now()]);
                 }
             }
 

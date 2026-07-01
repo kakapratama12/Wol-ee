@@ -65,7 +65,7 @@ export default function DistributionEdit({ distribution, outlets, products, ingr
         items: distribution.items.map(item => ({
             item_id: item.product_id?.toString() || item.ingredient_id?.toString() || '',
             item_source: item.product_id ? 'product' : 'ingredient',
-            quantity: item.quantity.toString(),
+            quantity: Number(item.quantity).toString(),
             unit: item.unit,
         })) as Array<{
             item_id: string;

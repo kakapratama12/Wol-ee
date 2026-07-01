@@ -153,7 +153,7 @@ export default function Show({ distribution }: Props) {
                                             {item.product ? 'Produk' : 'Bahan Baku'}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            {item.quantity}
+                                            {Number(item.quantity)}
                                         </TableCell>
                                         <TableCell className="text-right">{item.unit}</TableCell>
                                     </TableRow>
