@@ -91,6 +91,7 @@ const navigation: (NavSingle | NavGroup)[] = [
         children: [
             { label: 'Daftar Partner', href: '/partners' },
             { label: 'Invoices', href: '/invoices' },
+            { label: 'Tagihan Supplier', href: '/payables' },
         ],
     },
     {
