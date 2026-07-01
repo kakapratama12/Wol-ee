@@ -13,6 +13,7 @@ import {
     X,
     ChevronDown,
     Utensils,
+    User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeProvider, useTheme } from '@/Components/ThemeProvider';
@@ -313,6 +314,13 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
                             <p className="text-sm font-medium leading-tight">{user.name}</p>
                             <p className="text-xs capitalize text-muted-foreground">{user.role}</p>
                         </div>
+                        <Link
+                            href="/profile"
+                            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+                        >
+                            <User className="h-4 w-4" />
+                            <span className="hidden sm:inline">Profil</span>
+                        </Link>
                         <Link
                             href="/logout"
                             method="post"
