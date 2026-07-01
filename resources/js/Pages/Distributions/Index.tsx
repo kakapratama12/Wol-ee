@@ -119,11 +119,41 @@ export default function DistributionsIndex({ distributions, outlets, products, i
         form.setData('items', items);
     };
 
+    const [stockErrors, setStockErrors] = useState<Record<number, string>>({});
+
     const handleSubmit = () => {
+        // Validate outlets
+        if (!form.data.from_outlet_id) {
+            alert('Pilih Dari Outlet terlebih dahulu');
+            return;
+        }
+        if (!form.data.to_outlet_id) {
+            alert('Pilih Ke Outlet terlebih dahulu');
+            return;
+        }
+
+        // Validate stock
+        const errors: Record<number, string> = {};
+        form.data.items.forEach((item, index) => {
+            if (item.item_id && item.item_source === 'ingredient' && item.quantity) {
+                const ingredient = ingredients.find((i) => i.id === Number(item.item_id));
+                if (ingredient && Number(item.quantity) > ingredient.current_stock) {
+                    errors[index] = `Stok ${ingredient.name} hanya ${ingredient.current_stock} ${ingredient.base_unit}`;
+                }
+            }
+        });
+
+        if (Object.keys(errors).length > 0) {
+            setStockErrors(errors);
+            return;
+        }
+        setStockErrors({});
+
         form.post(route('distributions.store'), {
             onSuccess: () => {
                 form.reset();
                 setShowCreateModal(false);
+                setStockErrors({});
             },
         });
     };
@@ -253,63 +283,71 @@ export default function DistributionsIndex({ distributions, outlets, products, i
                             </div>
                             <div className="space-y-2">
                                 {form.data.items.map((item, index) => (
-                                    <div key={index} className="flex items-center gap-2 flex-wrap">
-                                        <GroupedSelect
-                                            className="flex-1"
-                                            value={item.item_id ? `${item.item_source}:${item.item_id}` : ''}
-                                            onChange={(val) => {
-                                                const [source, id] = val.split(':');
-                                                updateItem(index, 'item_id', id);
-                                                updateItem(index, 'item_source', source);
-                                            }}
-                                            placeholder="Pilih item"
-                                            groups={[
-                                                {
-                                                    label: 'Bahan Baku',
-                                                    options: ingredients
-                                                        .filter((i) => i.item_type === 'raw_material')
-                                                        .map((i) => ({ value: `ingredient:${i.id}`, label: i.name })),
-                                                },
-                                                {
-                                                    label: 'Prep',
-                                                    options: ingredients
-                                                        .filter((i) => i.item_type === 'prep')
-                                                        .map((i) => ({ value: `ingredient:${i.id}`, label: i.name })),
-                                                },
-                                                {
-                                                    label: 'Produk Jadi',
-                                                    options: products.map((p) => ({ value: `product:${p.id}`, label: p.name })),
-                                                },
-                                            ]}
-                                        />
-                                        <Input
-                                            type="number"
-                                            value={item.quantity}
-                                            onChange={(e) => updateItem(index, 'quantity', e.target.value)}
-                                            placeholder="Qty"
-                                            className="w-24 min-w-[6rem]"
-                                        />
-                                        <span className="text-sm text-gray-500 w-12">{item.unit}</span>
-                                        {form.data.items.length > 1 && (
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => removeItem(index)}
-                                            >
-                                                <X className="h-4 w-4 text-red-500" />
-                                            </Button>
-                                        )}
-                                        {item.item_id && item.item_source === 'ingredient' && (
-                                            <span className="text-xs text-gray-400 whitespace-nowrap">
-                                                Stok: {Number(ingredients.find((i) => i.id === Number(item.item_id))?.current_stock ?? 0)}
-                                            </span>
-                                        )}
-                                        {item.item_id && item.item_source === 'product' && (
-                                            <span className="text-xs text-gray-400 whitespace-nowrap">
-                                                Produk jadi
-                                            </span>
-                                        )}
+                                    <div key={index}>
+                                        <div className="flex items-center gap-2">
+                                            <GroupedSelect
+                                                className="flex-1"
+                                                value={item.item_id ? `${item.item_source}:${item.item_id}` : ''}
+                                                onChange={(val) => {
+                                                    const [source, id] = val.split(':');
+                                                    updateItem(index, 'item_id', id);
+                                                    updateItem(index, 'item_source', source);
+                                                }}
+                                                placeholder="Pilih item"
+                                                groups={[
+                                                    {
+                                                        label: 'Bahan Baku',
+                                                        options: ingredients
+                                                            .filter((i) => i.item_type === 'raw_material')
+                                                            .map((i) => ({ value: `ingredient:${i.id}`, label: i.name })),
+                                                    },
+                                                    {
+                                                        label: 'Prep',
+                                                        options: ingredients
+                                                            .filter((i) => i.item_type === 'prep')
+                                                            .map((i) => ({ value: `ingredient:${i.id}`, label: i.name })),
+                                                    },
+                                                    {
+                                                        label: 'Produk Jadi',
+                                                        options: products.map((p) => ({ value: `product:${p.id}`, label: p.name })),
+                                                    },
+                                                ]}
+                                            />
+                                            <Input
+                                                type="number"
+                                                value={item.quantity}
+                                                onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                                                placeholder="Qty"
+                                                className="w-24 min-w-[6rem]"
+                                            />
+                                            <span className="text-sm text-gray-500 w-12">{item.unit}</span>
+                                            {form.data.items.length > 1 && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => removeItem(index)}
+                                                >
+                                                    <X className="h-4 w-4 text-red-500" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                        {/* Stock info & error below */}
+                                        <div className="ml-1 mt-0.5">
+                                            {item.item_id && item.item_source === 'ingredient' && (
+                                                <span className="text-xs text-gray-400">
+                                                    Sisa stok: {Number(ingredients.find((i) => i.id === Number(item.item_id))?.current_stock ?? 0)} {item.unit}
+                                                </span>
+                                            )}
+                                            {item.item_id && item.item_source === 'product' && (
+                                                <span className="text-xs text-gray-400">
+                                                    Produk jadi
+                                                </span>
+                                            )}
+                                            {stockErrors[index] && (
+                                                <div className="text-xs text-red-500 mt-0.5">{stockErrors[index]}</div>
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
