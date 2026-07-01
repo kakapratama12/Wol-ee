@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import { Plus, X } from 'lucide-react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Plus, X, Eye } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent } from '@/Components/ui/card';
@@ -166,7 +166,7 @@ export default function DistributionsIndex({ distributions, outlets, products, i
                                     </TableRow>
                                 ) : (
                                     distributions.map((dist) => (
-                                        <TableRow key={dist.id}>
+                                        <TableRow key={dist.id} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800" onClick={() => router.visit(route('distributions.show', dist.id))}>
                                             <TableCell>{formatDate(dist.distributed_at)}</TableCell>
                                             <TableCell>{dist.from_outlet?.name || '-'}</TableCell>
                                             <TableCell>{dist.to_outlet?.name || '-'}</TableCell>

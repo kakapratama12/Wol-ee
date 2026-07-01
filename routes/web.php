@@ -71,12 +71,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Multi-outlet
     Route::get('/outlets', [\App\Http\Controllers\OutletController::class, 'index'])->name('outlets.index');
+    Route::get('/outlets/{outlet}/inventory', [\App\Http\Controllers\OutletInventoryController::class, 'index'])->name('outlets.inventory');
     Route::get('/distributions', [\App\Http\Controllers\DistributionController::class, 'index'])->name('distributions.index');
+    Route::get('/distributions/{distribution}', [\App\Http\Controllers\DistributionController::class, 'show'])->name('distributions.show');
     Route::middleware('owner')->group(function () {
         Route::post('/outlets', [\App\Http\Controllers\OutletController::class, 'store'])->name('outlets.store');
         Route::put('/outlets/{outlet}', [\App\Http\Controllers\OutletController::class, 'update'])->name('outlets.update');
         Route::delete('/outlets/{outlet}', [\App\Http\Controllers\OutletController::class, 'destroy'])->name('outlets.destroy');
         Route::post('/distributions', [\App\Http\Controllers\DistributionController::class, 'store'])->name('distributions.store');
+        Route::get('/distributions/{distribution}/edit', [\App\Http\Controllers\DistributionController::class, 'edit'])->name('distributions.edit');
+        Route::put('/distributions/{distribution}', [\App\Http\Controllers\DistributionController::class, 'update'])->name('distributions.update');
+        Route::delete('/distributions/{distribution}', [\App\Http\Controllers\DistributionController::class, 'destroy'])->name('distributions.destroy');
+        Route::post('/outlets/{outlet}/inventory/adjust', [\App\Http\Controllers\OutletInventoryController::class, 'adjust'])->name('outlets.inventory.adjust');
     });
 
     // Owner only

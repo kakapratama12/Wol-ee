@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import { Plus, Pencil, Trash2, MapPin } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
@@ -127,7 +127,7 @@ export default function OutletsIndex({ outlets }: Props) {
                                         <TableCell className="text-gray-500 dark:text-gray-400">
                                             {outlet.address || '-'}
                                         </TableCell>
-                                        <TableCell className="text-center">{outlet.inventory_count}</TableCell>
+                                        <TableCell className="text-center"><Link href={route("outlets.inventory", outlet.id)} className="text-blue-600 hover:underline dark:text-blue-400">{outlet.inventory_count}</Link></TableCell>
                                         <TableCell>
                                             <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                                 outlet.is_active
