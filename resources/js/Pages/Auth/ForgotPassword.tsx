@@ -1,6 +1,6 @@
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link } from '@inertiajs/react';
-import { MessageCircle } from 'lucide-react';
+import { ArrowLeft, MessageCircle } from 'lucide-react';
 
 export default function ForgotPassword() {
     const whatsappUrl =
@@ -14,6 +14,14 @@ export default function ForgotPassword() {
             <Head title="Lupa Password" />
 
             <div className="text-center">
+                <Link
+                    href={route('login')}
+                    className="mb-4 inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Kembali
+                </Link>
+
                 <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
                     <MessageCircle className="h-6 w-6 text-gray-600" />
                 </div>
