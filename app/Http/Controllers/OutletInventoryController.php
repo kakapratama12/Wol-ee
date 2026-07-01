@@ -19,17 +19,14 @@ class OutletInventoryController extends Controller
     {
         $outlet = Outlet::findOrFail($outletId);
 
-        $outlet->load([
-            'inventory' => function ($query) {
-                $query->with(['product', 'ingredient']);
-            },
-        ]);
+        $inventory = $outlet->inventory()->with(['product', 'ingredient'])->get();
 
         $products = Product::all();
         $ingredients = Ingredient::all();
 
         return Inertia::render('Outlets/Inventory', [
             'outlet' => $outlet,
+            'inventory' => $inventory,
             'products' => $products,
             'ingredients' => $ingredients,
         ]);
