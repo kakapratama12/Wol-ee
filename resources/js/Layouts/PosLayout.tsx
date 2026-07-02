@@ -8,12 +8,14 @@ interface PosLayoutProps {
     title?: string;
     branch?: string | null;
     actions?: React.ReactNode;
+    activeTab?: string;
 }
 
 export default function PosLayout({
     title = 'Kasir',
     branch,
     actions,
+    activeTab,
     children,
 }: PropsWithChildren<PosLayoutProps>) {
     const { auth } = usePage<PageProps>().props;
@@ -61,7 +63,7 @@ export default function PosLayout({
                 <div className="mx-auto flex max-w-7xl items-center justify-around py-2">
                     {navItems.map((item) => {
                         const Icon = item.icon;
-                        const isActive = typeof window !== 'undefined' && window.location.pathname.startsWith(item.href);
+                        const isActive = activeTab ? item.label.toLowerCase().includes(activeTab) : (typeof window !== 'undefined' && window.location.pathname.startsWith(item.href));
                         return (
                             <Link
                                 key={item.href}
