@@ -87,7 +87,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/distributions/{distribution}', [\App\Http\Controllers\DistributionController::class, 'update'])->name('distributions.update');
         Route::delete('/distributions/{distribution}', [\App\Http\Controllers\DistributionController::class, 'destroy'])->name('distributions.destroy');
         Route::post('/outlets/{outlet}/inventory/adjust', [\App\Http\Controllers\OutletInventoryController::class, 'adjust'])->name('outlets.inventory.adjust');
+        Route::post('/outlets/{outlet}/stock/purchase', [\App\Http\Controllers\OutletStockController::class, 'purchase'])->name('outlets.stock.purchase');
+        Route::post('/outlets/{outlet}/stock/adjust', [\App\Http\Controllers\OutletStockController::class, 'adjust'])->name('outlets.stock.adjust');
     });
+    Route::get('/outlets/{outlet}/stock/movements', [\App\Http\Controllers\OutletStockController::class, 'movements'])->name('outlets.stock.movements');
 
     // Owner only
     Route::middleware('owner')->group(function () {
