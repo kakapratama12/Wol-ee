@@ -18,6 +18,7 @@ class CloseCashierSessionRequest extends FormRequest
     {
         return [
             'actual_cash' => ['required', 'numeric', 'min:0'],
+            'closing_note' => ['nullable', 'string', 'max:500'],
         ];
     }
 }

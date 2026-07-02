@@ -211,7 +211,11 @@ class SessionController extends Controller
         }
 
         try {
-            $summary = $sessions->close($session, (float) $request->validated('actual_cash'));
+            $summary = $sessions->close(
+                $session,
+                (float) $request->validated('actual_cash'),
+                $request->validated('closing_note')
+            );
         } catch (InvalidArgumentException $e) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 422);

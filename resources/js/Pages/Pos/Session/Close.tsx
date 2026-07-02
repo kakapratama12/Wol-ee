@@ -30,6 +30,7 @@ interface Props {
 export default function CloseSession({ session, salesSummary, orderCount }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         actual_cash: '',
+        closing_note: '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -101,6 +102,34 @@ export default function CloseSession({ session, salesSummary, orderCount }: Prop
                     {errors.actual_cash && (
                         <p className="mt-1 text-sm text-destructive">{errors.actual_cash}</p>
                     )}
+
+                    {data.actual_cash && Number(data.actual_cash) !== session.expected_cash && (
+                        <div className={`mt-2 rounded-lg p-3 text-sm ${
+                            Number(data.actual_cash) > session.expected_cash
+                                ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                                : 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
+                        }`}>
+                            <span className="font-medium">Selisih: </span>
+                            {Number(data.actual_cash) > session.expected_cash ? '+' : ''}
+                            {formatRupiah(Number(data.actual_cash) - session.expected_cash)}
+                        </div>
+                    )}
+
+                    <div className="mt-3">
+                        <Label htmlFor="closing_note">Catatan (opsional)</Label>
+                        <textarea
+                            id="closing_note"
+                            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                            value={data.closing_note}
+                            onChange={(e) => setData('closing_note', e.target.value)}
+                            placeholder="Jelaskan selisih jika ada, misal: beli gula 24rb"
+                            rows={2}
+                        />
+                        {errors.closing_note && (
+                            <p className="mt-1 text-sm text-destructive">{errors.closing_note}</p>
+                        )}
+                    </div>
+
                     <Button
                         type="button"
                         variant="outline"
