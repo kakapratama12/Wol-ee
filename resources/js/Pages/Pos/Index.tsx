@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Store, Clock, TrendingUp, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Store, Clock, TrendingUp, ShoppingBag, ArrowRight, Package } from 'lucide-react';
 import PosLayout from '@/Layouts/PosLayout';
 import { Button } from '@/Components/ui/button';
 import { formatRupiah } from '@/lib/format';
@@ -107,6 +107,20 @@ export default function PosIndex({ todaySession, recentSessions }: Props) {
                         )}
                     </div>
                 </div>
+
+                {/* Quick Actions */}
+                <Link href="/pos/stock">
+                    <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition hover:border-primary hover:shadow-md">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                            <Package className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold">Stok Outlet</p>
+                            <p className="text-xs text-muted-foreground">Beli bahan, adjust stok, lihat riwayat</p>
+                        </div>
+                        <ArrowRight className="ml-auto h-5 w-5 text-muted-foreground" />
+                    </div>
+                </Link>
 
                 {/* Riwayat Sesi */}
                 {recentSessions.length > 0 && (

@@ -34,3 +34,11 @@ Route::middleware(['auth', 'staff'])->group(function () {
         Route::post('/orders/{order}/void', [OrderController::class, 'void'])->name('orders.void');
     });
 });
+
+// Stock management
+Route::middleware(['auth', 'staff'])->prefix('stock')->name('stock.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Pos\StockController::class, 'index'])->name('index');
+    Route::get('/purchase', [\App\Http\Controllers\Pos\StockController::class, 'purchaseForm'])->name('purchase');
+    Route::get('/adjust', [\App\Http\Controllers\Pos\StockController::class, 'adjustForm'])->name('adjust');
+    Route::get('/movements', [\App\Http\Controllers\Pos\StockController::class, 'movements'])->name('movements');
+});
