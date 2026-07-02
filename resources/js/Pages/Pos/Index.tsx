@@ -1,5 +1,5 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { Store, Clock, TrendingUp, ShoppingBag } from 'lucide-react';
+import { Head, Link } from '@inertiajs/react';
+import { Store, Clock, ShoppingBag } from 'lucide-react';
 import PosLayout from '@/Layouts/PosLayout';
 import { Button } from '@/Components/ui/button';
 import { formatRupiah } from '@/lib/format';

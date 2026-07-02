@@ -22,23 +22,23 @@ class TodayController extends Controller
 
         $orders = PosOrder::where('user_id', $user->id)
             ->whereDate('created_at', $today)
-            ->with('items')
+            ->with('sales.product')
             ->get();
 
         $summary = [
             'total_orders' => $orders->count(),
-            'total_revenue' => $orders->sum('total_amount'),
-            'total_items' => $orders->sum(fn($o) => $o->items->sum('quantity')),
-            'cash' => $orders->where('payment_method', 'cash')->sum('total_amount'),
-            'qris' => $orders->where('payment_method', 'qris')->sum('total_amount'),
-            'transfer' => $orders->where('payment_method', 'transfer')->sum('total_amount'),
+            'total_revenue' => (float) $orders->sum('total'),
+            'total_items' => $orders->sum(fn ($o) => $o->sales->sum('quantity')),
+            'tunai' => (float) $orders->where('payment_method', 'tunai')->sum('total'),
+            'qris' => (float) $orders->where('payment_method', 'qris')->sum('total'),
+            'transfer' => (float) $orders->where('payment_method', 'transfer')->sum('total'),
         ];
 
-        $recent = $orders->map(fn($o) => [
+        $recent = $orders->map(fn ($o) => [
             'id' => $o->id,
             'time' => $o->created_at->format('H:i'),
-            'items' => $o->items->pluck('name')->implode(', '),
-            'total' => $o->total_amount,
+            'items' => $o->sales->pluck('product.name')->implode(', '),
+            'total' => (float) $o->total,
             'payment' => $o->payment_method,
         ])->take(20);
 

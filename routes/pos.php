@@ -4,6 +4,8 @@ use App\Http\Controllers\Pos\OrderController;
 use App\Http\Controllers\Pos\PosAuthController;
 use App\Http\Controllers\Pos\RegisterController;
 use App\Http\Controllers\Pos\SessionController;
+use App\Http\Controllers\Pos\StockController;
+use App\Http\Controllers\Pos\TodayController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -15,6 +17,7 @@ Route::middleware(['auth', 'staff'])->group(function () {
     Route::post('/logout', [PosAuthController::class, 'destroy'])->name('logout');
     Route::get('/', [SessionController::class, 'landing'])->name('landing');
     Route::get('/entry', [SessionController::class, 'entry'])->name('entry');
+    Route::get('/today', [TodayController::class, 'index'])->name('today');
 
     Route::get('/session/open', [SessionController::class, 'openForm'])->name('session.open.form');
     Route::post('/session/open', [SessionController::class, 'open'])->name('session.open');
@@ -33,14 +36,12 @@ Route::middleware(['auth', 'staff'])->group(function () {
         Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
         Route::post('/orders/{order}/void', [OrderController::class, 'void'])->name('orders.void');
     });
-});
 
-    Route::get('/today', [\App\Http\Controllers\Pos\TodayController::class, 'index'])->name('today');
-
-// Stock management
-Route::middleware(['auth', 'staff'])->prefix('stock')->name('stock.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Pos\StockController::class, 'index'])->name('index');
-    Route::get('/purchase', [\App\Http\Controllers\Pos\StockController::class, 'purchaseForm'])->name('purchase');
-    Route::get('/adjust', [\App\Http\Controllers\Pos\StockController::class, 'adjustForm'])->name('adjust');
-    Route::get('/movements', [\App\Http\Controllers\Pos\StockController::class, 'movements'])->name('movements');
+    // Stock management
+    Route::prefix('stock')->name('stock.')->group(function () {
+        Route::get('/', [StockController::class, 'index'])->name('index');
+        Route::get('/purchase', [StockController::class, 'purchaseForm'])->name('purchase');
+        Route::get('/adjust', [StockController::class, 'adjustForm'])->name('adjust');
+        Route::get('/movements', [StockController::class, 'movements'])->name('movements');
+    });
 });

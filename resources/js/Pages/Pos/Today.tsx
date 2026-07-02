@@ -17,7 +17,7 @@ interface Props {
         total_orders: number;
         total_revenue: number;
         total_items: number;
-        cash: number;
+        tunai: number;
         qris: number;
         transfer: number;
     };
@@ -48,7 +48,7 @@ export default function Today({ session, summary, recentOrders }: Props) {
                     <div className="grid grid-cols-3 gap-3 text-center">
                         <div>
                             <Banknote className="mx-auto mb-1 h-5 w-5 text-green-600 dark:text-green-400" />
-                            <p className="text-sm font-semibold">{formatRupiah(summary.cash)}</p>
+                            <p className="text-sm font-semibold">{formatRupiah(summary.tunai)}</p>
                             <p className="text-xs text-muted-foreground">Tunai</p>
                         </div>
                         <div>
