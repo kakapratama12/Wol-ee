@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
-import { Banknote, TrendingUp, Percent, PackageMinus } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Banknote, TrendingUp, Percent, PackageMinus, ShoppingCart, Package, BarChart3 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import StatCard from '@/Components/StatCard';
 import StockStatusBadge from '@/Components/StockStatusBadge';
@@ -16,6 +16,18 @@ import {
 import { Input } from '@/Components/ui/input';
 import { formatRupiah, formatPercent, formatNumber, formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
+
+/* ---------- Shared interfaces ---------- */
+
+interface RecentSale {
+    id: number;
+    product: string | null;
+    quantity: number;
+    revenue: number;
+    occurred_at: string | null;
+}
+
+/* ---------- Pengelola interfaces ---------- */
 
 interface Metrics {
     revenue: number;
@@ -34,14 +46,9 @@ interface LowStock {
     status: string;
 }
 
-interface RecentSale {
-    id: number;
-    product: string | null;
-    quantity: number;
-    revenue: number;
+interface PengelolaRecentSale extends RecentSale {
     profit: number;
     margin: number;
-    occurred_at: string | null;
 }
 
 interface RecentPurchase {
@@ -70,17 +77,39 @@ interface UpcomingPayable {
     due_date: string | null;
 }
 
+/* ---------- Staff interfaces ---------- */
+
+interface OutletInventoryItem {
+    id: number;
+    ingredient_name: string;
+    quantity: number;
+    unit: string;
+    base_unit: string;
+    minimum_stock: number;
+}
+
+/* ---------- Props ---------- */
+
 interface Props {
-    period: string;
-    periodLabel: string;
-    startDate: string;
-    endDate: string;
-    metrics: Metrics;
-    lowStock: LowStock[];
-    recentSales: RecentSale[];
-    recentPurchases: RecentPurchase[];
-    monthlyChart: MonthlyChartPoint[];
-    upcomingPayables: UpcomingPayable[];
+    isStaff: boolean;
+    // Staff props
+    outletName?: string;
+    todayRevenue?: number;
+    todayTransactions?: number;
+    todayItemsSold?: number;
+    recentSales?: RecentSale[];
+    outletInventory?: OutletInventoryItem[];
+    // Pengelola props
+    period?: string;
+    periodLabel?: string;
+    startDate?: string;
+    endDate?: string;
+    metrics?: Metrics;
+    lowStock?: LowStock[];
+    // recentSales reused but typed differently for pengelola
+    recentPurchases?: RecentPurchase[];
+    monthlyChart?: MonthlyChartPoint[];
+    upcomingPayables?: UpcomingPayable[];
 }
 
 const periodOptions = [
@@ -90,18 +119,155 @@ const periodOptions = [
     { value: 'custom', label: 'Custom' },
 ];
 
-export default function Dashboard({
-    period,
-    periodLabel,
-    startDate,
-    endDate,
-    metrics,
-    lowStock,
-    recentSales,
-    recentPurchases,
-    monthlyChart,
-    upcomingPayables,
-}: Props) {
+export default function Dashboard(props: Props) {
+    const {
+        isStaff,
+        // Staff
+        outletName = '',
+        todayRevenue = 0,
+        todayTransactions = 0,
+        todayItemsSold = 0,
+        recentSales = [],
+        outletInventory = [],
+        // Pengelola
+        period = 'this_month',
+        periodLabel = '',
+        startDate = '',
+        endDate = '',
+        metrics = { revenue: 0, cogs: 0, gross_profit: 0, gross_margin: 0, net_profit: 0 },
+        lowStock = [],
+        recentPurchases = [],
+        monthlyChart = [],
+        upcomingPayables = [],
+    } = props;
+
+    // ─── Staff View ─────────────────────────────────────────────
+    if (isStaff) {
+        return (
+            <AppLayout title="Dashboard">
+                <Head title="Dashboard" />
+
+                <div className="mb-4">
+                    <h2 className="text-lg font-semibold">{outletName}</h2>
+                    <p className="text-sm text-muted-foreground">Penjualan hari ini</p>
+                </div>
+
+                {/* Today's Sales Summary */}
+                <div className="grid gap-4 sm:grid-cols-3">
+                    <StatCard
+                        label="Omset Hari Ini"
+                        value={formatRupiah(todayRevenue)}
+                        icon={<Banknote className="h-5 w-5" />}
+                    />
+                    <StatCard
+                        label="Total Transaksi"
+                        value={todayTransactions.toString()}
+                        icon={<ShoppingCart className="h-5 w-5" />}
+                    />
+                    <StatCard
+                        label="Items Terjual"
+                        value={todayItemsSold.toString()}
+                        icon={<Package className="h-5 w-5" />}
+                    />
+                </div>
+
+                {/* Recent Sales Today */}
+                <Card className="mt-6">
+                    <CardHeader>
+                        <CardTitle>Penjualan Hari Ini</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {recentSales.length === 0 ? (
+                            <p className="py-6 text-center text-sm text-muted-foreground">
+                                Belum ada penjualan hari ini.
+                            </p>
+                        ) : (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Produk</TableHead>
+                                        <TableHead>Qty</TableHead>
+                                        <TableHead>Revenue</TableHead>
+                                        <TableHead>Waktu</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {recentSales.map((s) => (
+                                        <TableRow key={s.id}>
+                                            <TableCell className="font-medium">
+                                                {s.product ?? '-'}
+                                            </TableCell>
+                                            <TableCell>{s.quantity}</TableCell>
+                                            <TableCell>{formatRupiah(s.revenue)}</TableCell>
+                                            <TableCell className="text-muted-foreground">
+                                                {s.occurred_at
+                                                    ? new Date(s.occurred_at).toLocaleTimeString('id-ID', {
+                                                          hour: '2-digit',
+                                                          minute: '2-digit',
+                                                      })
+                                                    : '-'}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Outlet Inventory */}
+                <Card className="mt-6">
+                    <CardHeader>
+                        <CardTitle>Stok Outlet</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {outletInventory.length === 0 ? (
+                            <p className="py-6 text-center text-sm text-muted-foreground">
+                                Belum ada data inventory outlet.
+                            </p>
+                        ) : (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Bahan</TableHead>
+                                        <TableHead>Stok</TableHead>
+                                        <TableHead>Min</TableHead>
+                                        <TableHead>Satuan</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {outletInventory.map((item) => (
+                                        <TableRow key={item.id}>
+                                            <TableCell className="font-medium">
+                                                {item.ingredient_name}
+                                            </TableCell>
+                                            <TableCell>
+                                                {formatNumber(item.quantity, 2)}
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground">
+                                                {formatNumber(item.minimum_stock, 2)}
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground">
+                                                {item.base_unit}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
+                        <Link
+                            href="/inventory"
+                            className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+                        >
+                            Lihat detail inventory
+                        </Link>
+                    </CardContent>
+                </Card>
+            </AppLayout>
+        );
+    }
+
+    // ─── Pengelola View (existing) ──────────────────────────────
     const maxChartValue = Math.max(
         1,
         ...monthlyChart.flatMap((point) => [point.revenue, point.expense]),
@@ -349,7 +515,7 @@ export default function Dashboard({
                                             <TableCell>{s.quantity}</TableCell>
                                             <TableCell>{formatRupiah(s.revenue)}</TableCell>
                                             <TableCell className="text-success">
-                                                {formatRupiah(s.profit)}
+                                                {formatRupiah((s as PengelolaRecentSale).profit)}
                                             </TableCell>
                                         </TableRow>
                                     ))}

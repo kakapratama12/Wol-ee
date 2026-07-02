@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use App\Models\Ingredient;
+use App\Models\OutletInventory;
 use App\Models\Sale;
 use App\Models\Transaction;
 use App\Services\PnlService;
@@ -16,7 +17,87 @@ class DashboardController extends Controller
 {
     public function index(Request $request, PnlService $pnl): Response
     {
+        $user = $request->user();
         $now = Carbon::now();
+
+        // Staff view: simplified dashboard scoped to their outlet
+        if ($user->isStaff()) {
+            return $this->staffDashboard($request, $user, $now);
+        }
+
+        // Pengelola / admin view: full dashboard
+        return $this->pengelolaDashboard($request, $pnl, $now);
+    }
+
+    private function staffDashboard(Request $request, $user, Carbon $now): Response
+    {
+        $outletId = $user->outlet_id;
+        $todayStart = $now->copy()->startOfDay();
+        $todayEnd = $now->copy()->endOfDay();
+
+        // Today's sales for this outlet
+        $todaySales = Sale::query()
+            ->active()
+            ->with('product:id,name')
+            ->where('outlet_id', $outletId)
+            ->whereBetween('occurred_at', [$todayStart->toIso8601String(), $todayEnd->toIso8601String()])
+            ->latest('occurred_at')
+            ->get();
+
+        $todayRevenue = round((float) $todaySales->sum('revenue'), 2);
+        $todayTransactions = $todaySales->count();
+        $todayItemsSold = (int) $todaySales->sum('quantity');
+
+        $recentSales = $todaySales
+            ->take(10)
+            ->map(fn (Sale $s) => [
+                'id' => $s->id,
+                'product' => $s->product?->name,
+                'quantity' => $s->quantity,
+                'revenue' => (float) $s->revenue,
+                'occurred_at' => $s->occurred_at?->toIso8601String(),
+            ]);
+
+        // Outlet inventory
+        $outletInventory = \App\Models\OutletInventory::query()
+            ->with('ingredient:id,name,base_unit,minimum_stock')
+            ->where('outlet_id', $outletId)
+            ->orderBy('ingredient_id')
+            ->get()
+            ->map(fn (\App\Models\OutletInventory $oi) => [
+                'id' => $oi->id,
+                'ingredient_name' => $oi->ingredient?->name ?? '-',
+                'quantity' => (float) $oi->quantity,
+                'unit' => $oi->unit,
+                'base_unit' => $oi->ingredient?->base_unit ?? $oi->unit,
+                'minimum_stock' => $oi->ingredient ? (float) $oi->ingredient->minimum_stock : 0,
+            ]);
+
+        $outletName = $user->outlet?->name ?? '';
+
+        return Inertia::render('Dashboard', [
+            'isStaff' => true,
+            'outletName' => $outletName,
+            'todayRevenue' => $todayRevenue,
+            'todayTransactions' => $todayTransactions,
+            'todayItemsSold' => $todayItemsSold,
+            'recentSales' => $recentSales,
+            'outletInventory' => $outletInventory,
+            // Pass empty defaults so the pengelola props are not required
+            'period' => 'today',
+            'periodLabel' => $now->translatedFormat('d M Y'),
+            'startDate' => $todayStart->toDateString(),
+            'endDate' => $todayEnd->toDateString(),
+            'metrics' => ['revenue' => 0, 'cogs' => 0, 'gross_profit' => 0, 'gross_margin' => 0, 'net_profit' => 0],
+            'lowStock' => [],
+            'recentPurchases' => [],
+            'monthlyChart' => [],
+            'upcomingPayables' => [],
+        ]);
+    }
+
+    private function pengelolaDashboard(Request $request, PnlService $pnl, Carbon $now): Response
+    {
         $period = $request->input('period', 'this_month');
 
         // Determine date range based on period
@@ -139,6 +220,7 @@ class DashboardController extends Controller
             });
 
         return Inertia::render('Dashboard', [
+            'isStaff' => false,
             'period' => $period,
             'periodLabel' => $label,
             'startDate' => $start->toDateString(),
