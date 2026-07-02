@@ -71,6 +71,11 @@ class Sale extends Model
         return $this->belongsTo(PosOrder::class);
     }
 
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(Outlet::class);
+    }
+
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
