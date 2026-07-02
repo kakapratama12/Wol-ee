@@ -75,6 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Multi-outlet
     Route::get('/outlets', [\App\Http\Controllers\OutletController::class, 'index'])->name('outlets.index');
+    Route::get('/outlets/{outlet}', [\App\Http\Controllers\OutletController::class, 'show'])->name('outlets.show');
     Route::get('/outlets/{outlet}/inventory', [\App\Http\Controllers\OutletInventoryController::class, 'index'])->name('outlets.inventory');
     Route::get('/distributions', [\App\Http\Controllers\DistributionController::class, 'index'])->name('distributions.index');
     Route::get('/distributions/{distribution}', [\App\Http\Controllers\DistributionController::class, 'show'])->name('distributions.show');
@@ -91,6 +92,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/outlets/{outlet}/stock/adjust', [\App\Http\Controllers\OutletStockController::class, 'adjust'])->name('outlets.stock.adjust');
     });
     Route::get('/outlets/{outlet}/stock/movements', [\App\Http\Controllers\OutletStockController::class, 'movements'])->name('outlets.stock.movements');
+    Route::get('/outlets/{outlet}/inventory/movements', [\App\Http\Controllers\OutletInventoryController::class, 'movements'])->name('outlets.stock.movements.page');
 
     // Owner only
     Route::middleware('owner')->group(function () {

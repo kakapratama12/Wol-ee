@@ -8,6 +8,7 @@ use App\Http\Requests\Pos\OpenCashierSessionRequest;
 use App\Models\CashierSession;
 use App\Models\PosOrder;
 use App\Services\CashierSessionService;
+use App\Services\ProductAvailabilityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,12 +24,23 @@ class SessionController extends Controller
         $user = auth()->user();
         $today = Carbon::today();
 
-        $todaySession = CashierSession::query()
+        // Check for any open session (might be from earlier today or yesterday)
+        $activeSession = CashierSession::query()
             ->where('user_id', $user->id)
-            ->whereDate('opened_at', $today)
+            ->whereNull('closed_at')
             ->withSum('posOrders', 'total')
             ->withCount('posOrders')
             ->first();
+
+        // Also get today's session for summary
+        $todaySession = $activeSession && $activeSession->opened_at->isToday()
+            ? $activeSession
+            : CashierSession::query()
+                ->where('user_id', $user->id)
+                ->whereDate('opened_at', $today)
+                ->withSum('posOrders', 'total')
+                ->withCount('posOrders')
+                ->first();
 
         $recentSessions = CashierSession::query()
             ->where('user_id', $user->id)
@@ -39,6 +51,14 @@ class SessionController extends Controller
             ->orderByDesc('opened_at')
             ->get();
 
+
+        // Product availability based on outlet stock + recipes
+        $outletId = $user->outlet_id;
+        $stockSummary = [];
+        if ($outletId) {
+            $availabilityService = app(ProductAvailabilityService::class);
+            $stockSummary = $availabilityService->buildOpeningSummary($user->tenant, $outletId);
+        }
         return Inertia::render('Pos/Index', [
             'todaySession' => $todaySession ? [
                 'id' => $todaySession->id,
@@ -67,6 +87,12 @@ class SessionController extends Controller
                 'expected_cash' => round((float) $s->opening_cash + (float) $s->total_cash, 2),
                 'variance' => (float) $s->variance,
             ]),
+            'stockSummary' => $stockSummary,
+            'activeSession' => $activeSession ? [
+                'id' => $activeSession->id,
+                'opened_at' => $activeSession->opened_at?->toIso8601String(),
+                'opening_cash' => (float) $activeSession->opening_cash,
+            ] : null,
         ]);
     }
 
@@ -134,7 +160,7 @@ class SessionController extends Controller
             ], 201);
         }
 
-        return redirect()->route('pos.session.summary.page');
+        return redirect()->route('pos.register');
     }
 
     public function summaryPage(CashierSessionService $sessions): Response|RedirectResponse
@@ -211,7 +237,11 @@ class SessionController extends Controller
         }
 
         try {
-            $summary = $sessions->close($session, (float) $request->validated('actual_cash'));
+            $summary = $sessions->close(
+                $session,
+                (float) $request->validated('actual_cash'),
+                $request->validated('closing_note')
+            );
         } catch (InvalidArgumentException $e) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 422);

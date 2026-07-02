@@ -143,7 +143,7 @@ export default function Register({ session, products }: Props) {
     };
 
     return (
-        <PosLayout
+        <PosLayout activeTab="kasir"
             title="Kasir"
             branch={session.outlet}
             actions={
@@ -192,6 +192,9 @@ export default function Register({ session, products }: Props) {
                                     <p className="text-base font-bold">{formatRupiah(product.selling_price)}</p>
                                     {product.recipe_type === 'batch' && product.disabled && (
                                         <p className="text-xs text-destructive">Habis</p>
+                                    )}
+                                    {product.recipe_type === 'batch' && product.max_portions < 0 && (
+                                        <p className="text-xs text-amber-600">Stok minus ({product.max_portions})</p>
                                     )}
                                     {product.recipe_type === 'batch' && !product.disabled && (
                                         <p className="text-xs text-muted-foreground">~{product.max_portions} pcs</p>

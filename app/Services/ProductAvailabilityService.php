@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Exceptions\CartUnavailableException;
 use App\Models\Ingredient;
 use App\Models\Product;
 use App\Models\Tenant;
@@ -20,55 +19,37 @@ class ProductAvailabilityService
     ) {}
 
     /**
-     * @param  list<array{product_id: int, quantity: int}>  $lineItems
+     * Validate cart items availability.
      *
-     * @throws CartUnavailableException
+     * NOTE: We no longer throw CartUnavailableException for stock issues.
+     * Stock can go negative — flexible first, audit later.
+     * This method now only validates that products exist and are active.
+     *
+     * @param  list<array{product_id: int, quantity: int}>  $lineItems
      */
     public function validateCart(array $lineItems, ?int $branchId = null): void
     {
         if ($lineItems === []) {
-            throw new CartUnavailableException('Keranjang kosong.');
+            throw new \InvalidArgumentException('Keranjang kosong.');
         }
 
-        if ($this->canFulfillCart($lineItems, $branchId)) {
-            return;
-        }
-
-        $unavailable = [];
+        // Just validate products exist and are active
+        $products = Product::query()
+            ->whereIn('id', collect($lineItems)->pluck('product_id'))
+            ->get()
+            ->keyBy('id');
 
         foreach ($lineItems as $item) {
-            $product = Product::query()->find($item['product_id']);
+            $product = $products->get($item['product_id']);
 
             if (! $product) {
-                continue;
+                throw new \InvalidArgumentException('Produk tidak ditemukan.');
             }
 
-            $requested = (int) $item['quantity'];
-            $max = $this->maxFulfillableQuantityInCart($lineItems, (int) $product->id, $branchId);
-
-            if ($max < $requested) {
-                $unavailable[] = [
-                    'product_id' => $product->id,
-                    'name' => $product->name,
-                    'requested_qty' => $requested,
-                    'max_fulfillable_qty' => $max,
-                ];
+            if (! $product->is_active) {
+                throw new \InvalidArgumentException("Produk {$product->name} tidak aktif.");
             }
         }
-
-        $message = count($unavailable) === 1
-            ? sprintf(
-                '%s tidak tersedia (diminta %d). Stok cukup untuk maks. %d porsi.',
-                $unavailable[0]['name'],
-                $unavailable[0]['requested_qty'],
-                $unavailable[0]['max_fulfillable_qty'],
-            )
-            : sprintf(
-                '%d produk tidak bisa diproses. Periksa item yang ditandai di keranjang.',
-                count($unavailable),
-            );
-
-        throw new CartUnavailableException($message, $unavailable);
     }
 
     public function estimateMaxPortions(Product $product, ?int $branchId = null): int
@@ -122,106 +103,6 @@ class ProductAvailabilityService
                 'bucket' => $this->bucketFor($max),
             ];
         })->values()->all();
-    }
-
-    /**
-     * @param  list<array{product_id: int, quantity: int}>  $lineItems
-     */
-    private function canFulfillCart(array $lineItems, ?int $branchId): bool
-    {
-        $products = $this->loadProductsForCart($lineItems);
-
-        foreach ($lineItems as $item) {
-            $product = $products->get($item['product_id']);
-
-            if (! $product) {
-                return false;
-            }
-
-            if ($product->isBatch()) {
-                if ($this->branchStock->getFinishedGoodsStock($product, $branchId) < (int) $item['quantity']) {
-                    return false;
-                }
-            }
-        }
-
-        $demand = $this->aggregateIngredientDemand($lineItems, $products);
-
-        foreach ($demand as $ingredientId => $required) {
-            if ($this->branchStock->getIngredientStock($ingredientId, $branchId) < $required) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * @param  list<array{product_id: int, quantity: int}>  $lineItems
-     */
-    private function maxFulfillableQuantityInCart(array $lineItems, int $productId, ?int $branchId): int
-    {
-        $requested = (int) collect($lineItems)->firstWhere('product_id', $productId)['quantity'];
-
-        for ($qty = $requested; $qty >= 0; $qty--) {
-            $testCart = collect($lineItems)
-                ->map(fn (array $row) => $row['product_id'] === $productId
-                    ? ['product_id' => $row['product_id'], 'quantity' => $qty]
-                    : $row)
-                ->values()
-                ->all();
-
-            if ($this->canFulfillCart($testCart, $branchId)) {
-                return $qty;
-            }
-        }
-
-        return 0;
-    }
-
-    /**
-     * @param  list<array{product_id: int, quantity: int}>  $lineItems
-     * @return array<int, float>
-     */
-    private function aggregateIngredientDemand(array $lineItems, \Illuminate\Support\Collection $products): array
-    {
-        $demand = [];
-
-        foreach ($lineItems as $item) {
-            $product = $products->get($item['product_id']);
-
-            if (! $product || $product->isBatch()) {
-                continue;
-            }
-
-            $product->loadMissing('recipeItems.ingredient');
-
-            foreach ($product->recipeItems as $recipeItem) {
-                if (! $recipeItem->ingredient) {
-                    continue;
-                }
-
-                $ingredientId = $recipeItem->ingredient_id;
-                $demand[$ingredientId] = ($demand[$ingredientId] ?? 0) + ((float) $recipeItem->quantity * (int) $item['quantity']);
-            }
-        }
-
-        return $demand;
-    }
-
-    /**
-     * @param  list<array{product_id: int, quantity: int}>  $lineItems
-     * @return \Illuminate\Support\Collection<int, Product>
-     */
-    private function loadProductsForCart(array $lineItems): \Illuminate\Support\Collection
-    {
-        $ids = collect($lineItems)->pluck('product_id')->unique()->values();
-
-        return Product::query()
-            ->whereIn('id', $ids)
-            ->with('recipeItems.ingredient')
-            ->get()
-            ->keyBy('id');
     }
 
     private function bucketFor(int $maxPortions): string

@@ -266,10 +266,10 @@ export default function Dashboard(props: Props) {
                             </Table>
                         )}
                         <Link
-                            href="/inventory"
+                            href="/pos/stock"
                             className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
                         >
-                            Lihat detail inventory
+                            Lihat detail stok outlet
                         </Link>
                     </CardContent>
                 </Card>

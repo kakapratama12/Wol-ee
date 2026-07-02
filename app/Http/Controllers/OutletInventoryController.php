@@ -7,6 +7,8 @@ use App\Models\OutletInventory;
 use App\Models\Ingredient;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Models\StockMovement;
+use App\Services\OutletStockService;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -69,4 +71,40 @@ class OutletInventoryController extends Controller
 
         return back()->with('success', 'Stok berhasil disesuaikan.');
     }
+
+    /**
+     * Show stock movements for a specific outlet.
+     */
+    public function movements(Request $request, Outlet $outlet)
+    {
+        $stockService = app(OutletStockService::class);
+        $movements = $stockService->getMovements(
+            $outlet,
+            $request->input('start_date'),
+            $request->input('end_date'),
+        );
+
+        // Map to frontend-friendly format
+        $mappedMovements = $movements->map(fn ($m) => [
+            'id' => $m->id,
+            'ingredient' => $m->ingredient?->name,
+            'type' => $m->type,
+            'quantity' => (float) $m->quantity,
+            'stock_after' => (float) $m->stock_after,
+            'reason' => $m->reason,
+            'note' => $m->note,
+            'user' => $m->user?->name,
+            'occurred_at' => $m->occurred_at?->format('d M Y H:i'),
+        ]);
+
+        return Inertia::render('Outlets/StockMovements', [
+            'outlet' => $outlet,
+            'movements' => $mappedMovements,
+            'filters' => [
+                'start_date' => $request->input('start_date'),
+                'end_date' => $request->input('end_date'),
+            ],
+        ]);
+    }
+
 }

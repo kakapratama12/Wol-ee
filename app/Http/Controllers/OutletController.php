@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Outlet;
 use Illuminate\Http\Request;
+use App\Models\Ingredient;
+use App\Models\Product;
+use App\Services\OutletStockService;
 use Inertia\Inertia;
 
 class OutletController extends Controller
@@ -17,6 +20,38 @@ class OutletController extends Controller
 
         return Inertia::render('Outlets/Index', [
             'outlets' => $outlets,
+        ]);
+    }
+
+
+    public function show(Outlet $outlet)
+    {
+        $outlet->loadCount('inventory');
+        $inventory = $outlet->inventory()->with(['product', 'ingredient'])->get();
+
+        $stockService = app(OutletStockService::class);
+        $movements = $stockService->getMovements($outlet);
+        $mappedMovements = $movements->map(fn ($m) => [
+            'id' => $m->id,
+            'ingredient' => $m->ingredient?->name,
+            'type' => $m->type,
+            'quantity' => (float) $m->quantity,
+            'stock_after' => (float) $m->stock_after,
+            'reason' => $m->reason,
+            'note' => $m->note,
+            'user' => $m->user?->name,
+            'occurred_at' => $m->occurred_at?->format('d M Y H:i'),
+        ]);
+
+        $products = Product::all();
+        $ingredients = Ingredient::all();
+
+        return Inertia::render('Outlets/Show', [
+            'outlet' => $outlet,
+            'inventory' => $inventory,
+            'movements' => $mappedMovements,
+            'products' => $products,
+            'ingredients' => $ingredients,
         ]);
     }
 

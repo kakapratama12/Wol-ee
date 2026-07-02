@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, Pencil } from 'lucide-react';
+import { ArrowLeft, History, Pencil } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent } from '@/Components/ui/card';
@@ -179,6 +179,13 @@ export default function OutletInventory({ outlet, inventory, products, ingredien
                             {outlet.type === 'pusat' ? 'Pusat' : 'Outlet'}
                         </span>
                     </div>
+                    <Link
+                        href={route('outlets.stock.movements.page', outlet.id)}
+                        className="inline-flex items-center gap-1.5 rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                    >
+                        <History className="h-4 w-4" />
+                        Riwayat
+                    </Link>
                 </div>
 
                 {/* Inventory Table */}

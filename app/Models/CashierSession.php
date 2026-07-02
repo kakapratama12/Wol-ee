@@ -22,6 +22,7 @@ class CashierSession extends Model
         'total_transfer',
         'actual_cash',
         'variance',
+        'closing_note',
         'opening_availability_snapshot',
         'reported_to_owner_at',
         'opened_at',

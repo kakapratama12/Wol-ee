@@ -15,11 +15,15 @@ class SaleService
     public function __construct(
         private readonly CogsService $cogs,
         private readonly InventoryService $inventory,
+        private readonly BranchStockService $branchStock,
     ) {}
 
     /**
      * Catat penjualan: hitung COGS snapshot, simpan sale, kurangi stok bahan
      * sesuai resep. Atomic.
+     *
+     * When outletId is provided, deducts from outlet_inventory (allows negative).
+     * When outletId is null, deducts from central stock (ingredients.current_stock).
      */
     public function record(
         Product $product,
@@ -71,7 +75,13 @@ class SaleService
         }
 
         DB::transaction(function () use ($sale) {
-            $this->inventory->reverseSaleUsage($sale);
+            if ($sale->outlet_id !== null) {
+                // Outlet sale — reverse from outlet_inventory
+                $this->reverseOutletSaleUsage($sale);
+            } else {
+                // Central sale — reverse from central stock
+                $this->inventory->reverseSaleUsage($sale);
+            }
             $sale->update(['status' => Sale::STATUS_VOID]);
         });
     }
@@ -96,7 +106,11 @@ class SaleService
             $posOrderId = $sale->pos_order_id;
             $outletId = $sale->outlet_id;
 
-            $this->inventory->reverseSaleUsage($sale);
+            if ($sale->outlet_id !== null) {
+                $this->reverseOutletSaleUsage($sale);
+            } else {
+                $this->inventory->reverseSaleUsage($sale);
+            }
             $sale->delete();
 
             return $this->persistSale(
@@ -158,27 +172,65 @@ class SaleService
             'occurred_at' => $occurredAt,
         ]);
 
-        if ($product->isBatch()) {
-            $this->inventory->deductFinishedGoods($product, $quantity, $sale, $occurredAt, $userId);
-        } else {
-            foreach ($product->recipeItems as $item) {
-                if (! $item->ingredient) {
-                    continue;
+        // Deduct stock based on outlet_id
+        if ($outletId !== null) {
+            // Outlet sale — deduct from outlet_inventory (allows negative)
+            if ($product->isBatch()) {
+                $this->branchStock->deductFinishedGoodsForSale($outletId, $product, $quantity);
+            } else {
+                foreach ($product->recipeItems as $item) {
+                    if (! $item->ingredient) {
+                        continue;
+                    }
+                    $usage = (float) $item->quantity * $quantity;
+                    $this->branchStock->deductForSale($outletId, $item->ingredient->id, $usage);
                 }
-                $usage = (float) $item->quantity * $quantity;
-                $this->inventory->recordUsage(
-                    $item->ingredient,
-                    $usage,
-                    Sale::class,
-                    $sale->id,
-                    null,
-                    $occurredAt,
-                    $userId,
-                );
+            }
+        } else {
+            // Central sale — deduct from central stock
+            if ($product->isBatch()) {
+                $this->inventory->deductFinishedGoods($product, $quantity, $sale, $occurredAt, $userId);
+            } else {
+                foreach ($product->recipeItems as $item) {
+                    if (! $item->ingredient) {
+                        continue;
+                    }
+                    $usage = (float) $item->quantity * $quantity;
+                    $this->inventory->recordUsage(
+                        $item->ingredient,
+                        $usage,
+                        Sale::class,
+                        $sale->id,
+                        null,
+                        $occurredAt,
+                        $userId,
+                    );
+                }
             }
         }
 
         return $sale;
+    }
+
+    /**
+     * Reverse outlet_inventory deductions for a voided sale.
+     */
+    private function reverseOutletSaleUsage(Sale $sale): void
+    {
+        $product = $sale->product;
+
+        if ($product->isBatch()) {
+            $this->branchStock->reverseFinishedGoodsForSale($sale->outlet_id, $product, (float) $sale->quantity);
+        } else {
+            $product->loadMissing('recipeItems.ingredient');
+            foreach ($product->recipeItems as $item) {
+                if (! $item->ingredient) {
+                    continue;
+                }
+                $usage = (float) $item->quantity * (int) $sale->quantity;
+                $this->branchStock->reverseForSale($sale->outlet_id, $item->ingredient->id, $usage);
+            }
+        }
     }
 
     /**

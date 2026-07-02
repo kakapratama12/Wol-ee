@@ -31,21 +31,35 @@ interface RecentSession {
     variance?: number;
 }
 
+interface ActiveSession {
+    id: number;
+    opened_at: string;
+    opening_cash: number;
+}
+
 interface Props {
     todaySession: TodaySession | null;
     recentSessions: RecentSession[];
+    activeSession: ActiveSession | null;
+    stockSummary: Array<{
+        product_id: number;
+        name: string;
+        recipe_type: string;
+        max_portions: number;
+        bucket: 'ready' | 'low' | 'out';
+    }>;
 }
 
-export default function PosIndex({ todaySession, recentSessions }: Props) {
-    const isOpen = todaySession?.status === 'open';
+export default function PosIndex({ todaySession, recentSessions, activeSession, stockSummary }: Props) {
+    const isOpen = !!activeSession;
 
     return (
         <PosLayout title="POS">
             <Head title="POS" />
 
-            <div className="mx-auto max-w-2xl space-y-6">
+            <div className="mx-auto max-w-2xl space-y-7">
                 {/* Status Toko Hari Ini */}
-                <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
                     <div className="flex items-center gap-3">
                         <div className={`flex h-12 w-12 items-center justify-center rounded-full ${isOpen ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' : 'bg-muted text-muted-foreground'}`}>
                             <Store className="h-6 w-6" />
@@ -60,7 +74,7 @@ export default function PosIndex({ todaySession, recentSessions }: Props) {
                         </div>
                     </div>
 
-                    {isOpen && todaySession && (
+                    {isOpen && todaySession && todaySession.status === 'open' && (
                         <div className="mt-4 grid grid-cols-3 gap-4 text-center">
                             <div>
                                 <p className="text-2xl font-bold text-primary">{formatRupiah(todaySession.total_omset)}</p>
@@ -77,26 +91,26 @@ export default function PosIndex({ todaySession, recentSessions }: Props) {
                         </div>
                     )}
 
-                    <div className="mt-6">
-                        {isOpen ? (
-                            <div className="flex gap-3">
-                                <Link
-                                    href="/pos/register"
-                                    className="flex-1"
-                                >
-                                    <Button className="h-12 w-full text-base">
-                                        <ShoppingBag className="mr-2 h-5 w-5" />
-                                        Masuk Kasir
-                                    </Button>
-                                </Link>
-                                <Link
-                                    href="/pos/session/close"
-                                >
-                                    <Button variant="outline" className="h-12 px-6">
-                                        Tutup Toko
-                                    </Button>
-                                </Link>
-                            </div>
+                    <div className="mt-4">
+                        {activeSession ? (
+                            <>
+                                <p className="mb-3 text-xs text-muted-foreground">
+                                    Sesi dibuka {new Date(activeSession.opened_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} jam {new Date(activeSession.opened_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} sedang berjalan
+                                </p>
+                                <div className="flex gap-3">
+                                    <Link href="/pos/register" className="flex-1">
+                                        <Button className="h-12 w-full text-base">
+                                            <ShoppingBag className="mr-2 h-5 w-5" />
+                                            Masuk Kasir
+                                        </Button>
+                                    </Link>
+                                    <Link href="/pos/session/close">
+                                        <Button variant="outline" className="h-12 px-6">
+                                            Tutup Toko
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </>
                         ) : (
                             <Link href="/pos/session/open">
                                 <Button className="h-12 w-full text-base" size="lg">
@@ -109,9 +123,39 @@ export default function PosIndex({ todaySession, recentSessions }: Props) {
                 </div>
 
 
+                {/* Product Availability */}
+                <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                    <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Stok Produk Hari Ini</h3>
+                    {stockSummary && stockSummary.length > 0 ? (
+                        <div className="space-y-2">
+                            {stockSummary.map((item) => (
+                                <div key={item.product_id} className="flex items-center justify-between rounded-lg border border-border p-2.5">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`h-2 w-2 rounded-full ${
+                                            item.bucket === 'out' ? 'bg-red-500' :
+                                            item.bucket === 'low' ? 'bg-amber-500' : 'bg-green-500'
+                                        }`} />
+                                        <span className="text-sm">{item.name}</span>
+                                    </div>
+                                    <span className={`text-sm font-medium ${
+                                        item.bucket === 'out' ? 'text-red-600 dark:text-red-400' :
+                                        item.bucket === 'low' ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'
+                                    }`}>
+                                        {item.max_portions} porsi
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                            Belum ada produk
+                        </p>
+                    )}
+                </div>
+
                 {/* Riwayat Sesi */}
                 {recentSessions.length > 0 && (
-                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
                         <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Riwayat 5 Hari Terakhir</h3>
                         <div className="space-y-3">
                             {recentSessions.map((session) => (

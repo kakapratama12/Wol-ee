@@ -56,7 +56,7 @@ class CashierSessionService
     /**
      * @return array<string, mixed>
      */
-    public function close(CashierSession $session, float $actualCash): array
+    public function close(CashierSession $session, float $actualCash, ?string $closingNote = null): array
     {
         if (! $session->isOpen()) {
             throw new InvalidArgumentException('Sesi kasir sudah ditutup.');
@@ -68,6 +68,7 @@ class CashierSessionService
         $session->update([
             'actual_cash' => round($actualCash, 2),
             'variance' => $variance,
+            'closing_note' => $closingNote,
             'closed_at' => Carbon::now(),
         ]);
 

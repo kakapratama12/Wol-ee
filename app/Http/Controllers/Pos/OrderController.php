@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Pos;
 
-use App\Exceptions\CartUnavailableException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Pos\StorePosOrderRequest;
 use App\Models\PosOrder;
@@ -49,20 +48,6 @@ class OrderController extends Controller
                 amountPaid: (float) $validated['amount_paid'],
                 note: $validated['note'] ?? null,
             );
-        } catch (CartUnavailableException $e) {
-            if ($request->header('X-Inertia')) {
-                return back()->with('pos_cart_error', [
-                    'message' => $e->getMessage(),
-                    'unavailable_products' => $e->unavailableProducts,
-                ]);
-            }
-
-            return response()->json([
-                'success' => false,
-                'error_code' => 'CART_UNAVAILABLE',
-                'message' => $e->getMessage(),
-                'unavailable_products' => $e->unavailableProducts,
-            ], 422);
         } catch (InvalidArgumentException $e) {
             if ($request->header('X-Inertia')) {
                 return back()->withErrors(['checkout' => $e->getMessage()]);

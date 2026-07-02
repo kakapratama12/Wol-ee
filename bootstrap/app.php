@@ -22,7 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectUsersTo(function (Request $request) {
             if ($request->user()?->isStaff()) {
-                return route('pos.landing');
+                return route('pos.register');
             }
 
             if ($request->user()?->isSuperAdmin()) {
@@ -36,7 +36,6 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             \App\Http\Middleware\SecurityHeaders::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
-            \App\Http\Middleware\RedirectCashierToPos::class,
         ]);
 
         $middleware->alias([
