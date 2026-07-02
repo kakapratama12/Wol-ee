@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Models\CashEntry;
 use App\Models\Expense;
+use App\Models\Payable;
 use App\Models\Sale;
 use App\Models\Transaction;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class CashflowService
 {
@@ -36,7 +38,9 @@ class CashflowService
         $totalKasMasuk = round($penjualan + $modalMasuk, 2);
 
         // ── Kas Keluar ──
+        // Hanya transaksi TANPA payable_id (cash basis)
         $pembelian = (float) Transaction::query()
+            ->whereNull('payable_id')
             ->whereBetween('occurred_at', [$start, $end])
             ->sum('total');
 
@@ -69,6 +73,16 @@ class CashflowService
             'di_luar_usaha' => round($diLuarUsaha, 2),
         ];
 
+        // ── Kewajiban (AP) ──
+        $totalApOutstanding = (float) Payable::query()
+            ->whereIn('status', [Payable::STATUS_OUTSTANDING, Payable::STATUS_PARTIAL])
+            ->sum(DB::raw('amount - paid_amount'));
+
+        $apDueThisMonth = (float) Payable::query()
+            ->whereIn('status', [Payable::STATUS_OUTSTANDING, Payable::STATUS_PARTIAL])
+            ->whereBetween('due_date', [$start, $end])
+            ->sum(DB::raw('amount - paid_amount'));
+
         return [
             'month' => $month,
             'year' => $year,
@@ -78,6 +92,10 @@ class CashflowService
             'kas_keluar' => $kasKeluarDetail,
             'total_kas_keluar' => $totalKasKeluar,
             'saldo_akhir' => $saldoAkhir,
+            'kewajiban' => [
+                'total_outstanding' => round($totalApOutstanding, 2),
+                'due_this_month' => round($apDueThisMonth, 2),
+            ],
         ];
     }
 
@@ -99,7 +117,9 @@ class CashflowService
             ->sum('amount');
 
         // Total kas keluar dari awal sampai akhir bulan ini
+        // Hanya transaksi TANPA payable_id (cash basis)
         $totalPembelian = (float) Transaction::query()
+            ->whereNull('payable_id')
             ->where('occurred_at', '<=', $end)
             ->sum('total');
 

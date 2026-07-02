@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { ArrowLeft, Eye, Pencil } from 'lucide-react';
+import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
+import { ArrowLeft, Eye, Pencil, Trash2, Archive } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import InvoiceStatusBadge from '@/Components/InvoiceStatusBadge';
 import { Button, buttonVariants } from '@/Components/ui/button';
@@ -22,6 +22,7 @@ import type { PageProps } from '@/types';
 interface Invoice {
     id: number;
     invoice_number: string;
+    po_number: string | null;
     partner: string | null;
     amount: number;
     paid_amount: number;
@@ -31,6 +32,7 @@ interface Invoice {
     note: string | null;
     paid_at: string | null;
     subtotal: number;
+    archived_at: string | null;
 }
 
 interface Payment {
@@ -65,7 +67,10 @@ export default function InvoicesShow({ invoice, payments }: Props) {
     const [previewOpen, setPreviewOpen] = useState(false);
     const { props } = usePage<PageProps>();
     const isOwner = props.auth.user.role === 'pengelola';
-    const canPay = isOwner && invoice.status !== 'paid';
+    const canPay = isOwner && invoice.status !== 'paid' && invoice.status !== 'draft';
+    const canEdit = isOwner && (invoice.status === 'draft' || invoice.status === 'outstanding');
+    const canDelete = isOwner && (invoice.status === 'draft' || invoice.status === 'outstanding');
+    const canArchive = isOwner && (invoice.status === 'partial' || invoice.status === 'paid') && !invoice.archived_at;
 
     const form = useForm({
         amount: '',
@@ -78,6 +83,16 @@ export default function InvoicesShow({ invoice, payments }: Props) {
             preserveScroll: true,
             onSuccess: () => form.reset('amount'),
         });
+    };
+
+    const handleDelete = () => {
+        if (!confirm(`Hapus invoice "${invoice.invoice_number}"?`)) return;
+        router.delete(route('invoices.destroy', invoice.id));
+    };
+
+    const handleArchive = () => {
+        if (!confirm(`Arsipkan invoice "${invoice.invoice_number}"?`)) return;
+        router.post(route('invoices.archive', invoice.id));
     };
 
     return (
@@ -101,9 +116,12 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                             <div className="flex items-center gap-3">
                                 <CardTitle>{invoice.invoice_number}</CardTitle>
                                 <InvoiceStatusBadge status={invoice.status} />
+                                {invoice.archived_at && (
+                                    <span className="text-xs text-muted-foreground">(Diarsipkan)</span>
+                                )}
                             </div>
                             <div className="flex gap-2">
-                                {isOwner && (
+                                {canEdit && (
                                     <Link
                                         href={`/invoices/${invoice.id}/edit`}
                                         className={buttonVariants({
@@ -150,6 +168,26 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                                         Kuitansi
                                     </a>
                                 )}
+                                {canDelete && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleDelete}
+                                    >
+                                        <Trash2 className="mr-1 h-4 w-4 text-red-500" />
+                                        Hapus
+                                    </Button>
+                                )}
+                                {canArchive && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleArchive}
+                                    >
+                                        <Archive className="mr-1 h-4 w-4" />
+                                        Arsipkan
+                                    </Button>
+                                )}
                             </div>
                         </CardHeader>
                         <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
@@ -157,6 +195,12 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                                 <span className="text-muted-foreground">Partner:</span>{' '}
                                 {invoice.partner ?? '-'}
                             </p>
+                            {invoice.po_number && (
+                                <p>
+                                    <span className="text-muted-foreground">Nomor PO:</span>{' '}
+                                    {invoice.po_number}
+                                </p>
+                            )}
                             <p>
                                 <span className="text-muted-foreground">Jatuh tempo:</span>{' '}
                                 {formatDate(invoice.due_date)}
@@ -251,7 +295,7 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                                     <TableRow key={item.id}>
                                         <TableCell>{item.description}</TableCell>
                                         <TableCell className="text-right">
-                                            {item.quantity}
+                                            {Math.round(item.quantity).toLocaleString('id-ID')}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             {formatRupiah(item.unit_price)}

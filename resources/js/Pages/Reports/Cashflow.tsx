@@ -29,6 +29,10 @@ interface Report {
     kas_keluar: KasKeluarDetail;
     total_kas_keluar: number;
     saldo_akhir: number;
+    kewajiban: {
+        total_outstanding: number;
+        due_this_month: number;
+    };
 }
 
 interface Props {
@@ -242,6 +246,21 @@ export default function Cashflow({ report, period, periodLabel }: Props) {
                         bold
                         big
                         negative={report.saldo_akhir < 0}
+                    />
+
+                    <div className="border-t border-border" />
+
+                    {/* Kewajiban (AP) */}
+                    <SectionTitle title="Kewajiban (Tagihan Supplier)" color="text-orange-700" />
+                    <Line
+                        label="Total Belum Dibayar"
+                        value={formatRupiah(report.kewajiban.total_outstanding)}
+                        muted
+                    />
+                    <Line
+                        label="Jatuh Tempo Bulan Ini"
+                        value={formatRupiah(report.kewajiban.due_this_month)}
+                        bold
                     />
                 </CardContent>
             </Card>

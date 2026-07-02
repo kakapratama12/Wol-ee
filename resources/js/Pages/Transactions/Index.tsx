@@ -41,9 +41,15 @@ interface IngredientOption {
     base_unit: string;
 }
 
+interface SupplierOption {
+    id: number;
+    name: string;
+}
+
 interface Props {
     transactions: Paginated<Transaction>;
     ingredients: IngredientOption[];
+    suppliers: SupplierOption[];
 }
 
 function toDatetimeLocal(iso: string | null): string {
@@ -56,6 +62,7 @@ function toDatetimeLocal(iso: string | null): string {
 export default function TransactionsIndex({
     transactions,
     ingredients: initialIngredients,
+    suppliers,
 }: Props) {
     const [ingredients, setIngredients] = useState(initialIngredients);
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -70,6 +77,9 @@ export default function TransactionsIndex({
         note: '',
         occurred_at: defaultDate,
         idempotency_key: '',
+        bayar_nanti: false,
+        partner_id: '',
+        due_date: '',
     });
     const editForm = useForm({
         ingredient_id: '',
@@ -195,6 +205,56 @@ export default function TransactionsIndex({
                                     value={form.data.occurred_at}
                                     onChange={(e) => form.setData('occurred_at', e.target.value)}
                                 />
+                            </div>
+
+                            {/* Bayar Nanti Toggle */}
+                            <div className="border-t border-border pt-4">
+                                <label className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        checked={form.data.bayar_nanti}
+                                        onChange={(e) => form.setData('bayar_nanti', e.target.checked)}
+                                        className="h-4 w-4 rounded border-gray-300"
+                                    />
+                                    <span className="text-sm font-medium">Bayar Nanti (utang supplier)</span>
+                                </label>
+
+                                {form.data.bayar_nanti && (
+                                    <div className="mt-3 space-y-3">
+                                        <div>
+                                            <Label>Supplier</Label>
+                                            <select
+                                                value={form.data.partner_id}
+                                                onChange={(e) => form.setData('partner_id', e.target.value)}
+                                                className="mt-1 block w-full rounded-md border border-border bg-card px-3 py-2 text-sm"
+                                            >
+                                                <option value="">- Pilih supplier -</option>
+                                                {suppliers.map((s) => (
+                                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                                ))}
+                                            </select>
+                                            {form.errors.partner_id && (
+                                                <p className="mt-1 text-xs text-destructive">
+                                                    {form.errors.partner_id}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="due_date">Jatuh Tempo</Label>
+                                            <Input
+                                                id="due_date"
+                                                type="date"
+                                                value={form.data.due_date}
+                                                onChange={(e) => form.setData('due_date', e.target.value)}
+                                            />
+                                            {form.errors.due_date && (
+                                                <p className="mt-1 text-xs text-destructive">
+                                                    {form.errors.due_date}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <Button type="submit" className="w-full" disabled={form.processing}>
                                 Simpan & Tambah Stok

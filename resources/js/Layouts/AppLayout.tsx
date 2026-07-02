@@ -1,4 +1,4 @@
-import { PropsWithChildren, ReactNode, useEffect, useMemo, useState } from 'react';
+import { PropsWithChildren, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutDashboard,
@@ -13,6 +13,7 @@ import {
     X,
     ChevronDown,
     Utensils,
+    User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeProvider, useTheme } from '@/Components/ThemeProvider';
@@ -90,6 +91,7 @@ const navigation: (NavSingle | NavGroup)[] = [
         children: [
             { label: 'Daftar Partner', href: '/partners' },
             { label: 'Invoices', href: '/invoices' },
+            { label: 'Tagihan Supplier', href: '/payables' },
         ],
     },
     {
@@ -138,6 +140,8 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const userMenuRef = useRef<HTMLDivElement>(null);
 
     const flash = props.flash;
     useEffect(() => {
@@ -150,6 +154,18 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
         const t = setTimeout(() => setToast(null), 4000);
         return () => clearTimeout(t);
     }, [toast]);
+
+    // Close user menu on click outside
+    useEffect(() => {
+        if (!userMenuOpen) return;
+        const handler = (e: MouseEvent) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+                setUserMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [userMenuOpen]);
 
     const visibleNav = useMemo(() => {
         return navigation
@@ -309,19 +325,42 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
                     </div>
                     <div className="flex items-center gap-2">
                         <ThemeToggle />
-                        <div className="hidden text-right sm:block">
-                            <p className="text-sm font-medium leading-tight">{user.name}</p>
-                            <p className="text-xs capitalize text-muted-foreground">{user.role}</p>
+                        <div ref={userMenuRef} className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                                className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
+                            >
+                                <div className="hidden text-right sm:block">
+                                    <p className="text-sm font-medium leading-tight">{user.name}</p>
+                                    <p className="text-xs capitalize text-muted-foreground">{user.role}</p>
+                                </div>
+                                <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', userMenuOpen && 'rotate-180')} />
+                            </button>
+
+                            {userMenuOpen && (
+                                <div className="absolute right-0 z-50 mt-1 w-44 rounded-lg border border-border bg-card py-1 shadow-lg">
+                                    <Link
+                                        href="/profile"
+                                        onClick={() => setUserMenuOpen(false)}
+                                        className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-accent"
+                                    >
+                                        <User className="h-4 w-4" />
+                                        Ganti Password
+                                    </Link>
+                                    <Link
+                                        href="/logout"
+                                        method="post"
+                                        as="button"
+                                        onClick={() => setUserMenuOpen(false)}
+                                        className="flex w-full items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-accent"
+                                    >
+                                        <LogOut className="h-4 w-4" />
+                                        Keluar
+                                    </Link>
+                                </div>
+                            )}
                         </div>
-                        <Link
-                            href="/logout"
-                            method="post"
-                            as="button"
-                            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-                        >
-                            <LogOut className="h-4 w-4" />
-                            <span className="hidden sm:inline">Keluar</span>
-                        </Link>
                     </div>
                 </header>
 

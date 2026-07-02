@@ -154,6 +154,20 @@ class DashboardController extends Controller
             'recentSales' => $recentSales,
             'recentPurchases' => $recentPurchases,
             'monthlyChart' => $monthlyChart,
+            'upcomingPayables' => \App\Models\Payable::query()
+                ->with('partner:id,name')
+                ->whereIn('status', ['outstanding', 'partial'])
+                ->where('due_date', '<=', $now->copy()->addDays(30)->toDateString())
+                ->orderBy('due_date')
+                ->limit(5)
+                ->get()
+                ->map(fn ($p) => [
+                    'id' => $p->id,
+                    'payable_number' => $p->payable_number,
+                    'partner' => $p->partner?->name,
+                    'remaining' => round((float) $p->amount - (float) $p->paid_amount, 2),
+                    'due_date' => $p->due_date?->toDateString(),
+                ]),
         ]);
     }
 }

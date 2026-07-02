@@ -79,10 +79,11 @@ class InvoiceService
                         'tenant_id' => $tenantId,
                         'partner_id' => $partner->id,
                         'invoice_number' => $this->generateInvoiceNumber($tenantId),
+                        'po_number' => $data['po_number'] ?? null,
                         'amount' => $amount,
                         'paid_amount' => 0,
                         'due_date' => $data['due_date'],
-                        'status' => Invoice::STATUS_OUTSTANDING,
+                        'status' => $data['status'] ?? Invoice::STATUS_OUTSTANDING,
                         'note' => $data['note'] ?? null,
                     ]);
 

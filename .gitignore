@@ -26,3 +26,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Playwright
+tests/e2e-report/
+test-results/

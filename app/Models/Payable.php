@@ -8,21 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Invoice extends Model
+class Payable extends Model
 {
     use BelongsToTenant, HasFactory;
 
+    public const STATUS_DRAFT = 'draft';
     public const STATUS_OUTSTANDING = 'outstanding';
     public const STATUS_PARTIAL = 'partial';
     public const STATUS_PAID = 'paid';
-    public const STATUS_DRAFT = 'draft';
 
     protected $fillable = [
-        'idempotency_key',
         'tenant_id',
         'partner_id',
-        'invoice_number',
-        'po_number',
+        'payable_number',
         'amount',
         'paid_amount',
         'due_date',
@@ -47,11 +45,6 @@ class Invoice extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(InvoiceItem::class);
-    }
-
-    public function fees(): HasMany
-    {
-        return $this->hasMany(InvoiceFee::class);
+        return $this->hasMany(PayableItem::class);
     }
 }

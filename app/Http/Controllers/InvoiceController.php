@@ -22,16 +22,26 @@ class InvoiceController extends Controller
     {
         $query = Invoice::query()
             ->with('partner')
-            ->orderByDesc('due_date');
+            ->orderByDesc('created_at');
 
+        // Filter: archived status
+        $archived = $request->boolean('archived', false);
+        if ($archived) {
+            $query->whereNotNull('archived_at');
+        } else {
+            $query->whereNull('archived_at');
+        }
+
+        // Filter: status
         $status = $request->string('status');
-        if ($status->isNotEmpty() && in_array($status->toString(), ['outstanding', 'partial', 'paid'], true)) {
+        if ($status->isNotEmpty() && in_array($status->toString(), ['draft', 'outstanding', 'partial', 'paid'], true)) {
             $query->where('status', $status->toString());
         }
 
         $invoices = $query->get()->map(fn (Invoice $invoice) => [
             'id' => $invoice->id,
             'invoice_number' => $invoice->invoice_number,
+            'po_number' => $invoice->po_number,
             'partner' => $invoice->partner?->name,
             'amount' => (float) $invoice->amount,
             'paid_amount' => (float) $invoice->paid_amount,
@@ -48,15 +58,15 @@ class InvoiceController extends Controller
         return Inertia::render('Invoices/Index', [
             'invoices' => $invoices,
             'customers' => $customers,
-            'filters' => ['status' => $status->toString()],
+            'filters' => ['status' => $status->toString(), 'archived' => $archived],
         ]);
     }
 
     public function show(Invoice $invoice): Response
     {
         $invoice->load('partner', 'items', 'fees');
-
         $payments = [];
+
         if ((float) $invoice->paid_amount > 0) {
             $payments[] = [
                 'paid_at' => $invoice->paid_at?->toDateString() ?? $invoice->updated_at->toDateString(),
@@ -64,13 +74,13 @@ class InvoiceController extends Controller
             ];
         }
 
-        // Calculate subtotal
         $subtotal = $invoice->items->sum('total');
 
         return Inertia::render('Invoices/Show', [
             'invoice' => [
                 'id' => $invoice->id,
                 'invoice_number' => $invoice->invoice_number,
+                'po_number' => $invoice->po_number,
                 'partner_id' => $invoice->partner_id,
                 'partner' => $invoice->partner?->name,
                 'amount' => (float) $invoice->amount,
@@ -81,6 +91,7 @@ class InvoiceController extends Controller
                 'note' => $invoice->note,
                 'paid_at' => $invoice->paid_at?->toDateString(),
                 'subtotal' => (float) $subtotal,
+                'archived_at' => $invoice->archived_at?->toDateString(),
                 'items' => $invoice->items->map(fn ($item) => [
                     'id' => $item->id,
                     'description' => $item->description,
@@ -102,20 +113,24 @@ class InvoiceController extends Controller
 
     public function edit(Invoice $invoice): Response
     {
-        $invoice->load('partner', 'items', 'fees');
+        // Only draft and outstanding can be edited
+        if (!in_array($invoice->status, ['draft', 'outstanding'], true)) {
+            return back()->with('error', 'Invoice yang sudah dibayar sebagian/tidak bisa diedit.');
+        }
 
+        $invoice->load('partner', 'items', 'fees');
         $customers = Partner::query()
             ->where('type', Partner::TYPE_CUSTOMER)
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        // Calculate subtotal
         $subtotal = $invoice->items->sum('total');
 
         return Inertia::render('Invoices/Edit', [
             'invoice' => [
                 'id' => $invoice->id,
                 'invoice_number' => $invoice->invoice_number,
+                'po_number' => $invoice->po_number,
                 'partner_id' => $invoice->partner_id,
                 'partner' => $invoice->partner?->name,
                 'amount' => (float) $invoice->amount,
@@ -145,10 +160,16 @@ class InvoiceController extends Controller
 
     public function update(Request $request, Invoice $invoice): RedirectResponse
     {
+        // Only draft and outstanding can be updated
+        if (!in_array($invoice->status, ['draft', 'outstanding'], true)) {
+            return back()->with('error', 'Invoice yang sudah dibayar sebagian/tidak bisa diedit.');
+        }
+
         $validated = $request->validate([
             'partner_id' => ['required', 'exists:partners,id'],
             'due_date' => ['required', 'date'],
             'note' => ['nullable', 'string', 'max:1000'],
+            'po_number' => ['nullable', 'string', 'max:100'],
             'amount' => ['nullable', 'numeric', 'min:0'],
             'items' => ['nullable', 'array', 'max:50'],
             'items.*.description' => ['required_with:items', 'string', 'max:255'],
@@ -160,7 +181,6 @@ class InvoiceController extends Controller
             'fees.*.value' => ['required_with:fees', 'numeric', 'min:0', 'max:99999999999'],
         ]);
 
-        // Validate partner is a customer
         $partner = Partner::findOrFail($validated['partner_id']);
         if ($partner->type !== Partner::TYPE_CUSTOMER) {
             return back()->with('error', 'Invoice hanya untuk partner tipe customer.');
@@ -170,13 +190,12 @@ class InvoiceController extends Controller
             'partner_id' => $validated['partner_id'],
             'due_date' => $validated['due_date'],
             'note' => $validated['note'] ?? null,
+            'po_number' => $validated['po_number'] ?? null,
         ]);
 
-        // Update items and fees if provided
         if (!empty($validated['items']) && count($validated['items']) > 0) {
             $this->invoices->updateItems($invoice, $validated['items'], $validated['fees'] ?? []);
         } elseif (isset($validated['amount'])) {
-            // If no items, update amount from request (only if no items were previously set)
             $invoice->update(['amount' => round((float) $validated['amount'], 2)]);
         }
 
@@ -198,12 +217,41 @@ class InvoiceController extends Controller
             ->with('success', 'Invoice dibuat.');
     }
 
+    public function destroy(Invoice $invoice): RedirectResponse
+    {
+        // Only draft and outstanding can be deleted
+        if (!in_array($invoice->status, ['draft', 'outstanding'], true)) {
+            return back()->with('error', 'Invoice yang sudah dibayar tidak bisa dihapus.');
+        }
+
+        $invoice->items()->delete();
+        $invoice->fees()->delete();
+        $invoice->delete();
+
+        return redirect()
+            ->route('invoices.index')
+            ->with('success', 'Invoice dihapus.');
+    }
+
+    public function archive(Invoice $invoice): RedirectResponse
+    {
+        // Only partial and paid can be archived
+        if (!in_array($invoice->status, ['partial', 'paid'], true)) {
+            return back()->with('error', 'Hanya invoice yang sudah dibayar sebagian/lunas yang bisa diarsipkan.');
+        }
+
+        $invoice->update(['archived_at' => now()]);
+
+        return redirect()
+            ->route('invoices.index')
+            ->with('success', 'Invoice diarsipkan.');
+    }
+
     public function pdf(Invoice $invoice)
     {
         $invoice->load('partner', 'items', 'fees');
         $tenant = $invoice->partner->tenant ?? auth()->user()->tenant;
 
-        // Calculate subtotal
         $subtotal = $invoice->items->sum('total');
 
         $pdf = Pdf::loadView('invoices.pdf', [
@@ -220,7 +268,6 @@ class InvoiceController extends Controller
         $invoice->load('partner', 'items', 'fees');
         $tenant = $invoice->partner->tenant ?? auth()->user()->tenant;
 
-        // Calculate subtotal
         $subtotal = $invoice->items->sum('total');
 
         $pdf = Pdf::loadView('invoices.pdf', [
@@ -237,7 +284,6 @@ class InvoiceController extends Controller
         $invoice->load('partner', 'items', 'fees');
         $tenant = $invoice->partner->tenant ?? auth()->user()->tenant;
 
-        // Calculate subtotal
         $subtotal = $invoice->items->sum('total');
 
         $pdf = Pdf::loadView('invoices.kuitansi', [

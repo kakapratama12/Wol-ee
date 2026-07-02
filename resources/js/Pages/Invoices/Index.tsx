@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { FileText, Plus } from 'lucide-react';
+import { FileText, Plus, Trash2, Archive } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import InvoiceStatusBadge from '@/Components/InvoiceStatusBadge';
 import Modal from '@/Components/ui/modal';
@@ -25,6 +25,7 @@ import type { PageProps } from '@/types';
 interface Invoice {
     id: number;
     invoice_number: string;
+    po_number: string | null;
     partner: string | null;
     amount: number;
     paid_amount: number;
@@ -41,7 +42,7 @@ interface Customer {
 interface Props {
     invoices: Invoice[];
     customers: Customer[];
-    filters: { status: string };
+    filters: { status: string; archived: boolean };
 }
 
 export default function InvoicesIndex({ invoices, customers: initialCustomers, filters }: Props) {
@@ -52,18 +53,22 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
 
     const form = useForm<{
         partner_id: string;
+        po_number: string;
         amount: string;
         due_date: string;
         note: string;
         idempotency_key: string;
+        status: string;
         items: { description: string; quantity: string; unit_price: string }[];
         fees: FeeRow[];
     }>({
         partner_id: '',
+        po_number: '',
         amount: '',
         due_date: '',
         note: '',
         idempotency_key: '',
+        status: '',
         items: [],
         fees: [],
     });
@@ -106,10 +111,38 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
     };
 
     const setFilter = (status: string) => {
-        router.get('/invoices', status ? { status } : {}, { preserveState: true });
+        router.get('/invoices', { ...filters, status }, { preserveState: true });
+    };
+
+    const toggleArchived = () => {
+        router.get('/invoices', { ...filters, archived: !filters.archived }, { preserveState: true });
+    };
+
+    const handleDelete = (invoice: Invoice) => {
+        if (!confirm(`Hapus invoice "${invoice.invoice_number}"?`)) return;
+        router.delete(route('invoices.destroy', invoice.id));
+    };
+
+    const handleArchive = (invoice: Invoice) => {
+        if (!confirm(`Arsipkan invoice "${invoice.invoice_number}"?`)) return;
+        router.post(route('invoices.archive', invoice.id));
     };
 
     const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (useItems && form.data.items.length > 0) {
+            form.setData('amount', '');
+        }
+        form.setData('idempotency_key', crypto.randomUUID());
+        form.post('/invoices', {
+            onSuccess: () => {
+                setFormOpen(false);
+                setUseItems(false);
+            },
+        });
+    };
+
+    const submitDraft = (e: React.FormEvent) => {
         e.preventDefault();
         if (useItems && form.data.items.length > 0) {
             form.setData('amount', '');
@@ -141,9 +174,10 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                     )}
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         {[
                             { key: '', label: 'Semua' },
+                            { key: 'draft', label: 'Draft' },
                             { key: 'outstanding', label: 'Outstanding' },
                             { key: 'partial', label: 'Sebagian' },
                             { key: 'paid', label: 'Lunas' },
@@ -157,24 +191,36 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                                 {f.label}
                             </Button>
                         ))}
+                        <div className="ml-2 border-l pl-2">
+                            <Button
+                                size="sm"
+                                variant={filters.archived ? 'default' : 'outline'}
+                                onClick={toggleArchived}
+                            >
+                                <Archive className="mr-1 h-4 w-4" />
+                                {filters.archived ? 'Sembunyikan Arsip' : 'Tampilkan Arsip'}
+                            </Button>
+                        </div>
                     </div>
 
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Nomor</TableHead>
+                                <TableHead>PO</TableHead>
                                 <TableHead>Partner</TableHead>
                                 <TableHead className="text-right">Nominal</TableHead>
                                 <TableHead className="text-right">Sisa</TableHead>
                                 <TableHead>Jatuh Tempo</TableHead>
                                 <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Aksi</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {invoices.length === 0 ? (
                                 <TableRow>
                                     <TableCell
-                                        colSpan={6}
+                                        colSpan={8}
                                         className="text-center text-muted-foreground"
                                     >
                                         Belum ada invoice.
@@ -191,6 +237,9 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                                                 {invoice.invoice_number}
                                             </Link>
                                         </TableCell>
+                                        <TableCell className="text-muted-foreground">
+                                            {invoice.po_number || '-'}
+                                        </TableCell>
                                         <TableCell>{invoice.partner ?? '-'}</TableCell>
                                         <TableCell className="text-right text-number">
                                             {formatRupiah(invoice.amount)}
@@ -201,6 +250,30 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                                         <TableCell>{formatDate(invoice.due_date)}</TableCell>
                                         <TableCell>
                                             <InvoiceStatusBadge status={invoice.status} />
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            {isOwner && (
+                                                <div className="flex items-center justify-end gap-1">
+                                                    {(invoice.status === 'draft' || invoice.status === 'outstanding') && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDelete(invoice)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                                        </Button>
+                                                    )}
+                                                    {(invoice.status === 'partial' || invoice.status === 'paid') && !filters.archived && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleArchive(invoice)}
+                                                        >
+                                                            <Archive className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            )}
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -246,6 +319,15 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                                 {form.errors.partner_id}
                             </p>
                         )}
+                    </div>
+                    <div>
+                        <Label htmlFor="po_number">Nomor PO (opsional)</Label>
+                        <Input
+                            id="po_number"
+                            value={form.data.po_number}
+                            onChange={(e) => form.setData('po_number', e.target.value)}
+                            placeholder="Masukkan nomor PO dari customer"
+                        />
                     </div>
                     <div className="flex items-center gap-2">
                         <input
@@ -317,8 +399,19 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                         <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
                             Batal
                         </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={form.processing}
+                            onClick={(e) => {
+                                form.setData('status', 'draft');
+                                submitDraft(e);
+                            }}
+                        >
+                            Simpan Draft
+                        </Button>
                         <Button type="submit" disabled={form.processing}>
-                            Simpan
+                            Simpan & Kirim
                         </Button>
                     </div>
                 </form>

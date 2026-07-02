@@ -12,7 +12,6 @@ class Partner extends Model
     use BelongsToTenant, HasFactory;
 
     public const TYPE_CUSTOMER = 'customer';
-
     public const TYPE_SUPPLIER = 'supplier';
 
     protected $fillable = [
@@ -28,5 +27,10 @@ class Partner extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    public function payables(): HasMany
+    {
+        return $this->hasMany(Payable::class);
     }
 }
