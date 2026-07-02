@@ -6,10 +6,10 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 
 interface Props {
-    branch?: string | null;
+    outlet?: string | null;
 }
 
-export default function OpenSession({ branch }: Props) {
+export default function OpenSession({ outlet }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         opening_cash: '',
     });
@@ -20,7 +20,7 @@ export default function OpenSession({ branch }: Props) {
     };
 
     return (
-        <PosLayout title="Buka Sesi" branch={branch}>
+        <PosLayout title="Buka Sesi" branch={outlet}>
             <Head title="Buka Sesi Kasir" />
 
             <div className="mx-auto max-w-md rounded-xl border border-border bg-card p-6 shadow-sm">

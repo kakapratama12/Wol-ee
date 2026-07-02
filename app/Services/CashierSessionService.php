@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Branch;
 use App\Models\CashierSession;
+use App\Models\Outlet;
 use App\Models\PosOrder;
 use App\Models\Product;
 use App\Models\Tenant;
@@ -29,8 +29,8 @@ class CashierSessionService
 
     public function open(User $user, float $openingCash): CashierSession
     {
-        if ($user->branch_id === null) {
-            throw new InvalidArgumentException('Kasir belum di-assign ke cabang.');
+        if ($user->outlet_id === null) {
+            throw new InvalidArgumentException('Kasir belum di-assign ke outlet.');
         }
 
         $existing = $this->findOpenSession($user);
@@ -42,7 +42,8 @@ class CashierSessionService
         $snapshot = $this->availability->buildOpeningSummary($user->tenant);
 
         return CashierSession::create([
-            'branch_id' => $user->branch_id,
+            'tenant_id' => $user->tenant_id,
+            'outlet_id' => $user->outlet_id,
             'user_id' => $user->id,
             'opening_cash' => round($openingCash, 2),
             'opening_availability_snapshot' => $snapshot,
@@ -83,22 +84,22 @@ class CashierSessionService
         ];
     }
 
-    public function ensureDefaultBranch(Tenant $tenant): Branch
+    public function ensureDefaultOutlet(Tenant $tenant): Outlet
     {
-        $branch = Branch::query()
+        $outlet = Outlet::query()
             ->withoutGlobalScope('tenant')
             ->where('tenant_id', $tenant->id)
             ->where('is_active', true)
             ->orderBy('id')
             ->first();
 
-        if ($branch) {
-            return $branch;
+        if ($outlet) {
+            return $outlet;
         }
 
-        return Branch::query()->create([
+        return Outlet::query()->create([
             'tenant_id' => $tenant->id,
-            'name' => 'Cabang Utama',
+            'name' => 'Outlet Utama',
             'is_active' => true,
         ]);
     }

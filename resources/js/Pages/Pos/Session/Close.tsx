@@ -12,7 +12,7 @@ interface SessionInfo {
     total_qris: number;
     total_transfer: number;
     expected_cash: number;
-    branch?: string | null;
+    outlet?: string | null;
 }
 
 interface Props {
@@ -32,7 +32,7 @@ export default function CloseSession({ session }: Props) {
     const totalOmset = session.total_cash + session.total_qris + session.total_transfer;
 
     return (
-        <PosLayout title="Tutup Sesi" branch={session.branch}>
+        <PosLayout title="Tutup Sesi" branch={session.outlet}>
             <Head title="Tutup Sesi Kasir" />
 
             <div className="mx-auto max-w-md space-y-4">

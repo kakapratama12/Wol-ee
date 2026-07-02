@@ -14,7 +14,7 @@ interface OrderInfo {
     payment_method: string;
     amount_paid: number;
     change_amount: number;
-    branch?: string | null;
+    outlet?: string | null;
     created_at?: string | null;
     sales: SaleLine[];
 }
@@ -31,7 +31,7 @@ const paymentLabels: Record<string, string> = {
 
 export default function OrderSuccess({ order }: Props) {
     return (
-        <PosLayout title="Transaksi Berhasil" branch={order.branch}>
+        <PosLayout title="Transaksi Berhasil" branch={order.outlet}>
             <Head title="Transaksi Berhasil" />
 
             <div className="mx-auto max-w-md rounded-xl border border-border bg-card p-6 text-center shadow-sm">

@@ -26,7 +26,7 @@ interface CartLine {
 
 interface SessionInfo {
     id: number;
-    branch?: string | null;
+    outlet?: string | null;
     opened_at?: string | null;
 }
 
@@ -150,7 +150,7 @@ export default function Register({ session, products }: Props) {
     return (
         <PosLayout
             title="Kasir"
-            branch={session.branch}
+            branch={session.outlet}
             actions={
                 <Link
                     href="/pos/session/close"

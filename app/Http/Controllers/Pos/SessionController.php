@@ -31,7 +31,7 @@ class SessionController extends Controller
         return response()->json([
             'session' => $session ? [
                 'id' => $session->id,
-                'branch_id' => $session->branch_id,
+                'outlet_id' => $session->outlet_id,
                 'opening_cash' => (float) $session->opening_cash,
                 'total_cash' => (float) $session->total_cash,
                 'total_qris' => (float) $session->total_qris,
@@ -48,7 +48,7 @@ class SessionController extends Controller
         }
 
         return Inertia::render('Pos/Session/Open', [
-            'branch' => auth()->user()->branch?->name,
+            'outlet' => auth()->user()->outlet?->name,
         ]);
     }
 
@@ -124,7 +124,7 @@ class SessionController extends Controller
             return redirect()->route('pos.session.open.form');
         }
 
-        $session->load('branch');
+        $session->load('outlet');
 
         return Inertia::render('Pos/Session/Close', [
             'session' => [
@@ -133,7 +133,7 @@ class SessionController extends Controller
                 'total_qris' => (float) $session->total_qris,
                 'total_transfer' => (float) $session->total_transfer,
                 'expected_cash' => round((float) $session->opening_cash + (float) $session->total_cash, 2),
-                'branch' => $session->branch?->name,
+                'outlet' => $session->outlet?->name,
             ],
         ]);
     }

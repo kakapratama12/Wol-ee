@@ -22,7 +22,7 @@ class PosOrder extends Model
     protected $fillable = [
         'tenant_id',
         'cashier_session_id',
-        'branch_id',
+        'outlet_id',
         'user_id',
         'total',
         'payment_method',
@@ -43,9 +43,9 @@ class PosOrder extends Model
         return $this->belongsTo(CashierSession::class);
     }
 
-    public function branch(): BelongsTo
+    public function outlet(): BelongsTo
     {
-        return $this->belongsTo(Branch::class);
+        return $this->belongsTo(Outlet::class);
     }
 
     public function user(): BelongsTo

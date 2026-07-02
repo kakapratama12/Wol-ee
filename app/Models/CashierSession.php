@@ -14,7 +14,7 @@ class CashierSession extends Model
 
     protected $fillable = [
         'tenant_id',
-        'branch_id',
+        'outlet_id',
         'user_id',
         'opening_cash',
         'total_cash',
@@ -41,9 +41,9 @@ class CashierSession extends Model
         'closed_at' => 'datetime',
     ];
 
-    public function branch(): BelongsTo
+    public function outlet(): BelongsTo
     {
-        return $this->belongsTo(Branch::class);
+        return $this->belongsTo(Outlet::class);
     }
 
     public function user(): BelongsTo

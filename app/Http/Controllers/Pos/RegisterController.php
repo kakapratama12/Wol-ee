@@ -24,7 +24,7 @@ class RegisterController extends Controller
             return redirect()->route('pos.session.open.form');
         }
 
-        $session->load('branch');
+        $session->load('outlet');
 
         $products = Product::query()
             ->where('is_active', true)
@@ -47,7 +47,7 @@ class RegisterController extends Controller
         return Inertia::render('Pos/Register', [
             'session' => [
                 'id' => $session->id,
-                'branch' => $session->branch?->name,
+                'outlet' => $session->outlet?->name,
                 'opened_at' => $session->opened_at?->toIso8601String(),
             ],
             'products' => $products,
@@ -56,7 +56,7 @@ class RegisterController extends Controller
 
     public function success(PosOrder $order): Response
     {
-        $order->load(['sales.product', 'branch']);
+        $order->load(['sales.product', 'outlet']);
 
         return Inertia::render('Pos/Orders/Success', [
             'order' => [
@@ -65,7 +65,7 @@ class RegisterController extends Controller
                 'payment_method' => $order->payment_method,
                 'amount_paid' => (float) $order->amount_paid,
                 'change_amount' => (float) $order->change_amount,
-                'branch' => $order->branch?->name,
+                'outlet' => $order->outlet?->name,
                 'created_at' => $order->created_at?->toIso8601String(),
                 'sales' => $order->sales->map(fn ($sale) => [
                     'product' => $sale->product?->name,
