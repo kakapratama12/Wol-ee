@@ -2,6 +2,53 @@ import { test, expect } from '@playwright/test';
 import { login } from './helpers';
 
 test.describe('Fitur AP (Accounts Payable)', () => {
+  test.describe('Partner Filter', () => {
+
+    test('filter Customer hanya tampilkan customer', async ({ page }) => {
+      await login(page);
+      await page.goto('/partners?type=customer');
+      await page.waitForLoadState('networkidle');
+
+      // Cek tombol Customer aktif
+      const customerBtn = page.locator('button:has-text("Customer")');
+      await expect(customerBtn).toHaveAttribute('class', /bg-primary/);
+
+      // Cek tidak ada badge "Supplier" di tabel
+      const badges = page.locator('table tbody tr td:nth-child(2)');
+      const count = await badges.count();
+      for (let i = 0; i < count; i++) {
+        const text = await badges.nth(i).textContent();
+        expect(text?.trim()).not.toBe('Supplier');
+      }
+    });
+
+    test('filter Supplier hanya tampilkan supplier', async ({ page }) => {
+      await login(page);
+      await page.goto('/partners?type=supplier');
+      await page.waitForLoadState('networkidle');
+
+      const supplierBtn = page.locator('button:has-text("Supplier")');
+      await expect(supplierBtn).toHaveAttribute('class', /bg-primary/);
+
+      // Cek tidak ada badge "Customer" di tabel
+      const badges = page.locator('table tbody tr td:nth-child(2)');
+      const count = await badges.count();
+      for (let i = 0; i < count; i++) {
+        const text = await badges.nth(i).textContent();
+        expect(text?.trim()).not.toBe('Customer');
+      }
+    });
+
+    test('filter Semua tampilkan semua partner', async ({ page }) => {
+      await login(page);
+      await page.goto('/partners');
+      await page.waitForLoadState('networkidle');
+
+      // Semua button harus aktif
+      const semuaBtn = page.locator('button:has-text("Semua")');
+      await expect(semuaBtn).toHaveAttribute('class', /bg-primary/);
+    });
+  });
 
   test.describe('Tagihan Supplier — Navigasi', () => {
 
