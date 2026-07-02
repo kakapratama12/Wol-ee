@@ -5,23 +5,67 @@ namespace App\Http\Controllers\Pos;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Pos\CloseCashierSessionRequest;
 use App\Http\Requests\Pos\OpenCashierSessionRequest;
+use App\Models\CashierSession;
 use App\Services\CashierSessionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 use InvalidArgumentException;
 
 class SessionController extends Controller
 {
+    public function landing(CashierSessionService $sessions): Response
+    {
+        $user = auth()->user();
+        $today = Carbon::today();
+
+        // Get today's session
+        $todaySession = CashierSession::query()
+            ->where('user_id', $user->id)
+            ->whereDate('opened_at', $today)
+            ->withSum('posOrders', 'total')
+            ->withCount('posOrders')
+            ->first();
+
+        // Get recent sessions (last 5 days)
+        $recentSessions = CashierSession::query()
+            ->where('user_id', $user->id)
+            ->where('opened_at', '>=', $today->subDays(5))
+            ->where('closed_at', '!=', null)
+            ->withSum('posOrders', 'total')
+            ->withCount('posOrders')
+            ->orderByDesc('opened_at')
+            ->get();
+
+        return Inertia::render('Pos/Index', [
+            'todaySession' => $todaySession ? [
+                'id' => $todaySession->id,
+                'status' => $todaySession->isOpen() ? 'open' : 'closed',
+                'opened_at' => $todaySession->opened_at?->toIso8601String(),
+                'closed_at' => $todaySession->closed_at?->toIso8601String(),
+                'opening_cash' => (float) $todaySession->opening_cash,
+                'total_omset' => (float) ($todaySession->pos_orders_sum_total ?? 0),
+                'total_orders' => $todaySession->pos_orders_count ?? 0,
+                'outlet' => $user->outlet?->name,
+            ] : null,
+            'recentSessions' => $recentSessions->map(fn ($s) => [
+                'id' => $s->id,
+                'date' => $s->opened_at?->format('d M Y'),
+                'opened_at' => $s->opened_at?->format('H:i'),
+                'closed_at' => $s->closed_at?->format('H:i'),
+                'total_omset' => (float) ($s->pos_orders_sum_total ?? 0),
+                'total_orders' => $s->pos_orders_count ?? 0,
+                'outlet' => $user->outlet?->name,
+            ]),
+        ]);
+    }
+
     public function entry(CashierSessionService $sessions): RedirectResponse
     {
-        $session = $sessions->findOpenSession(auth()->user());
-
-        return $session
-            ? redirect()->route('pos.register')
-            : redirect()->route('pos.session.open.form');
+        return redirect()->route('pos.landing');
     }
 
     public function show(Request $request, CashierSessionService $sessions): JsonResponse
@@ -167,6 +211,6 @@ class SessionController extends Controller
             ]);
         }
 
-        return redirect()->route('pos.session.open.form')->with('success', 'Sesi kasir ditutup.');
+        return redirect()->route('pos.landing')->with('success', 'Sesi kasir ditutup.');
     }
 }

@@ -6,7 +6,8 @@ use App\Http\Controllers\Pos\SessionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'staff'])->group(function () {
-    Route::get('/', [SessionController::class, 'entry'])->name('entry');
+    Route::get('/', [SessionController::class, 'landing'])->name('landing');
+    Route::get('/old-entry', [SessionController::class, 'entry'])->name('entry');
 
     Route::get('/session/open', [SessionController::class, 'openForm'])->name('session.open.form');
     Route::post('/session/open', [SessionController::class, 'open'])->name('session.open');
