@@ -3,6 +3,8 @@ import { Link, usePage } from '@inertiajs/react';
 import { LogOut, ShoppingCart, Package, BarChart3 } from 'lucide-react';
 import type { PageProps } from '@/types';
 import { cn } from '@/lib/utils';
+import { ThemeProvider } from '@/Components/ThemeProvider';
+import ThemeToggle from '@/Components/ThemeToggle';
 
 interface PosLayoutProps {
     title?: string;
@@ -27,6 +29,7 @@ export default function PosLayout({
     ];
 
     return (
+        <ThemeProvider>
         <div className="flex min-h-screen flex-col bg-background text-foreground">
             <header className="sticky top-0 z-30 border-b border-border bg-card px-4 py-3 shadow-sm">
                 <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
@@ -43,6 +46,7 @@ export default function PosLayout({
                     </div>
                     <div className="flex items-center gap-2">
                         {actions}
+                        <ThemeToggle />
                         <Link
                             href="/pos/logout"
                             method="post"
@@ -56,10 +60,10 @@ export default function PosLayout({
                 </div>
             </header>
 
-            <main className="mx-auto w-full max-w-7xl flex-1 p-4 pb-24 lg:pb-4">{children}</main>
+            <main className="mx-auto w-full max-w-7xl flex-1 p-4 pb-24">{children}</main>
 
-            {/* Bottom Navigation — mobile only */}
-            <nav className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card shadow-lg lg:hidden">
+            {/* Bottom Navigation */}
+            <nav className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card shadow-lg">
                 <div className="mx-auto flex max-w-7xl items-center justify-around py-2">
                     {navItems.map((item) => {
                         const Icon = item.icon;
@@ -80,17 +84,9 @@ export default function PosLayout({
                             </Link>
                         );
                     })}
-                    <Link
-                        href="/pos/logout"
-                        method="post"
-                        as="button"
-                        className="flex flex-col items-center gap-0.5 px-4 py-1 text-xs text-muted-foreground hover:text-destructive transition"
-                    >
-                        <LogOut className="h-5 w-5" />
-                        <span>Keluar</span>
-                    </Link>
                 </div>
             </nav>
         </div>
+        </ThemeProvider>
     );
 }
