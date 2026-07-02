@@ -1,4 +1,5 @@
 import { forwardRef, InputHTMLAttributes, useEffect, useImperativeHandle, useRef } from 'react';
+import { cn } from '@/lib/utils';
 
 export default forwardRef(function TextInput(
     {
@@ -25,10 +26,10 @@ export default forwardRef(function TextInput(
         <input
             {...props}
             type={type}
-            className={
-                'rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ' +
+            className={cn(
+                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
                 className
-            }
+            )}
             ref={localRef}
         />
     );
