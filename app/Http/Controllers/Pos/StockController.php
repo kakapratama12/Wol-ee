@@ -29,7 +29,9 @@ class StockController extends Controller
             return redirect()->route('pos.landing')->with('error', 'Anda belum di-assign ke outlet.');
         }
 
-        $ingredients = Ingredient::orderBy('name')->get();
+        $ingredients = Ingredient::where('item_type', Ingredient::ITEM_RAW_MATERIAL)
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('Pos/Stock/Index', [
             'outlet' => [
@@ -39,7 +41,7 @@ class StockController extends Controller
             'ingredients' => $ingredients->map(fn ($i) => [
                 'id' => $i->id,
                 'name' => $i->name,
-                'unit' => $i->unit,
+                'unit' => $i->base_unit,
             ]),
         ]);
     }
@@ -56,7 +58,9 @@ class StockController extends Controller
             return redirect()->route('pos.landing')->with('error', 'Anda belum di-assign ke outlet.');
         }
 
-        $ingredients = Ingredient::orderBy('name')->get();
+        $ingredients = Ingredient::where('item_type', Ingredient::ITEM_RAW_MATERIAL)
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('Pos/Stock/Purchase', [
             'outlet' => [
@@ -66,7 +70,7 @@ class StockController extends Controller
             'ingredients' => $ingredients->map(fn ($i) => [
                 'id' => $i->id,
                 'name' => $i->name,
-                'unit' => $i->unit,
+                'unit' => $i->base_unit,
             ]),
         ]);
     }
@@ -83,7 +87,9 @@ class StockController extends Controller
             return redirect()->route('pos.landing')->with('error', 'Anda belum di-assign ke outlet.');
         }
 
-        $ingredients = Ingredient::orderBy('name')->get();
+        $ingredients = Ingredient::where('item_type', Ingredient::ITEM_RAW_MATERIAL)
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('Pos/Stock/Adjust', [
             'outlet' => [
@@ -93,7 +99,7 @@ class StockController extends Controller
             'ingredients' => $ingredients->map(fn ($i) => [
                 'id' => $i->id,
                 'name' => $i->name,
-                'unit' => $i->unit,
+                'unit' => $i->base_unit,
             ]),
             'reasons' => [
                 ['value' => 'rusak', 'label' => 'Rusak'],
