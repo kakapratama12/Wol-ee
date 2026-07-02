@@ -3,19 +3,33 @@
 namespace App\Services;
 
 use App\Models\Ingredient;
+use App\Models\OutletInventory;
 use App\Models\Product;
-use BadMethodCallException;
 
 /**
- * Single interface for stock reads (and later writes) per branch/outlet.
+ * Single interface for stock reads per branch/outlet.
  *
- * Current implementation reads tenant-global stock (ingredients.current_stock).
- * After merge with multi-outlet branch: swap body to outlet_inventory + central fallback.
+ * When branchId is provided: reads from outlet_inventory.
+ * When branchId is null: falls back to central stock (ingredients.current_stock).
  */
 class BranchStockService
 {
     public function getIngredientStock(int $ingredientId, ?int $branchId = null): float
     {
+        // If branchId provided, try outlet_inventory first
+        if ($branchId !== null) {
+            $inventory = OutletInventory::query()
+                ->where('outlet_id', $branchId)
+                ->where('ingredient_id', $ingredientId)
+                ->whereNull('product_id')
+                ->first();
+
+            if ($inventory) {
+                return (float) $inventory->quantity;
+            }
+        }
+
+        // Fallback to central stock
         $ingredient = Ingredient::query()->find($ingredientId);
 
         if (! $ingredient) {
@@ -28,6 +42,21 @@ class BranchStockService
     public function getFinishedGoodsStock(Product $product, ?int $branchId = null): float
     {
         $finishedGoodsName = "{$product->name} ( Produk Jadi )";
+
+        // If branchId provided, try outlet_inventory first
+        if ($branchId !== null) {
+            $inventory = OutletInventory::query()
+                ->where('outlet_id', $branchId)
+                ->where('product_id', $product->id)
+                ->whereNull('ingredient_id')
+                ->first();
+
+            if ($inventory) {
+                return (float) $inventory->quantity;
+            }
+        }
+
+        // Fallback to central stock
         $finishedGoods = Ingredient::query()
             ->where('tenant_id', $product->tenant_id)
             ->where('name', $finishedGoodsName)
@@ -41,18 +70,76 @@ class BranchStockService
     }
 
     /**
-     * Deduct stock for a POS sale at a branch. Implemented after multi-outlet merge.
+     * Deduct stock for a POS sale at an outlet.
+     * Allows negative stock (no hard stop) — flexible first, audit later.
      */
-    public function deductForSale(/* Sale $sale */): void
+    public function deductForSale(int $outletId, int $ingredientId, float $quantity, ?string $note = null): void
     {
-        throw new BadMethodCallException('Branch-scoped deduct belum diimplementasi — merge dengan branch multi.');
+        $inventory = OutletInventory::firstOrCreate(
+            [
+                'outlet_id' => $outletId,
+                'ingredient_id' => $ingredientId,
+                'product_id' => null,
+            ],
+            [
+                'quantity' => 0,
+                'unit' => 'unit',
+            ]
+        );
+
+        $inventory->subtractQuantity($quantity);
     }
 
     /**
-     * Reverse stock for a voided POS sale. Implemented after multi-outlet merge.
+     * Reverse stock deduction for a voided POS sale.
      */
-    public function reverseForSale(/* Sale $sale */): void
+    public function reverseForSale(int $outletId, int $ingredientId, float $quantity): void
     {
-        throw new BadMethodCallException('Branch-scoped reverse belum diimplementasi — merge dengan branch multi.');
+        $inventory = OutletInventory::where([
+            'outlet_id' => $outletId,
+            'ingredient_id' => $ingredientId,
+            'product_id' => null,
+        ])->first();
+
+        if ($inventory) {
+            $inventory->addQuantity($quantity);
+        }
+    }
+
+    /**
+     * Deduct finished goods stock for batch product sales at outlet.
+     * Allows negative stock (no hard stop).
+     */
+    public function deductFinishedGoodsForSale(int $outletId, Product $product, float $quantity): void
+    {
+        $inventory = OutletInventory::firstOrCreate(
+            [
+                'outlet_id' => $outletId,
+                'product_id' => $product->id,
+                'ingredient_id' => null,
+            ],
+            [
+                'quantity' => 0,
+                'unit' => $product->unit,
+            ]
+        );
+
+        $inventory->subtractQuantity($quantity);
+    }
+
+    /**
+     * Reverse finished goods stock for voided sales at outlet.
+     */
+    public function reverseFinishedGoodsForSale(int $outletId, Product $product, float $quantity): void
+    {
+        $inventory = OutletInventory::where([
+            'outlet_id' => $outletId,
+            'product_id' => $product->id,
+            'ingredient_id' => null,
+        ])->first();
+
+        if ($inventory) {
+            $inventory->addQuantity($quantity);
+        }
     }
 }

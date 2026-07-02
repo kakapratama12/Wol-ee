@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Exceptions\CartUnavailableException;
 use App\Models\CashierSession;
 use App\Models\PosOrder;
 use App\Models\Product;

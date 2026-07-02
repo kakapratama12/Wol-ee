@@ -193,6 +193,9 @@ export default function Register({ session, products }: Props) {
                                     {product.recipe_type === 'batch' && product.disabled && (
                                         <p className="text-xs text-destructive">Habis</p>
                                     )}
+                                    {product.recipe_type === 'batch' && product.max_portions < 0 && (
+                                        <p className="text-xs text-amber-600">Stok minus ({product.max_portions})</p>
+                                    )}
                                     {product.recipe_type === 'batch' && !product.disabled && (
                                         <p className="text-xs text-muted-foreground">~{product.max_portions} pcs</p>
                                     )}
