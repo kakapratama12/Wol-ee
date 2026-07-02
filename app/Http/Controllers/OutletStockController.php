@@ -18,7 +18,7 @@ class OutletStockController extends Controller
     /**
      * Record a direct purchase at outlet.
      */
-    public function purchase(Request $request, Outlet $outlet): JsonResponse
+    public function purchase(Request $request, Outlet $outlet): JsonResponse|\Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
             'ingredient_id' => 'required|exists:ingredients,id',
@@ -38,19 +38,23 @@ class OutletStockController extends Controller
             Auth::user(),
         );
 
-        return response()->json([
-            'message' => 'Pembelian berhasil dicatat.',
-            'inventory' => [
-                'quantity' => (float) $inventory->quantity,
-                'unit' => $inventory->unit,
-            ],
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Pembelian berhasil dicatat.',
+                'inventory' => [
+                    'quantity' => (float) $inventory->quantity,
+                    'unit' => $inventory->unit,
+                ],
+            ]);
+        }
+
+        return back()->with('success', 'Pembelian berhasil dicatat.');
     }
 
     /**
      * Adjust stock at outlet with reason.
      */
-    public function adjust(Request $request, Outlet $outlet): JsonResponse
+    public function adjust(Request $request, Outlet $outlet): JsonResponse|\Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
             'ingredient_id' => 'required|exists:ingredients,id',
@@ -72,13 +76,17 @@ class OutletStockController extends Controller
             Auth::user(),
         );
 
-        return response()->json([
-            'message' => 'Stok berhasil disesuaikan.',
-            'inventory' => [
-                'quantity' => (float) $inventory->quantity,
-                'unit' => $inventory->unit,
-            ],
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Stok berhasil disesuaikan.',
+                'inventory' => [
+                    'quantity' => (float) $inventory->quantity,
+                    'unit' => $inventory->unit,
+                ],
+            ]);
+        }
+
+        return back()->with('success', 'Stok berhasil disesuaikan.');
     }
 
     /**
