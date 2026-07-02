@@ -6,14 +6,14 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class EnsureUserIsCashier
+class EnsureUserIsStaff
 {
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
 
-        if (! $user || ! $user->isCashier()) {
-            abort(403, 'Hanya kasir yang dapat mengakses POS.');
+        if (! $user || ! $user->isStaff()) {
+            abort(403, 'Hanya staff yang dapat mengakses halaman ini.');
         }
 
         return $next($request);

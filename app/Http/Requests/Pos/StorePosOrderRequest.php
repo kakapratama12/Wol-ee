@@ -10,7 +10,7 @@ class StorePosOrderRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isCashier() ?? false;
+        return $this->user()?->isStaff() ?? false;
     }
 
     /**

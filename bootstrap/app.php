@@ -1,10 +1,9 @@
 <?php
 
+use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,32 +21,17 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
-            \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+            \App\Http\Middleware\SecurityHeaders::class,
         ]);
-
-        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
 
         $middleware->alias([
             'owner' => \App\Http\Middleware\EnsureUserIsOwner::class,
-            'cashier' => \App\Http\Middleware\EnsureUserIsCashier::class,
+            'staff' => \App\Http\Middleware\EnsureUserIsStaff::class,
             'pos.session' => \App\Http\Middleware\EnsurePosSessionOpen::class,
             'super_admin' => \App\Http\Middleware\EnsureUserIsSuperAdmin::class,
             'bot.token' => \App\Http\Middleware\BotTokenAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
-        );
-
-        $exceptions->render(function (\Illuminate\Validation\ValidationException $e, Request $request) {
-            if ($request->is('api/*')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $e->errors(),
-                    'error_code' => 'VALIDATION_ERROR',
-                ], 422);
-            }
-        });
+        //
     })->create();

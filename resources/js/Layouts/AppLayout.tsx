@@ -27,6 +27,7 @@ interface NavSingle {
     href: string;
     icon: ReactNode;
     pengelolaOnly?: boolean;
+    staffOnly?: boolean;
     superAdminOnly?: boolean;
 }
 
@@ -34,6 +35,7 @@ interface NavLink {
     label: string;
     href: string;
     pengelolaOnly?: boolean;
+    staffOnly?: boolean;
     superAdminOnly?: boolean;
     hideIfNoInvoices?: boolean;
 }
@@ -42,6 +44,7 @@ interface NavGroup {
     label: string;
     icon: ReactNode;
     pengelolaOnly?: boolean;
+    staffOnly?: boolean;
     superAdminOnly?: boolean;
     children: NavLink[];
 }
@@ -52,11 +55,12 @@ const navigation: (NavSingle | NavGroup)[] = [
         label: 'Transaksi',
         icon: <Receipt className="h-4 w-4" />,
         children: [
-            { label: 'Pembelian', href: '/transactions' },
-            { label: 'Penjualan', href: '/sales' },
+            { label: 'Pembelian', href: '/transactions', staffOnly: true },
+            { label: 'Penjualan', href: '/sales', pengelolaOnly: true },
             { label: 'Biaya', href: '/expenses', pengelolaOnly: true },
         ],
     },
+    { label: 'POS', href: '/pos', icon: <Receipt className="h-4 w-4" />, staffOnly: true },
     {
         label: 'Distribusi',
         href: '/distributions',
@@ -182,24 +186,32 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
     }, [userMenuOpen]);
 
     const visibleNav = useMemo(() => {
+        const isStaff = user.role === 'staff';
+
         return navigation
             .map((item) => {
                 if (!isNavGroup(item)) {
+                    if ('staffOnly' in item && item.staffOnly && !isStaff) return null;
                     if ('pengelolaOnly' in item && item.pengelolaOnly && !isPengelola) return null;
                     if ('superAdminOnly' in item && item.superAdminOnly && !isSuperAdmin)
                         return null;
                     if (isSuperAdmin && !item.superAdminOnly) return null;
+                    if (isStaff && !item.staffOnly) return null;
                     return item;
                 }
 
+                if (item.staffOnly && !isStaff) return null;
                 if (item.pengelolaOnly && !isPengelola) return null;
                 if (item.superAdminOnly && !isSuperAdmin) return null;
                 if (isSuperAdmin && !item.superAdminOnly) return null;
+                if (isStaff && !item.staffOnly) return null;
 
                 const children = item.children.filter((child) => {
+                    if (child.staffOnly && !isStaff) return false;
                     if (child.pengelolaOnly && !isPengelola) return false;
                     if (child.superAdminOnly && !isSuperAdmin) return false;
                     if (child.hideIfNoInvoices && !hasInvoices) return false;
+                    if (isStaff && !child.staffOnly) return false;
                     return true;
                 });
 
@@ -208,7 +220,7 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
                 return { ...item, children };
             })
             .filter(Boolean) as (NavSingle | NavGroup)[];
-    }, [isPengelola, isSuperAdmin, hasInvoices]);
+    }, [isPengelola, isSuperAdmin, hasInvoices, user.role]);
 
     useEffect(() => {
         const initial: Record<string, boolean> = {};

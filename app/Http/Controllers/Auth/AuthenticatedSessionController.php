@@ -39,7 +39,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route("platform.overview");
         }
 
-        if ($user->isCashier()) {
+        if ($user->isStaff()) {
             return redirect()->route('pos.entry');
         }
 

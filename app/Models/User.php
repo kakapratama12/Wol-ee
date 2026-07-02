@@ -12,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'role', 'tenant_id', 'branch_id'])]
+#[Fillable(['name', 'email', 'password', 'role', 'tenant_id', 'outlet_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -21,7 +21,6 @@ class User extends Authenticatable
 
     public const ROLE_PENGELOLA = 'pengelola';
     public const ROLE_STAFF = 'staff';
-    public const ROLE_CASHIER = 'cashier';
     public const ROLE_SUPER_ADMIN = 'super_admin';
 
     /**
@@ -45,11 +44,6 @@ class User extends Authenticatable
         return $this->role === self::ROLE_STAFF;
     }
 
-    public function isCashier(): bool
-    {
-        return $this->role === self::ROLE_CASHIER;
-    }
-
     public function isSuperAdmin(): bool
     {
         return $this->role === self::ROLE_SUPER_ADMIN;
@@ -60,8 +54,8 @@ class User extends Authenticatable
         return $this->belongsTo(Tenant::class);
     }
 
-    public function branch(): BelongsTo
+    public function outlet(): BelongsTo
     {
-        return $this->belongsTo(Branch::class);
+        return $this->belongsTo(Outlet::class);
     }
 }
