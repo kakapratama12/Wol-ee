@@ -40,7 +40,7 @@ class DistributionController extends Controller
         }
 
         $validated = $request->validate([
-            'from_outlet_id' => 'nullable|sometimes|exists:outlets,id',
+            'from_outlet_id' => 'nullable',
             'to_outlet_id' => 'required|exists:outlets,id',
             'distributed_at' => 'required|date',
             'notes' => 'nullable|string|max:500',
@@ -50,6 +50,11 @@ class DistributionController extends Controller
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.unit' => 'required|string|max:20',
         ]);
+
+        // Validate from_outlet exists only when provided
+        if (!empty($validated['from_outlet_id']) && !Outlet::find($validated['from_outlet_id'])) {
+            return back()->withErrors(['from_outlet_id' => 'Outlet asal tidak ditemukan.']);
+        }
 
         // Validate: from and to must be different when from_outlet_id is set
         if (isset($validated['from_outlet_id']) && $validated['from_outlet_id'] == $validated['to_outlet_id']) {
@@ -105,7 +110,7 @@ class DistributionController extends Controller
         }
 
         $validated = $request->validate([
-            'from_outlet_id' => 'nullable|sometimes|exists:outlets,id',
+            'from_outlet_id' => 'nullable',
             'to_outlet_id' => 'required|exists:outlets,id',
             'distributed_at' => 'required|date',
             'notes' => 'nullable|string|max:500',
@@ -115,6 +120,11 @@ class DistributionController extends Controller
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.unit' => 'required|string|max:20',
         ]);
+
+        // Validate from_outlet exists only when provided
+        if (!empty($validated['from_outlet_id']) && !Outlet::find($validated['from_outlet_id'])) {
+            return back()->withErrors(['from_outlet_id' => 'Outlet asal tidak ditemukan.']);
+        }
 
         if (isset($validated['from_outlet_id']) && $validated['from_outlet_id'] == $validated['to_outlet_id']) {
             return back()->withErrors(['from_outlet_id' => 'Outlet asal dan tujuan tidak boleh sama.']);
