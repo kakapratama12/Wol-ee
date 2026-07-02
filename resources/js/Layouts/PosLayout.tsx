@@ -1,6 +1,6 @@
 import { PropsWithChildren } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { LogOut, ShoppingCart, Package, BarChart3 } from 'lucide-react';
+import { Home, LogOut, ShoppingCart, Package, BarChart3 } from 'lucide-react';
 import type { PageProps } from '@/types';
 import { cn } from '@/lib/utils';
 import { ThemeProvider } from '@/Components/ThemeProvider';
@@ -23,7 +23,8 @@ export default function PosLayout({
     const { auth } = usePage<PageProps>().props;
 
     const navItems = [
-        { href: '/pos/register', icon: ShoppingCart, label: 'Kasir' },
+        { href: '/pos', icon: Home, label: 'Home', exact: true },
+        { href: '/pos/entry', icon: ShoppingCart, label: 'Kasir' },
         { href: '/pos/stock', icon: Package, label: 'Stok' },
         { href: '/pos/today', icon: BarChart3, label: 'Hari Ini' },
     ];
@@ -67,7 +68,13 @@ export default function PosLayout({
                 <div className="mx-auto flex max-w-7xl items-center justify-around py-2">
                     {navItems.map((item) => {
                         const Icon = item.icon;
-                        const isActive = activeTab ? item.label.toLowerCase().includes(activeTab) : (typeof window !== 'undefined' && window.location.pathname.startsWith(item.href));
+                        const isActive = activeTab
+                            ? item.label.toLowerCase().includes(activeTab)
+                            : (typeof window !== 'undefined' && (
+                                item.exact
+                                    ? window.location.pathname === item.href
+                                    : window.location.pathname.startsWith(item.href)
+                            ));
                         return (
                             <Link
                                 key={item.href}
