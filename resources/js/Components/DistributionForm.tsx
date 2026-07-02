@@ -101,11 +101,8 @@ export default function DistributionForm({
     };
 
     const handleSubmit = () => {
-        // Validate outlets
+        // Validate outlets (empty from_outlet_id = Gudang Pusat, that's valid)
         const newFormErrors: { from?: string; to?: string } = {};
-        if (!form.data.from_outlet_id) {
-            newFormErrors.from = 'Pilih Dari Outlet';
-        }
         if (!form.data.to_outlet_id) {
             newFormErrors.to = 'Pilih Ke Outlet';
         }
