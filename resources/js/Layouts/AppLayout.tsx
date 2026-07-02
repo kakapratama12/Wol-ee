@@ -124,6 +124,7 @@ const navigation: (NavSingle | NavGroup)[] = [
         children: [
             { label: 'Bot Integration', href: '/settings/bot' },
             { label: 'Perusahaan', href: '/settings/company' },
+            { label: 'Kelola Staff', href: '/staff' },
         ],
     },
     {

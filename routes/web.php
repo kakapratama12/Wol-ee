@@ -4,6 +4,7 @@ use App\Http\Controllers\AgingReportController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PayableController;
+use App\Http\Controllers\StaffController;
 use App\Http\Controllers\BotIntegrationController;
 use App\Http\Controllers\CashEntryController;
 use App\Http\Controllers\CashflowController;
@@ -140,6 +141,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/payables', [PayableController::class, 'store'])->name('payables.store');
     Route::post('/payables/{payable}/pay', [PayableController::class, 'pay'])->name('payables.pay');
     Route::post('/payables/{payable}/archive', [PayableController::class, 'archive'])->name('payables.archive');
+
+    // Staff management (pengelola only)
+    Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
+    Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
+    Route::put('/staff/{staff}', [StaffController::class, 'update'])->name('staff.update');
+    Route::put('/staff/{staff}/password', [StaffController::class, 'resetPassword'])->name('staff.password');
+    Route::delete('/staff/{staff}', [StaffController::class, 'destroy'])->name('staff.destroy');
 });
 
 Route::middleware(['auth', 'verified', 'super_admin'])
