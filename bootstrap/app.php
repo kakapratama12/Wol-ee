@@ -36,7 +36,6 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             \App\Http\Middleware\SecurityHeaders::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
-            \App\Http\Middleware\RedirectCashierToPos::class,
         ]);
 
         $middleware->alias([

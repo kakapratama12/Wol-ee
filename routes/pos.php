@@ -6,10 +6,9 @@ use App\Http\Controllers\Pos\RegisterController;
 use App\Http\Controllers\Pos\SessionController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [PosAuthController::class, 'create'])->name('login');
-    Route::post('/login', [PosAuthController::class, 'store'])->name('login.store');
-});
+// Login sudah di /login (satu halaman untuk semua role)
+// Redirect /pos/login ke /login
+Route::get('/login', fn () => redirect()->route('login'))->name('login');
 
 Route::middleware(['auth', 'staff'])->group(function () {
     Route::post('/logout', [PosAuthController::class, 'destroy'])->name('logout');
