@@ -44,6 +44,15 @@ export default function PosLayout({
                     </div>
                     <div className="flex items-center gap-2">
                         {actions}
+                        <Link
+                            href="/pos/logout"
+                            method="post"
+                            as="button"
+                            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        >
+                            <LogOut className="h-4 w-4" />
+                            Keluar
+                        </Link>
                     </div>
                 </div>
             </header>

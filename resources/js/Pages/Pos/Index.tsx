@@ -130,9 +130,9 @@ export default function PosIndex({ todaySession, recentSessions, stockSummary }:
                 </Link>
 
                 {/* Stock Summary */}
-                {stockSummary && stockSummary.length > 0 && (
-                    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                        <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Stok Bahan Hari Ini</h3>
+                <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                    <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Stok Bahan Hari Ini</h3>
+                    {stockSummary && stockSummary.length > 0 ? (
                         <div className="space-y-2">
                             {stockSummary.map((item, idx) => (
                                 <div key={idx} className="flex items-center justify-between rounded-lg border border-border p-2.5">
@@ -159,8 +159,12 @@ export default function PosIndex({ todaySession, recentSessions, stockSummary }:
                                 </div>
                             ))}
                         </div>
-                    </div>
-                )}
+                    ) : (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                            Belum ada stok di outlet ini
+                        </p>
+                    )}
+                </div>
 
                 {/* Riwayat Sesi */}
                 {recentSessions.length > 0 && (
