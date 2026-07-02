@@ -19,7 +19,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/Components/ui/table';
-import { formatRupiah, formatPercent, formatDate } from '@/lib/format';
+import { formatRupiah, formatDate } from '@/lib/format';
 import type { Paginated } from '@/types';
 
 interface Sale {
@@ -30,9 +30,8 @@ interface Sale {
     unit_price: number;
     revenue: number;
     cogs: number;
-    profit: number;
-    margin: number;
     source: string;
+    outlet: string | null;
     note: string | null;
     occurred_at: string | null;
 }
@@ -226,7 +225,7 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                                         </TableCell>
                                         <TableCell>
                                             <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                                                {s.source === 'pos' ? 'Outlet' : s.source === 'bot' ? 'Bot' : 'Dashboard'}
+                                                {s.source === 'pos' ? (s.outlet || 'Outlet') : s.source === 'bot' ? 'Bot' : 'Dashboard'}
                                             </span>
                                         </TableCell>
                                         <TableCell className="text-right">

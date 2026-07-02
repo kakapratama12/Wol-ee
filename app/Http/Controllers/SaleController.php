@@ -17,6 +17,7 @@ class SaleController extends Controller
     {
         $sales = Sale::query()
             ->with('product:id,name')
+            ->with('outlet:id,name')
             ->latest('occurred_at')
             ->paginate(20)
             ->through(fn (Sale $s) => [
@@ -27,9 +28,8 @@ class SaleController extends Controller
                 'unit_price' => (float) $s->unit_price,
                 'revenue' => (float) $s->revenue,
                 'cogs' => (float) $s->cogs,
-                'profit' => (float) $s->profit,
-                'margin' => (float) $s->margin,
                 'source' => $s->source,
+                'outlet' => $s->outlet?->name,
                 'note' => $s->note,
                 'occurred_at' => $s->occurred_at?->toIso8601String(),
             ]);
