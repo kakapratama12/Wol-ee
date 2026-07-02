@@ -75,6 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Multi-outlet
     Route::get('/outlets', [\App\Http\Controllers\OutletController::class, 'index'])->name('outlets.index');
+    Route::get('/outlets/{outlet}', [\App\Http\Controllers\OutletController::class, 'show'])->name('outlets.show');
     Route::get('/outlets/{outlet}/inventory', [\App\Http\Controllers\OutletInventoryController::class, 'index'])->name('outlets.inventory');
     Route::get('/distributions', [\App\Http\Controllers\DistributionController::class, 'index'])->name('distributions.index');
     Route::get('/distributions/{distribution}', [\App\Http\Controllers\DistributionController::class, 'show'])->name('distributions.show');

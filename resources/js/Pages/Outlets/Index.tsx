@@ -113,7 +113,11 @@ export default function OutletsIndex({ outlets }: Props) {
                             </TableHeader>
                             <TableBody>
                                 {outlets.map((outlet) => (
-                                    <TableRow key={outlet.id}>
+                                    <TableRow
+                                        key={outlet.id}
+                                        className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                        onClick={() => router.visit(route('outlets.show', outlet.id))}
+                                    >
                                         <TableCell className="font-medium">{outlet.name}</TableCell>
                                         <TableCell>
                                             <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
@@ -127,7 +131,7 @@ export default function OutletsIndex({ outlets }: Props) {
                                         <TableCell className="text-gray-500 dark:text-gray-400">
                                             {outlet.address || '-'}
                                         </TableCell>
-                                        <TableCell className="text-center"><Link href={route("outlets.inventory", outlet.id)} className="text-blue-600 hover:underline dark:text-blue-400">{outlet.inventory_count}</Link></TableCell>
+                                        <TableCell className="text-center text-gray-700 dark:text-gray-300">{outlet.inventory_count}</TableCell>
                                         <TableCell>
                                             <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                                 outlet.is_active
@@ -139,11 +143,11 @@ export default function OutletsIndex({ outlets }: Props) {
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <Button variant="ghost" size="sm" onClick={() => startEdit(outlet)}>
+                                                <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); startEdit(outlet); }}>
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
                                                 {outlet.is_active && (
-                                                    <Button variant="ghost" size="sm" onClick={() => handleDelete(outlet)}>
+                                                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDelete(outlet); }}>
                                                         <Trash2 className="h-4 w-4 text-red-500" />
                                                     </Button>
                                                 )}
