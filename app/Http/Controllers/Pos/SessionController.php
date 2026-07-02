@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Pos\CloseCashierSessionRequest;
 use App\Http\Requests\Pos\OpenCashierSessionRequest;
 use App\Models\CashierSession;
+use App\Models\OutletInventory;
 use App\Models\PosOrder;
 use App\Services\CashierSessionService;
 use Illuminate\Http\JsonResponse;
@@ -39,6 +40,29 @@ class SessionController extends Controller
             ->orderByDesc('opened_at')
             ->get();
 
+
+        // Outlet stock summary for landing page
+        $outletId = $user->outlet_id;
+        $stockSummary = [];
+        if ($outletId) {
+            $stockSummary = OutletInventory::query()
+                ->with('ingredient:id,name,base_unit,minimum_stock')
+                ->where('outlet_id', $outletId)
+                ->whereHas('ingredient')
+                ->orderBy('ingredient_id')
+                ->get()
+                ->map(fn ($oi) => [
+                    'name' => $oi->ingredient?->name ?? '-',
+                    'quantity' => (float) $oi->quantity,
+                    'unit' => $oi->unit,
+                    'minimum_stock' => $oi->ingredient ? (float) $oi->ingredient->minimum_stock : 0,
+                    'status' => $oi->ingredient && $oi->ingredient->minimum_stock > 0
+                        ? ($oi->quantity <= 0 ? 'habis' : ($oi->quantity <= $oi->ingredient->minimum_stock ? 'menipis' : 'aman'))
+                        : 'aman',
+                ])
+                ->values()
+                ->all();
+        }
         return Inertia::render('Pos/Index', [
             'todaySession' => $todaySession ? [
                 'id' => $todaySession->id,
@@ -67,6 +91,7 @@ class SessionController extends Controller
                 'expected_cash' => round((float) $s->opening_cash + (float) $s->total_cash, 2),
                 'variance' => (float) $s->variance,
             ]),
+            'stockSummary' => $stockSummary,
         ]);
     }
 

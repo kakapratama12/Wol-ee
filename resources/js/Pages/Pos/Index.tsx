@@ -34,9 +34,16 @@ interface RecentSession {
 interface Props {
     todaySession: TodaySession | null;
     recentSessions: RecentSession[];
+    stockSummary: Array<{
+        name: string;
+        quantity: number;
+        unit: string;
+        minimum_stock: number;
+        status: 'aman' | 'menipis' | 'habis';
+    }>;
 }
 
-export default function PosIndex({ todaySession, recentSessions }: Props) {
+export default function PosIndex({ todaySession, recentSessions, stockSummary }: Props) {
     const isOpen = todaySession?.status === 'open';
 
     return (
@@ -121,6 +128,39 @@ export default function PosIndex({ todaySession, recentSessions }: Props) {
                         <ArrowRight className="ml-auto h-5 w-5 text-muted-foreground" />
                     </div>
                 </Link>
+
+                {/* Stock Summary */}
+                {stockSummary && stockSummary.length > 0 && (
+                    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                        <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Stok Bahan Hari Ini</h3>
+                        <div className="space-y-2">
+                            {stockSummary.map((item, idx) => (
+                                <div key={idx} className="flex items-center justify-between rounded-lg border border-border p-2.5">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`h-2 w-2 rounded-full ${
+                                            item.status === 'habis' ? 'bg-red-500' :
+                                            item.status === 'menipis' ? 'bg-amber-500' : 'bg-green-500'
+                                        }`} />
+                                        <span className="text-sm">{item.name}</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className={`text-sm font-medium ${
+                                            item.status === 'habis' ? 'text-red-600 dark:text-red-400' :
+                                            item.status === 'menipis' ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'
+                                        }`}>
+                                            {item.quantity.toLocaleString('id-ID')} {item.unit}
+                                        </span>
+                                        {item.minimum_stock > 0 && (
+                                            <span className="ml-2 text-xs text-muted-foreground">
+                                                (min: {item.minimum_stock.toLocaleString('id-ID')})
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Riwayat Sesi */}
                 {recentSessions.length > 0 && (

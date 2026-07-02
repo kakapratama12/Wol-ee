@@ -22,9 +22,9 @@ class DashboardController extends Controller
         $user = $request->user();
         $now = Carbon::now();
 
-        // Staff: redirect to POS (no separate dashboard for staff)
+        // Staff: redirect to POS landing (stock summary first, then open shift)
         if ($user->isStaff()) {
-            return redirect()->route('pos.register');
+            return redirect()->route('pos.landing');
         }
 
         // Pengelola / admin view: full dashboard
