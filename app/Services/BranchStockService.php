@@ -16,7 +16,7 @@ class BranchStockService
 {
     public function getIngredientStock(int $ingredientId, ?int $branchId = null): float
     {
-        // If branchId provided, try outlet_inventory first
+        // If branchId provided, only read from outlet_inventory (no fallback)
         if ($branchId !== null) {
             $inventory = OutletInventory::query()
                 ->where('outlet_id', $branchId)
@@ -24,12 +24,10 @@ class BranchStockService
                 ->whereNull('product_id')
                 ->first();
 
-            if ($inventory) {
-                return (float) $inventory->quantity;
-            }
+            return $inventory ? (float) $inventory->quantity : 0.0;
         }
 
-        // Fallback to central stock
+        // No branchId = central stock
         $ingredient = Ingredient::query()->find($ingredientId);
 
         if (! $ingredient) {
@@ -41,9 +39,7 @@ class BranchStockService
 
     public function getFinishedGoodsStock(Product $product, ?int $branchId = null): float
     {
-        $finishedGoodsName = "{$product->name} ( Produk Jadi )";
-
-        // If branchId provided, try outlet_inventory first
+        // If branchId provided, only read from outlet_inventory (no fallback)
         if ($branchId !== null) {
             $inventory = OutletInventory::query()
                 ->where('outlet_id', $branchId)
@@ -51,12 +47,11 @@ class BranchStockService
                 ->whereNull('ingredient_id')
                 ->first();
 
-            if ($inventory) {
-                return (float) $inventory->quantity;
-            }
+            return $inventory ? (float) $inventory->quantity : 0.0;
         }
 
-        // Fallback to central stock
+        // No branchId = central stock
+        $finishedGoodsName = "{$product->name} ( Produk Jadi )";
         $finishedGoods = Ingredient::query()
             ->where('tenant_id', $product->tenant_id)
             ->where('name', $finishedGoodsName)
@@ -66,7 +61,7 @@ class BranchStockService
             return 0.0;
         }
 
-        return $this->getIngredientStock($finishedGoods->id, $branchId);
+        return $this->getIngredientStock($finishedGoods->id, null);
     }
 
     /**

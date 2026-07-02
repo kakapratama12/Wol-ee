@@ -57,7 +57,7 @@ export default function PosIndex({ todaySession, recentSessions, activeSession, 
         <PosLayout title="POS">
             <Head title="POS" />
 
-            <div className="mx-auto max-w-2xl space-y-6">
+            <div className="mx-auto max-w-2xl space-y-8">
                 {/* Status Toko Hari Ini */}
                 <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
                     <div className="flex items-center gap-3">
