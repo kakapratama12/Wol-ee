@@ -70,7 +70,7 @@ export default function DistributionsIndex({ distributions, outlets, products, i
     const defaultDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
     const form = useForm({
-        from_outlet_id: outlets.find((o) => o.type === 'pusat')?.id?.toString() || '',
+        from_outlet_id: '',
         to_outlet_id: '',
         distributed_at: defaultDate,
         notes: '',
@@ -132,7 +132,7 @@ export default function DistributionsIndex({ distributions, outlets, products, i
                                     distributions.map((dist) => (
                                         <TableRow key={dist.id} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800" onClick={() => router.visit(route('distributions.show', dist.id))}>
                                             <TableCell>{formatDate(dist.distributed_at)}</TableCell>
-                                            <TableCell>{dist.from_outlet?.name || '-'}</TableCell>
+                                            <TableCell>{dist.from_outlet?.name || 'Gudang Pusat'}</TableCell>
                                             <TableCell>{dist.to_outlet?.name || '-'}</TableCell>
                                             <TableCell>
                                                 {dist.items.map((item) => (

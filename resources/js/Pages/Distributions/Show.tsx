@@ -90,7 +90,7 @@ export default function Show({ distribution }: Props) {
                                     Dari Outlet
                                 </dt>
                                 <dd className="mt-1 text-sm">
-                                    {distribution.from_outlet?.name ?? '-'}
+                                    {distribution.from_outlet?.name ?? 'Gudang Pusat'}
                                 </dd>
                             </div>
                             <div>

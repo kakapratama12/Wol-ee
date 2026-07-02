@@ -142,7 +142,7 @@ export default function DistributionForm({
                 <div>
                     <Label>Dari Outlet</Label>
                     <select
-                        value={form.data.from_outlet_id}
+                        value={form.data.from_outlet_id ?? ''}
                         onChange={(e) => {
                             form.setData('from_outlet_id', e.target.value);
                             setFormErrors((prev) => ({ ...prev, from: undefined }));
@@ -151,7 +151,7 @@ export default function DistributionForm({
                             formErrors.from ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                         }`}
                     >
-                        <option value="">Pilih outlet</option>
+                        <option value="">Gudang Pusat</option>
                         {outlets.map((o) => (
                             <option key={o.id} value={o.id}>{o.name}</option>
                         ))}
@@ -172,7 +172,7 @@ export default function DistributionForm({
                     >
                         <option value="">Pilih outlet</option>
                         {outlets
-                            .filter((o) => o.id.toString() !== form.data.from_outlet_id)
+                            .filter((o) => !form.data.from_outlet_id || o.id.toString() !== form.data.from_outlet_id)
                             .map((o) => (
                                 <option key={o.id} value={o.id}>{o.name}</option>
                             ))}

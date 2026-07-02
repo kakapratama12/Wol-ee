@@ -34,9 +34,14 @@ class DistributionController extends Controller
 
     public function store(Request $request)
     {
+        // Convert empty string to null for Gudang Pusat
+        if ($request->input('from_outlet_id') === '') {
+            $request->merge(['from_outlet_id' => null]);
+        }
+
         $validated = $request->validate([
-            'from_outlet_id' => 'required|exists:outlets,id',
-            'to_outlet_id' => 'required|exists:outlets,id|different:from_outlet_id',
+            'from_outlet_id' => 'nullable|sometimes|exists:outlets,id',
+            'to_outlet_id' => 'required|exists:outlets,id',
             'distributed_at' => 'required|date',
             'notes' => 'nullable|string|max:500',
             'items' => 'required|array|min:1',
@@ -46,64 +51,21 @@ class DistributionController extends Controller
             'items.*.unit' => 'required|string|max:20',
         ]);
 
+        // Validate: from and to must be different when from_outlet_id is set
+        if (isset($validated['from_outlet_id']) && $validated['from_outlet_id'] == $validated['to_outlet_id']) {
+            return back()->withErrors(['from_outlet_id' => 'Outlet asal dan tujuan tidak boleh sama.']);
+        }
+
         DB::transaction(function () use ($validated) {
             $distribution = Distribution::create([
-                'from_outlet_id' => $validated['from_outlet_id'],
+                'from_outlet_id' => $validated['from_outlet_id'] ?? null,
                 'to_outlet_id' => $validated['to_outlet_id'],
                 'distributed_at' => $validated['distributed_at'],
                 'notes' => $validated['notes'] ?? null,
                 'created_by' => auth()->id(),
             ]);
 
-            foreach ($validated['items'] as $item) {
-                $isIngredient = $item['item_source'] === 'ingredient';
-
-                DistributionItem::create([
-                    'distribution_id' => $distribution->id,
-                    'product_id' => $isIngredient ? null : $item['item_id'],
-                    'ingredient_id' => $isIngredient ? $item['item_id'] : null,
-                    'quantity' => $item['quantity'],
-                    'unit' => $item['unit'],
-                ]);
-
-                if ($isIngredient) {
-                    // Deduct from source ingredient stock
-                    $ingredient = Ingredient::findOrFail($item['item_id']);
-                    $ingredient->decrement('current_stock', $item['quantity']);
-
-                    // Add to outlet ingredient inventory
-                    $inventory = OutletInventory::firstOrCreate(
-                        [
-                            'outlet_id' => $validated['to_outlet_id'],
-                            'ingredient_id' => $item['item_id'],
-                            'product_id' => null,
-                        ],
-                        [
-                            'quantity' => 0,
-                            'unit' => $item['unit'],
-                            'last_updated' => now(),
-                        ]
-                    );
-                    $inventory->increment('quantity', $item['quantity']);
-                    $inventory->update(['unit' => $item['unit'], 'last_updated' => now()]);
-                } else {
-                    // Product distribution
-                    $inventory = OutletInventory::firstOrCreate(
-                        [
-                            'outlet_id' => $validated['to_outlet_id'],
-                            'product_id' => $item['item_id'],
-                            'ingredient_id' => null,
-                        ],
-                        [
-                            'quantity' => 0,
-                            'unit' => $item['unit'],
-                            'last_updated' => now(),
-                        ]
-                    );
-                    $inventory->increment('quantity', $item['quantity']);
-                    $inventory->update(['unit' => $item['unit'], 'last_updated' => now()]);
-                }
-            }
+            $this->applyItems($distribution, $validated['items'], $validated['to_outlet_id'], $validated['from_outlet_id'] ?? null);
         });
 
         return redirect()->route('distributions.index')
@@ -137,9 +99,14 @@ class DistributionController extends Controller
 
     public function update(Request $request, $id)
     {
+        // Convert empty string to null for Gudang Pusat
+        if ($request->input('from_outlet_id') === '') {
+            $request->merge(['from_outlet_id' => null]);
+        }
+
         $validated = $request->validate([
-            'from_outlet_id' => 'required|exists:outlets,id',
-            'to_outlet_id' => 'required|exists:outlets,id|different:from_outlet_id',
+            'from_outlet_id' => 'nullable|sometimes|exists:outlets,id',
+            'to_outlet_id' => 'required|exists:outlets,id',
             'distributed_at' => 'required|date',
             'notes' => 'nullable|string|max:500',
             'items' => 'required|array|min:1',
@@ -149,91 +116,25 @@ class DistributionController extends Controller
             'items.*.unit' => 'required|string|max:20',
         ]);
 
+        if (isset($validated['from_outlet_id']) && $validated['from_outlet_id'] == $validated['to_outlet_id']) {
+            return back()->withErrors(['from_outlet_id' => 'Outlet asal dan tujuan tidak boleh sama.']);
+        }
+
         DB::transaction(function () use ($validated, $id) {
             $distribution = Distribution::with('items')->findOrFail($id);
 
             // Reverse old inventory changes
-            foreach ($distribution->items as $oldItem) {
-                $isIngredient = $oldItem->ingredient_id !== null;
-
-                if ($isIngredient) {
-                    // Reverse: increment source ingredient stock back
-                    $ingredient = Ingredient::findOrFail($oldItem->ingredient_id);
-                    $ingredient->increment('current_stock', $oldItem->quantity);
-
-                    // Reverse: deduct from destination outlet ingredient inventory
-                    OutletInventory::where([
-                        'outlet_id' => $distribution->to_outlet_id,
-                        'ingredient_id' => $oldItem->ingredient_id,
-                        'product_id' => null,
-                    ])->decrement('quantity', $oldItem->quantity);
-                } else {
-                    // Reverse: deduct from destination outlet product inventory
-                    OutletInventory::where([
-                        'outlet_id' => $distribution->to_outlet_id,
-                        'product_id' => $oldItem->product_id,
-                        'ingredient_id' => null,
-                    ])->decrement('quantity', $oldItem->quantity);
-                }
-            }
+            $this->reverseItems($distribution->items, $distribution->to_outlet_id, $distribution->from_outlet_id);
 
             // Delete old distribution items
             $distribution->items()->delete();
 
             // Create new items and apply new inventory changes
-            foreach ($validated['items'] as $item) {
-                $isIngredient = $item['item_source'] === 'ingredient';
-
-                DistributionItem::create([
-                    'distribution_id' => $distribution->id,
-                    'product_id' => $isIngredient ? null : $item['item_id'],
-                    'ingredient_id' => $isIngredient ? $item['item_id'] : null,
-                    'quantity' => $item['quantity'],
-                    'unit' => $item['unit'],
-                ]);
-
-                if ($isIngredient) {
-                    // Deduct from source ingredient stock
-                    $ingredient = Ingredient::findOrFail($item['item_id']);
-                    $ingredient->decrement('current_stock', $item['quantity']);
-
-                    // Add to outlet ingredient inventory
-                    $inventory = OutletInventory::firstOrCreate(
-                        [
-                            'outlet_id' => $validated['to_outlet_id'],
-                            'ingredient_id' => $item['item_id'],
-                            'product_id' => null,
-                        ],
-                        [
-                            'quantity' => 0,
-                            'unit' => $item['unit'],
-                            'last_updated' => now(),
-                        ]
-                    );
-                    $inventory->increment('quantity', $item['quantity']);
-                    $inventory->update(['unit' => $item['unit'], 'last_updated' => now()]);
-                } else {
-                    // Product distribution — add to outlet product inventory
-                    $inventory = OutletInventory::firstOrCreate(
-                        [
-                            'outlet_id' => $validated['to_outlet_id'],
-                            'product_id' => $item['item_id'],
-                            'ingredient_id' => null,
-                        ],
-                        [
-                            'quantity' => 0,
-                            'unit' => $item['unit'],
-                            'last_updated' => now(),
-                        ]
-                    );
-                    $inventory->increment('quantity', $item['quantity']);
-                    $inventory->update(['unit' => $item['unit'], 'last_updated' => now()]);
-                }
-            }
+            $this->applyItems($distribution, $validated['items'], $validated['to_outlet_id'], $validated['from_outlet_id'] ?? null);
 
             // Update distribution fields
             $distribution->update([
-                'from_outlet_id' => $validated['from_outlet_id'],
+                'from_outlet_id' => $validated['from_outlet_id'] ?? null,
                 'to_outlet_id' => $validated['to_outlet_id'],
                 'distributed_at' => $validated['distributed_at'],
                 'notes' => $validated['notes'] ?? null,
@@ -250,29 +151,7 @@ class DistributionController extends Controller
             $distribution = Distribution::with('items')->findOrFail($id);
 
             // Reverse inventory changes for each item
-            foreach ($distribution->items as $item) {
-                $isIngredient = $item->ingredient_id !== null;
-
-                if ($isIngredient) {
-                    // Reverse: increment source ingredient stock back
-                    $ingredient = Ingredient::findOrFail($item->ingredient_id);
-                    $ingredient->increment('current_stock', $item->quantity);
-
-                    // Reverse: deduct from destination outlet ingredient inventory
-                    OutletInventory::where([
-                        'outlet_id' => $distribution->to_outlet_id,
-                        'ingredient_id' => $item->ingredient_id,
-                        'product_id' => null,
-                    ])->decrement('quantity', $item->quantity);
-                } else {
-                    // Reverse: deduct from destination outlet product inventory
-                    OutletInventory::where([
-                        'outlet_id' => $distribution->to_outlet_id,
-                        'product_id' => $item->product_id,
-                        'ingredient_id' => null,
-                    ])->decrement('quantity', $item->quantity);
-                }
-            }
+            $this->reverseItems($distribution->items, $distribution->to_outlet_id, $distribution->from_outlet_id);
 
             // Delete distribution items and distribution
             $distribution->items()->delete();
@@ -281,5 +160,112 @@ class DistributionController extends Controller
 
         return redirect()->route('distributions.index')
             ->with('success', 'Distribusi berhasil dihapus.');
+    }
+
+    /**
+     * Apply inventory changes when creating/updating a distribution.
+     * from_outlet_id = null means Gudang Pusat (central warehouse).
+     */
+    private function applyItems(Distribution $distribution, array $items, int $toOutletId, ?int $fromOutletId): void
+    {
+        foreach ($items as $item) {
+            $isIngredient = $item['item_source'] === 'ingredient';
+
+            $distribution->items()->create([
+                'product_id' => $isIngredient ? null : $item['item_id'],
+                'ingredient_id' => $isIngredient ? $item['item_id'] : null,
+                'quantity' => $item['quantity'],
+                'unit' => $item['unit'],
+            ]);
+
+            if ($isIngredient) {
+                $ingredient = Ingredient::findOrFail($item['item_id']);
+
+                // Deduct from source
+                if ($fromOutletId === null) {
+                    // Gudang Pusat: deduct from central ingredient stock
+                    $ingredient->decrement('current_stock', $item['quantity']);
+                } else {
+                    // Outlet: deduct from source outlet's ingredient inventory
+                    OutletInventory::where([
+                        'outlet_id' => $fromOutletId,
+                        'ingredient_id' => $item['item_id'],
+                        'product_id' => null,
+                    ])->decrement('quantity', $item['quantity']);
+                }
+
+                // Add to destination outlet ingredient inventory
+                $inventory = OutletInventory::firstOrCreate(
+                    [
+                        'outlet_id' => $toOutletId,
+                        'ingredient_id' => $item['item_id'],
+                        'product_id' => null,
+                    ],
+                    [
+                        'quantity' => 0,
+                        'unit' => $item['unit'],
+                        'last_updated' => now(),
+                    ]
+                );
+                $inventory->increment('quantity', $item['quantity']);
+                $inventory->update(['unit' => $item['unit'], 'last_updated' => now()]);
+            } else {
+                // Product distribution
+                $inventory = OutletInventory::firstOrCreate(
+                    [
+                        'outlet_id' => $toOutletId,
+                        'product_id' => $item['item_id'],
+                        'ingredient_id' => null,
+                    ],
+                    [
+                        'quantity' => 0,
+                        'unit' => $item['unit'],
+                        'last_updated' => now(),
+                    ]
+                );
+                $inventory->increment('quantity', $item['quantity']);
+                $inventory->update(['unit' => $item['unit'], 'last_updated' => now()]);
+            }
+        }
+    }
+
+    /**
+     * Reverse inventory changes when deleting/updating a distribution.
+     */
+    private function reverseItems($items, int $toOutletId, ?int $fromOutletId): void
+    {
+        foreach ($items as $item) {
+            $isIngredient = $item->ingredient_id !== null;
+
+            if ($isIngredient) {
+                // Reverse: deduct from destination outlet ingredient inventory
+                OutletInventory::where([
+                    'outlet_id' => $toOutletId,
+                    'ingredient_id' => $item->ingredient_id,
+                    'product_id' => null,
+                ])->decrement('quantity', $item->quantity);
+
+                // Reverse: add back to source
+                if ($fromOutletId === null) {
+                    // Gudang Pusat: add back to central ingredient stock
+                    $ingredient = Ingredient::findOrFail($item->ingredient_id);
+                    $ingredient->increment('current_stock', $item->quantity);
+                } else {
+                    // Outlet: add back to source outlet's ingredient inventory
+                    OutletInventory::where([
+                        'outlet_id' => $fromOutletId,
+                        'ingredient_id' => $item->ingredient_id,
+                        'product_id' => null,
+                    ])->increment('quantity', $item->quantity);
+                }
+            } else {
+                // Reverse: deduct from destination outlet product inventory
+                OutletInventory::where([
+                    'outlet_id' => $toOutletId,
+                    'product_id' => $item->product_id,
+                    'ingredient_id' => null,
+                ])->decrement('quantity', $item->quantity);
+            }
+        }
     }
 }

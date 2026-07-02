@@ -35,7 +35,7 @@ interface DistributionItem {
 
 interface Distribution {
     id: number;
-    from_outlet_id: number;
+    from_outlet_id: number | null;
     to_outlet_id: number;
     distributed_at: string;
     notes: string | null;
@@ -57,7 +57,7 @@ export default function DistributionEdit({ distribution, outlets, products, ingr
     };
 
     const form = useForm({
-        from_outlet_id: distribution.from_outlet_id.toString(),
+        from_outlet_id: distribution.from_outlet_id?.toString() || '',
         to_outlet_id: distribution.to_outlet_id.toString(),
         distributed_at: formatDateForInput(distribution.distributed_at),
         notes: distribution.notes || '',
