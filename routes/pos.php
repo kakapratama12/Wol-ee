@@ -42,4 +42,8 @@ Route::middleware(['auth', 'staff'])->group(function () {
         Route::get('/adjust', [StockController::class, 'adjustForm'])->name('adjust');
         Route::get('/movements', [StockController::class, 'movements'])->name('movements');
     });
+
+    // Stock mutations (staff can purchase & adjust for their outlet)
+    Route::post('/outlets/{outlet}/stock/purchase', [\App\Http\Controllers\OutletStockController::class, 'purchase'])->name('outlets.stock.purchase');
+    Route::post('/outlets/{outlet}/stock/adjust', [\App\Http\Controllers\OutletStockController::class, 'adjust'])->name('outlets.stock.adjust');
 });
