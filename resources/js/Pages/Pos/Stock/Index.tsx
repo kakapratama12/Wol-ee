@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { Package, ShoppingCart, Wrench, History, ArrowLeft } from 'lucide-react';
+import { Package, ShoppingCart, Wrench, History, ArrowLeft, AlertTriangle } from 'lucide-react';
 import PosLayout from '@/Layouts/PosLayout';
 import { Button } from '@/Components/ui/button';
 
@@ -12,6 +12,7 @@ interface Ingredient {
     id: number;
     name: string;
     unit: string;
+    stock: number;
 }
 
 interface Props {
@@ -20,6 +21,8 @@ interface Props {
 }
 
 export default function StockIndex({ outlet, ingredients }: Props) {
+    const hasNegativeStock = ingredients.some((i) => i.stock < 0);
+
     return (
         <PosLayout title="Stok Outlet" branch={outlet.name}>
             <Head title="Stok Outlet" />
@@ -37,6 +40,14 @@ export default function StockIndex({ outlet, ingredients }: Props) {
                         <p className="text-sm text-muted-foreground">{outlet.name}</p>
                     </div>
                 </div>
+
+                {/* Negative stock warning */}
+                {hasNegativeStock && (
+                    <div className="flex items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                        <AlertTriangle className="h-5 w-5 flex-shrink-0" />
+                        <p>Beberapa stok outlet minus. Segera lakukan distribusi atau adjust.</p>
+                    </div>
+                )}
 
                 {/* Quick Actions */}
                 <div className="grid grid-cols-2 gap-4">
@@ -74,23 +85,31 @@ export default function StockIndex({ outlet, ingredients }: Props) {
                     </div>
                 </Link>
 
-                {/* Daftar Bahan */}
+                {/* Daftar Bahan dengan Stok Outlet */}
                 <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-                    <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Daftar Bahan ({ingredients.length})</h3>
+                    <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Stok Outlet ({ingredients.length})</h3>
                     {ingredients.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">Belum ada bahan.</p>
+                        <p className="text-sm text-muted-foreground">Belum ada stok di outlet ini. Minta distribusi dari gudang pusat.</p>
                     ) : (
                         <div className="space-y-2">
                             {ingredients.map((ingredient) => (
                                 <div
                                     key={ingredient.id}
-                                    className="flex items-center justify-between rounded-lg border border-border p-3"
+                                    className={`flex items-center justify-between rounded-lg border p-3 ${
+                                        ingredient.stock < 0
+                                            ? 'border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20'
+                                            : 'border-border'
+                                    }`}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <Package className="h-4 w-4 text-muted-foreground" />
+                                        <Package className={`h-4 w-4 ${ingredient.stock < 0 ? 'text-amber-600' : 'text-muted-foreground'}`} />
                                         <span className="text-sm font-medium">{ingredient.name}</span>
                                     </div>
-                                    <span className="text-xs text-muted-foreground">{ingredient.unit}</span>
+                                    <span className={`text-sm font-semibold ${
+                                        ingredient.stock < 0 ? 'text-amber-600' : 'text-muted-foreground'
+                                    }`}>
+                                        {Math.round(ingredient.stock * 100) / 100} {ingredient.unit}
+                                    </span>
                                 </div>
                             ))}
                         </div>
