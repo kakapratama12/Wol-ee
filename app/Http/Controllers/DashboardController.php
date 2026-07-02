@@ -9,6 +9,7 @@ use App\Models\OutletInventory;
 use App\Models\Sale;
 use App\Models\Transaction;
 use App\Services\PnlService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
@@ -16,7 +17,7 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request, PnlService $pnl): Response
+    public function index(Request $request, PnlService $pnl): Response|RedirectResponse
     {
         $user = $request->user();
         $now = Carbon::now();
