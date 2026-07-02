@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
         $this->seedActivity($tenant, $ingredients, $products);
         $this->seedExpenses($tenant);
         $this->call(PartnerSeeder::class);
+        $this->call(OutletSeeder::class);
     }
 
     private function seedTenant(): Tenant

@@ -14,6 +14,8 @@ import {
     ChevronDown,
     Utensils,
     User,
+    Truck,
+    Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeProvider, useTheme } from '@/Components/ThemeProvider';
@@ -54,6 +56,18 @@ const navigation: (NavSingle | NavGroup)[] = [
             { label: 'Penjualan', href: '/sales' },
             { label: 'Biaya', href: '/expenses', pengelolaOnly: true },
         ],
+    },
+    {
+        label: 'Distribusi',
+        href: '/distributions',
+        icon: <Truck className="h-4 w-4" />,
+        pengelolaOnly: true,
+    },
+    {
+        label: 'Outlet',
+        href: '/outlets',
+        icon: <Building2 className="h-4 w-4" />,
+        pengelolaOnly: true,
     },
     {
         label: 'Inventory',

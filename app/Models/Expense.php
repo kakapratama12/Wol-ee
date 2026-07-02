@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Expense extends Model
 {
@@ -24,7 +25,6 @@ class Expense extends Model
         self::CATEGORY_NON_OPERASIONAL => 'Di Luar Usaha',
     ];
 
-    /** Kategori yang masuk P&L (bukan non-operasional). */
     public const PNL_CATEGORIES = [
         self::CATEGORY_BAHAN_BAKU,
         self::CATEGORY_OPERASIONAL,
@@ -32,7 +32,6 @@ class Expense extends Model
         self::CATEGORY_OVERHEAD,
     ];
 
-    /** Deskripsi per kategori untuk tooltip UI. */
     public const CATEGORY_DESCRIPTIONS = [
         self::CATEGORY_BAHAN_BAKU => 'Bahan baku langsung untuk produksi (tepung, gula, dsb)',
         self::CATEGORY_OPERASIONAL => 'Biaya operasional harian (listrik, air, gaji, sewa)',
@@ -49,6 +48,7 @@ class Expense extends Model
         'period_year',
         'occurred_at',
         'tenant_id',
+        'outlet_id',
     ];
 
     protected $casts = [
@@ -57,4 +57,9 @@ class Expense extends Model
         'period_year' => 'integer',
         'occurred_at' => 'datetime',
     ];
+
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(Outlet::class);
+    }
 }

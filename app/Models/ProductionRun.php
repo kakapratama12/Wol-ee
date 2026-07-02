@@ -15,6 +15,7 @@ class ProductionRun extends Model
     protected $fillable = [
         'tenant_id',
         'product_id',
+        'outlet_id',
         'batch_count',
         'yield_actual',
         'waste_count',
@@ -31,9 +32,6 @@ class ProductionRun extends Model
         'produced_at' => 'datetime',
     ];
 
-    /**
-     * Get yield_actual, defaulting to 0 if null
-     */
     public function getYieldActualAttribute(?int $value): int
     {
         return $value ?? 0;
@@ -42,6 +40,11 @@ class ProductionRun extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(Outlet::class);
     }
 
     public function items(): HasMany
@@ -54,9 +57,6 @@ class ProductionRun extends Model
         return $this->hasMany(StockMovement::class);
     }
 
-    /**
-     * Calculate yield per batch
-     */
     public function getYieldPerBatch(): float
     {
         if ($this->batch_count === 0) {
@@ -65,9 +65,6 @@ class ProductionRun extends Model
         return $this->yield_actual / $this->batch_count;
     }
 
-    /**
-     * Calculate cost per unit (pcs)
-     */
     public function getCostPerUnit(): float
     {
         if ($this->yield_actual === 0) {
@@ -76,9 +73,6 @@ class ProductionRun extends Model
         return $this->total_cost / $this->yield_actual;
     }
 
-    /**
-     * Calculate waste percentage
-     */
     public function getWastePercentage(): float
     {
         $total = $this->yield_actual + $this->waste_count;

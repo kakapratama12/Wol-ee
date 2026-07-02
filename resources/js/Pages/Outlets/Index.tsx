@@ -1,0 +1,254 @@
+import { useState } from 'react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Plus, Pencil, Trash2, MapPin } from 'lucide-react';
+import AppLayout from '@/Layouts/AppLayout';
+import { Button } from '@/Components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { Input } from '@/Components/ui/input';
+import { Label } from '@/Components/ui/label';
+import Modal from '@/Components/ui/modal';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
+
+interface Outlet {
+    id: number;
+    name: string;
+    type: 'pusat' | 'outlet';
+    address: string | null;
+    is_active: boolean;
+    inventory_count: number;
+}
+
+interface Props {
+    outlets: Outlet[];
+}
+
+export default function OutletsIndex({ outlets }: Props) {
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [editing, setEditing] = useState<Outlet | null>(null);
+
+    const form = useForm({
+        name: '',
+        type: 'outlet',
+        address: '',
+    });
+
+    const editForm = useForm({
+        name: '',
+        type: 'outlet',
+        address: '',
+        is_active: true,
+    });
+
+    const handleCreate = () => {
+        form.post(route('outlets.store'), {
+            onSuccess: () => {
+                form.reset();
+                setShowCreateModal(false);
+            },
+        });
+    };
+
+    const handleUpdate = () => {
+        if (!editing) return;
+        editForm.put(route('outlets.update', editing.id), {
+            onSuccess: () => {
+                editForm.reset();
+                setEditing(null);
+            },
+        });
+    };
+
+    const handleDelete = (outlet: Outlet) => {
+        if (!confirm(`Nonaktifkan "${outlet.name}"?`)) return;
+        router.delete(route('outlets.destroy', outlet.id));
+    };
+
+    const startEdit = (outlet: Outlet) => {
+        editForm.setData({
+            name: outlet.name,
+            type: outlet.type,
+            address: outlet.address || '',
+            is_active: outlet.is_active,
+        });
+        setEditing(outlet);
+    };
+
+    return (
+        <AppLayout title="Outlet">
+            <Head title="Outlet" />
+
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Outlet</h1>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Kelola pusat dan outlet kamu
+                        </p>
+                    </div>
+                    <Button onClick={() => setShowCreateModal(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Tambah Outlet
+                    </Button>
+                </div>
+
+                <Card>
+                    <CardContent className="p-0">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Nama</TableHead>
+                                    <TableHead>Tipe</TableHead>
+                                    <TableHead>Alamat</TableHead>
+                                    <TableHead className="text-center">Stok Item</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Aksi</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {outlets.map((outlet) => (
+                                    <TableRow key={outlet.id}>
+                                        <TableCell className="font-medium">{outlet.name}</TableCell>
+                                        <TableCell>
+                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                                outlet.type === 'pusat'
+                                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                                                    : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                            }`}>
+                                                {outlet.type === 'pusat' ? 'Pusat' : 'Outlet'}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-gray-500 dark:text-gray-400">
+                                            {outlet.address || '-'}
+                                        </TableCell>
+                                        <TableCell className="text-center"><Link href={route("outlets.inventory", outlet.id)} className="text-blue-600 hover:underline dark:text-blue-400">{outlet.inventory_count}</Link></TableCell>
+                                        <TableCell>
+                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                                outlet.is_active
+                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                            }`}>
+                                                {outlet.is_active ? 'Aktif' : 'Nonaktif'}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <Button variant="ghost" size="sm" onClick={() => startEdit(outlet)}>
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                {outlet.is_active && (
+                                                    <Button variant="ghost" size="sm" onClick={() => handleDelete(outlet)}>
+                                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Create Modal */}
+            <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} title="Tambah Outlet">
+                <div>
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="name">Nama Outlet</Label>
+                            <Input
+                                id="name"
+                                value={form.data.name}
+                                onChange={(e) => form.setData('name', e.target.value)}
+                                placeholder="Contoh: Outlet Bandung"
+                            />
+                            {form.errors.name && (
+                                <p className="text-sm text-red-500 mt-1">{form.errors.name}</p>
+                            )}
+                        </div>
+                        <div>
+                            <Label htmlFor="type">Tipe</Label>
+                            <select
+                                id="type"
+                                value={form.data.type}
+                                onChange={(e) => form.setData('type', e.target.value)}
+                                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            >
+                                <option value="pusat">Pusat / Dapur</option>
+                                <option value="outlet">Outlet</option>
+                            </select>
+                        </div>
+                        <div>
+                            <Label htmlFor="address">Alamat</Label>
+                            <Input
+                                id="address"
+                                value={form.data.address}
+                                onChange={(e) => form.setData('address', e.target.value)}
+                                placeholder="Opsional"
+                            />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button variant="ghost" onClick={() => setShowCreateModal(false)}>
+                                Batal
+                            </Button>
+                            <Button onClick={handleCreate} disabled={form.processing}>
+                                Simpan
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Edit Modal */}
+            <Modal open={!!editing} onClose={() => setEditing(null)} title="Edit Outlet">
+                <div>
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="edit-name">Nama Outlet</Label>
+                            <Input
+                                id="edit-name"
+                                value={editForm.data.name}
+                                onChange={(e) => editForm.setData('name', e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="edit-type">Tipe</Label>
+                            <select
+                                id="edit-type"
+                                value={editForm.data.type}
+                                onChange={(e) => editForm.setData('type', e.target.value)}
+                                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            >
+                                <option value="pusat">Pusat / Dapur</option>
+                                <option value="outlet">Outlet</option>
+                            </select>
+                        </div>
+                        <div>
+                            <Label htmlFor="edit-address">Alamat</Label>
+                            <Input
+                                id="edit-address"
+                                value={editForm.data.address}
+                                onChange={(e) => editForm.setData('address', e.target.value)}
+                            />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button variant="ghost" onClick={() => setEditing(null)}>
+                                Batal
+                            </Button>
+                            <Button onClick={handleUpdate} disabled={editForm.processing}>
+                                Update
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
+        </AppLayout>
+    );
+}

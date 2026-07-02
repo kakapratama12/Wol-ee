@@ -24,7 +24,7 @@ class Sale extends Model
         'user_id',
         'product_id',
         'pos_order_id',
-        'branch_id',
+        'outlet_id',
         'quantity',
         'unit_price',
         'revenue',

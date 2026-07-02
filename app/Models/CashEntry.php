@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CashEntry extends Model
 {
@@ -26,10 +27,16 @@ class CashEntry extends Model
         'description',
         'occurred_at',
         'tenant_id',
+        'outlet_id',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'occurred_at' => 'date',
     ];
+
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(Outlet::class);
+    }
 }

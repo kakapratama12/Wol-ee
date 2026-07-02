@@ -41,6 +41,11 @@ class Tenant extends Model
         return $this->hasMany(User::class);
     }
 
+    public function outlets(): HasMany
+    {
+        return $this->hasMany(Outlet::class);
+    }
+
     public function feedback(): HasMany
     {
         return $this->hasMany(BotFeedback::class);
