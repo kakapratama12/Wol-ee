@@ -19,6 +19,11 @@ import {
 } from '@/Components/ui/table';
 import { formatRupiah, formatDate } from '@/lib/format';
 
+interface Outlet {
+    id: number;
+    name: string;
+}
+
 interface Expense {
     id: number;
     category: string;
@@ -27,6 +32,8 @@ interface Expense {
     period_month: number;
     period_year: number;
     occurred_at: string | null;
+    outlet_id: number | null;
+    outlet_name: string | null;
 }
 
 interface Props {
@@ -34,6 +41,7 @@ interface Props {
     total: number;
     categories: Record<string, string>;
     categoryDescriptions: Record<string, string>;
+    outlets: Outlet[];
     period: { month: number; year: number };
     periodLabel: string;
 }
@@ -78,6 +86,7 @@ export default function ExpensesIndex({
     total,
     categories,
     categoryDescriptions,
+    outlets,
     period,
     periodLabel,
 }: Props) {
@@ -92,6 +101,8 @@ export default function ExpensesIndex({
         period_month: period.month,
         period_year: period.year,
         occurred_at: defaultDate,
+        is_outlet_expense: false,
+        outlet_id: '',
     });
     const editForm = useForm({
         category: 'operasional',
@@ -100,6 +111,8 @@ export default function ExpensesIndex({
         period_month: period.month,
         period_year: period.year,
         occurred_at: '',
+        is_outlet_expense: false,
+        outlet_id: '',
     });
     const [editing, setEditing] = useState<Expense | null>(null);
     const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
@@ -112,9 +125,13 @@ export default function ExpensesIndex({
             form.setData('period_month', p.month);
             form.setData('period_year', p.year);
         }
+        // Only send outlet_id when checkbox is checked
+        if (!form.data.is_outlet_expense) {
+            form.setData('outlet_id', '');
+        }
         form.post('/expenses', {
             preserveScroll: true,
-            onSuccess: () => form.setData('amount', ''),
+            onSuccess: () => form.setData({ amount: '', is_outlet_expense: false, outlet_id: '' }),
         });
     };
 
@@ -127,6 +144,8 @@ export default function ExpensesIndex({
             period_month: expense.period_month,
             period_year: expense.period_year,
             occurred_at: toDatetimeLocal(expense.occurred_at),
+            is_outlet_expense: expense.outlet_id !== null,
+            outlet_id: expense.outlet_id !== null ? String(expense.outlet_id) : '',
         });
         editForm.clearErrors();
     };
@@ -139,6 +158,10 @@ export default function ExpensesIndex({
             const p = getPeriodFromDate(editForm.data.occurred_at);
             editForm.setData('period_month', p.month);
             editForm.setData('period_year', p.year);
+        }
+        // Only send outlet_id when checkbox is checked
+        if (!editForm.data.is_outlet_expense) {
+            editForm.setData('outlet_id', '');
         }
         editForm.put(`/expenses/${editing.id}`, {
             preserveScroll: true,
@@ -239,6 +262,46 @@ export default function ExpensesIndex({
                                     onChange={(e) => form.setData('occurred_at', e.target.value)}
                                 />
                             </div>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="is_outlet_expense"
+                                    className="h-4 w-4 rounded border-gray-300"
+                                    checked={form.data.is_outlet_expense}
+                                    onChange={(e) => {
+                                        form.setData('is_outlet_expense', e.target.checked);
+                                        if (!e.target.checked) form.setData('outlet_id', '');
+                                        else if (outlets.length > 0 && !form.data.outlet_id) {
+                                            form.setData('outlet_id', String(outlets[0].id));
+                                        }
+                                    }}
+                                />
+                                <Label htmlFor="is_outlet_expense" className="cursor-pointer text-sm font-medium">
+                                    Biaya outlet
+                                </Label>
+                            </div>
+                            {form.data.is_outlet_expense && (
+                                <div>
+                                    <Label htmlFor="outlet_id">Outlet</Label>
+                                    <Select
+                                        id="outlet_id"
+                                        value={form.data.outlet_id}
+                                        onChange={(e) => form.setData('outlet_id', e.target.value)}
+                                    >
+                                        <option value="">Pilih outlet…</option>
+                                        {outlets.map((o) => (
+                                            <option key={o.id} value={o.id}>
+                                                {o.name}
+                                            </option>
+                                        ))}
+                                    </Select>
+                                    {form.errors.outlet_id && (
+                                        <p className="mt-1 text-xs text-destructive">
+                                            {form.errors.outlet_id}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                             <Button type="submit" className="w-full" disabled={form.processing}>
                                 <Plus className="h-4 w-4" /> Tambah
                             </Button>
@@ -258,6 +321,7 @@ export default function ExpensesIndex({
                                     <TableHead className="w-32">Kategori</TableHead>
                                     <TableHead>Tanggal</TableHead>
                                     <TableHead>Deskripsi</TableHead>
+                                    <TableHead className="w-36">Outlet</TableHead>
                                     <TableHead className="text-right">Jumlah</TableHead>
                                     <TableHead></TableHead>
                                 </TableRow>
@@ -266,7 +330,7 @@ export default function ExpensesIndex({
                                 {expenses.length === 0 && (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={5}
+                                            colSpan={6}
                                             className="py-8 text-center text-muted-foreground"
                                         >
                                             Belum ada biaya.
@@ -287,6 +351,11 @@ export default function ExpensesIndex({
                                         </TableCell>
                                         <TableCell className="text-muted-foreground">
                                             {e.description ?? '-'}
+                                        </TableCell>
+                                        <TableCell className="text-sm">
+                                            {e.outlet_name ?? (
+                                                <span className="text-muted-foreground">—</span>
+                                            )}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             {formatRupiah(e.amount)}
@@ -364,6 +433,45 @@ export default function ExpensesIndex({
                             onChange={(e) => editForm.setData('occurred_at', e.target.value)}
                         />
                     </div>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="edit_is_outlet_expense"
+                            className="h-4 w-4 rounded border-gray-300"
+                            checked={editForm.data.is_outlet_expense}
+                            onChange={(e) => {
+                                editForm.setData('is_outlet_expense', e.target.checked);
+                                if (!e.target.checked) editForm.setData('outlet_id', '');
+                                else if (outlets.length > 0 && !editForm.data.outlet_id) {
+                                    editForm.setData('outlet_id', String(outlets[0].id));
+                                }
+                            }}
+                        />
+                        <Label htmlFor="edit_is_outlet_expense" className="cursor-pointer text-sm font-medium">
+                            Biaya outlet
+                        </Label>
+                    </div>
+                    {editForm.data.is_outlet_expense && (
+                        <div>
+                            <Label>Outlet</Label>
+                            <Select
+                                value={editForm.data.outlet_id}
+                                onChange={(e) => editForm.setData('outlet_id', e.target.value)}
+                            >
+                                <option value="">Pilih outlet…</option>
+                                {outlets.map((o) => (
+                                    <option key={o.id} value={o.id}>
+                                        {o.name}
+                                    </option>
+                                ))}
+                            </Select>
+                            {editForm.errors.outlet_id && (
+                                <p className="mt-1 text-xs text-destructive">
+                                    {editForm.errors.outlet_id}
+                                </p>
+                            )}
+                        </div>
+                    )}
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={() => setEditing(null)}>
                             Batal

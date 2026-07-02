@@ -25,6 +25,7 @@ class UpdateExpenseRequest extends FormRequest
             'period_month' => ['required', 'integer', 'between:1,12'],
             'period_year' => ['required', 'integer', 'between:2000,2100'],
             'occurred_at' => ['sometimes', 'date'],
+            'outlet_id' => ['nullable', 'integer', 'exists:outlets,id'],
         ];
     }
 }

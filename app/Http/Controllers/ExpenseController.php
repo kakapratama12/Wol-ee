@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreExpenseRequest;
 use App\Http\Requests\UpdateExpenseRequest;
 use App\Models\Expense;
+use App\Models\Outlet;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -20,6 +21,7 @@ class ExpenseController extends Controller
         $year = (int) $request->integer('year', $now->year);
 
         $expenses = Expense::query()
+            ->with('outlet:id,name')
             ->where('period_year', $year)
             ->where('period_month', $month)
             ->latest()
@@ -32,6 +34,8 @@ class ExpenseController extends Controller
                 'period_month' => $e->period_month,
                 'period_year' => $e->period_year,
                 'occurred_at' => $e->occurred_at?->toIso8601String(),
+                'outlet_id' => $e->outlet_id,
+                'outlet_name' => $e->outlet?->name,
             ]);
 
         return Inertia::render('Expenses/Index', [
@@ -39,6 +43,7 @@ class ExpenseController extends Controller
             'total' => round((float) $expenses->sum('amount'), 2),
             'categories' => Expense::CATEGORIES,
             'categoryDescriptions' => Expense::CATEGORY_DESCRIPTIONS,
+            'outlets' => Outlet::select('id', 'name')->orderBy('name')->get(),
             'period' => ['month' => $month, 'year' => $year],
             'periodLabel' => Carbon::create($year, $month)->translatedFormat('F Y'),
         ]);
