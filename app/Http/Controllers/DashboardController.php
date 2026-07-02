@@ -21,9 +21,9 @@ class DashboardController extends Controller
         $user = $request->user();
         $now = Carbon::now();
 
-        // Staff view: simplified dashboard scoped to their outlet
+        // Staff: redirect to POS (no separate dashboard for staff)
         if ($user->isStaff()) {
-            return $this->staffDashboard($request, $user, $now);
+            return redirect()->route('pos.register');
         }
 
         // Pengelola / admin view: full dashboard

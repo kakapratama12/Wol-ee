@@ -24,21 +24,14 @@ export default function StockIndex({ outlet, ingredients }: Props) {
     const hasNegativeStock = ingredients.some((i) => i.stock < 0);
 
     return (
-        <PosLayout title="Stok Outlet" branch={outlet.name}>
+        <PosLayout title="Stok Outlet" branch={outlet.name} activeTab="stok">
             <Head title="Stok Outlet" />
 
             <div className="mx-auto max-w-2xl space-y-6">
                 {/* Header */}
-                <div className="flex items-center gap-3">
-                    <Link href="/pos">
-                        <Button variant="ghost" size="icon" className="h-10 w-10">
-                            <ArrowLeft className="h-5 w-5" />
-                        </Button>
-                    </Link>
-                    <div>
-                        <h2 className="text-lg font-semibold">Manajemen Stok</h2>
-                        <p className="text-sm text-muted-foreground">{outlet.name}</p>
-                    </div>
+                <div>
+                    <h2 className="text-lg font-semibold">Stok Outlet</h2>
+                    <p className="text-sm text-muted-foreground">{outlet.name}</p>
                 </div>
 
                 {/* Negative stock warning */}

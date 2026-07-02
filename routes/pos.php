@@ -35,6 +35,10 @@ Route::middleware(['auth', 'staff'])->group(function () {
 });
 
 // Stock management
+// Today's summary
+Route::middleware(['auth', 'staff'])->get('/summary', [\App\Http\Controllers\Pos\TodayController::class, 'index'])->name('summary');
+
+// Stock management
 Route::middleware(['auth', 'staff'])->prefix('stock')->name('stock.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Pos\StockController::class, 'index'])->name('index');
     Route::get('/purchase', [\App\Http\Controllers\Pos\StockController::class, 'purchaseForm'])->name('purchase');

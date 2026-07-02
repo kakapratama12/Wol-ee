@@ -143,7 +143,7 @@ export default function Register({ session, products }: Props) {
     };
 
     return (
-        <PosLayout
+        <PosLayout activeTab="kasir"
             title="Kasir"
             branch={session.outlet}
             actions={
