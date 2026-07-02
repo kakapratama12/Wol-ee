@@ -45,9 +45,9 @@ export default function StockIndex({ outlet, ingredients }: Props) {
                 {/* Quick Actions */}
                 <div className="grid grid-cols-2 gap-4">
                     <Link href="/pos/stock/purchase">
-                        <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card p-6 shadow-sm transition hover:border-primary hover:shadow-md">
-                            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
-                                <ShoppingCart className="h-6 w-6" />
+                        <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card p-4 shadow-sm transition hover:border-primary hover:shadow-md">
+                            <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                                <ShoppingCart className="h-5 w-5" />
                             </div>
                             <p className="text-sm font-semibold">Beli Bahan</p>
                             <p className="mt-1 text-xs text-muted-foreground text-center">Pembelian direct dari outlet</p>
@@ -55,9 +55,9 @@ export default function StockIndex({ outlet, ingredients }: Props) {
                     </Link>
 
                     <Link href="/pos/stock/adjust">
-                        <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card p-6 shadow-sm transition hover:border-primary hover:shadow-md">
-                            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                                <Wrench className="h-6 w-6" />
+                        <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card p-4 shadow-sm transition hover:border-primary hover:shadow-md">
+                            <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                                <Wrench className="h-5 w-5" />
                             </div>
                             <p className="text-sm font-semibold">Adjust Stok</p>
                             <p className="mt-1 text-xs text-muted-foreground text-center">Catat susut, rusak, expired</p>
@@ -79,7 +79,7 @@ export default function StockIndex({ outlet, ingredients }: Props) {
                 </Link>
 
                 {/* Daftar Bahan dengan Stok Outlet */}
-                <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
                     <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Stok Outlet ({ingredients.length})</h3>
                     {ingredients.length === 0 ? (
                         <p className="text-sm text-muted-foreground">Belum ada stok di outlet ini. Minta distribusi dari gudang pusat.</p>

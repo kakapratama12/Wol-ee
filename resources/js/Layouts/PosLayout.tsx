@@ -12,7 +12,7 @@ interface PosLayoutProps {
 }
 
 const navItems = [
-    { key: 'kasir', label: 'Kasir', icon: ShoppingCart, href: '/pos/register' },
+    { key: 'kasir', label: 'Kasir', icon: ShoppingCart, href: '/pos' },
     { key: 'stok', label: 'Stok', icon: Package, href: '/pos/stock' },
     { key: 'hari-ini', label: 'Hari Ini', icon: BarChart3, href: '/pos/summary' },
 ] as const;

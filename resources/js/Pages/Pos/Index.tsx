@@ -52,7 +52,7 @@ export default function PosIndex({ todaySession, recentSessions, stockSummary }:
 
             <div className="mx-auto max-w-2xl space-y-6">
                 {/* Status Toko Hari Ini */}
-                <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
                     <div className="flex items-center gap-3">
                         <div className={`flex h-12 w-12 items-center justify-center rounded-full ${isOpen ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' : 'bg-muted text-muted-foreground'}`}>
                             <Store className="h-6 w-6" />
@@ -168,7 +168,7 @@ export default function PosIndex({ todaySession, recentSessions, stockSummary }:
 
                 {/* Riwayat Sesi */}
                 {recentSessions.length > 0 && (
-                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
                         <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Riwayat 5 Hari Terakhir</h3>
                         <div className="space-y-3">
                             {recentSessions.map((session) => (
