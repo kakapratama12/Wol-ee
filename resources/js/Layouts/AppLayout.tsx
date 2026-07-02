@@ -14,7 +14,6 @@ import {
     ChevronDown,
     Utensils,
     User,
-    Truck,
     Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -64,20 +63,8 @@ const navigation: (NavSingle | NavGroup)[] = [
         ],
     },
     { label: 'POS', href: '/pos', icon: <Receipt className="h-4 w-4" />, staffOnly: true },
-    {
-        label: 'Distribusi',
-        href: '/distributions',
-        icon: <Truck className="h-4 w-4" />,
-        pengelolaOnly: true,
-        multiOutletOnly: true,
-    },
-    {
-        label: 'Outlet',
-        href: '/outlets',
-        icon: <Building2 className="h-4 w-4" />,
-        pengelolaOnly: true,
-        multiOutletOnly: true,
-    },
+
+
     {
         label: 'Inventory',
         icon: <Boxes className="h-4 w-4" />,
@@ -85,6 +72,17 @@ const navigation: (NavSingle | NavGroup)[] = [
             { label: 'Stok Bahan Dasar', href: '/inventory?type=raw_material' },
             { label: 'Stok Prep', href: '/prep-stocks' },
             { label: 'Stok Produk Jadi', href: '/finished-goods', pengelolaOnly: true },
+        ],
+    },
+    {
+        label: 'Kelola Outlet',
+        icon: <Building2 className="h-4 w-4" />,
+        pengelolaOnly: true,
+        multiOutletOnly: true,
+        children: [
+            { label: 'Daftar Outlet', href: '/outlets' },
+            { label: 'Distribusi', href: '/distributions' },
+            { label: 'Staff Outlet', href: '/staff' },
         ],
     },
     {
@@ -124,7 +122,6 @@ const navigation: (NavSingle | NavGroup)[] = [
         children: [
             { label: 'Bot Integration', href: '/settings/bot' },
             { label: 'Perusahaan', href: '/settings/company' },
-            { label: 'Kelola Staff', href: '/staff' },
         ],
     },
     {
