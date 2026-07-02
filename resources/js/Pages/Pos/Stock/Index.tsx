@@ -65,48 +65,51 @@ export default function StockIndex({ outlet, ingredients }: Props) {
                     </Link>
                 </div>
 
-                {/* Riwayat */}
-                <Link href="/pos/stock/movements">
-                    <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition hover:border-primary hover:shadow-md">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
-                            <History className="h-6 w-6" />
+                {/* Sections below quick actions - extra spacing */}
+                <div className="space-y-6 pt-2">
+                    {/* Riwayat */}
+                    <Link href="/pos/stock/movements">
+                        <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition hover:border-primary hover:shadow-md">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                                <History className="h-6 w-6" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold">Riwayat Pergerakan Stok</p>
+                                <p className="text-xs text-muted-foreground">Lihat semua pembelian & adjustmen</p>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-sm font-semibold">Riwayat Pergerakan Stok</p>
-                            <p className="text-xs text-muted-foreground">Lihat semua pembelian & adjustmen</p>
-                        </div>
-                    </div>
-                </Link>
+                    </Link>
 
-                {/* Daftar Bahan dengan Stok Outlet */}
-                <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                    <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Stok Outlet ({ingredients.length})</h3>
-                    {ingredients.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">Belum ada stok di outlet ini. Minta distribusi dari gudang pusat.</p>
-                    ) : (
-                        <div className="space-y-2">
-                            {ingredients.map((ingredient) => (
-                                <div
-                                    key={ingredient.id}
-                                    className={`flex items-center justify-between rounded-lg border p-3 ${
-                                        ingredient.stock < 0
-                                            ? 'border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20'
-                                            : 'border-border'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <Package className={`h-4 w-4 ${ingredient.stock < 0 ? 'text-amber-600' : 'text-muted-foreground'}`} />
-                                        <span className="text-sm font-medium">{ingredient.name}</span>
+                    {/* Daftar Bahan dengan Stok Outlet */}
+                    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                        <h3 className="mb-4 text-sm font-semibold text-muted-foreground">Stok Outlet ({ingredients.length})</h3>
+                        {ingredients.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">Belum ada stok di outlet ini. Minta distribusi dari gudang pusat.</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {ingredients.map((ingredient) => (
+                                    <div
+                                        key={ingredient.id}
+                                        className={`flex items-center justify-between rounded-lg border p-3 ${
+                                            ingredient.stock < 0
+                                                ? 'border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20'
+                                                : 'border-border'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Package className={`h-4 w-4 ${ingredient.stock < 0 ? 'text-amber-600' : 'text-muted-foreground'}`} />
+                                            <span className="text-sm font-medium">{ingredient.name}</span>
+                                        </div>
+                                        <span className={`text-sm font-semibold ${
+                                            ingredient.stock < 0 ? 'text-amber-600' : 'text-muted-foreground'
+                                        }`}>
+                                            {Math.round(ingredient.stock * 100) / 100} {ingredient.unit}
+                                        </span>
                                     </div>
-                                    <span className={`text-sm font-semibold ${
-                                        ingredient.stock < 0 ? 'text-amber-600' : 'text-muted-foreground'
-                                    }`}>
-                                        {Math.round(ingredient.stock * 100) / 100} {ingredient.unit}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </PosLayout>
