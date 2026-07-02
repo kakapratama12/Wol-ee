@@ -55,7 +55,7 @@ const navigation: (NavSingle | NavGroup)[] = [
         label: 'Transaksi',
         icon: <Receipt className="h-4 w-4" />,
         children: [
-            { label: 'Pembelian', href: '/transactions', staffOnly: true },
+            { label: 'Pembelian', href: '/transactions' },
             { label: 'Penjualan', href: '/sales', pengelolaOnly: true },
             { label: 'Biaya', href: '/expenses', pengelolaOnly: true },
         ],
