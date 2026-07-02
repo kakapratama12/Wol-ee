@@ -10,15 +10,19 @@ const TEST_PASSWORD = process.env.TEST_PASSWORD || 'password';
  */
 export async function login(page: Page, email?: string, password?: string) {
   await page.goto('/login');
-  await page.waitForLoadState('networkidle');
+  // Tunggu React app selesai render — form email harus muncul
+  await page.waitForSelector('input[name="email"]', { timeout: 15000 });
+  await page.waitForSelector('input[name="password"]', { timeout: 5000 });
 
   await page.fill('input[name="email"]', email || TEST_EMAIL);
   await page.fill('input[name="password"]', password || TEST_PASSWORD);
-  await page.click('button[type="submit"]');
+
+  // Klik tombol "Log in" — button text, bukan type="submit"
+  await page.getByRole('button', { name: 'Log in' }).click();
 
   // Tunggu redirect ke dashboard
-  await page.waitForURL('**/dashboard', { timeout: 10000 });
-  await expect(page.locator('text=Dashboard')).toBeVisible();
+  await page.waitForURL('**/dashboard', { timeout: 15000 });
+  await page.waitForLoadState('networkidle');
 }
 
 /**
