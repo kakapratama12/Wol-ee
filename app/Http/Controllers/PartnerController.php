@@ -21,8 +21,9 @@ class PartnerController extends Controller
     {
         $query = Partner::query()->orderBy('name');
 
-        if ($request->filled('type') && in_array($request->string('type'), ['customer', 'supplier'], true)) {
-            $query->where('type', $request->string('type'));
+        $type = (string) $request->input('type', '');
+        if ($type !== '' && in_array($type, ['customer', 'supplier'], true)) {
+            $query->where('type', $type);
         }
 
         if ($request->filled('q')) {
