@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Events\CashierSessionClosed;
 use App\Models\CashierSession;
 use App\Models\Outlet;
 use App\Models\PosOrder;
+use App\Models\Sale;
 use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
@@ -39,7 +41,7 @@ class CashierSessionService
             throw new InvalidArgumentException('Masih ada sesi kasir yang belum ditutup.');
         }
 
-        $snapshot = $this->availability->buildOpeningSummary($user->tenant);
+        $snapshot = $this->availability->buildOpeningSummary($user->tenant, $user->outlet_id);
 
         return CashierSession::create([
             'tenant_id' => $user->tenant_id,
@@ -69,7 +71,7 @@ class CashierSessionService
             'closed_at' => Carbon::now(),
         ]);
 
-        return [
+        $summary = [
             'opening_cash' => (float) $session->opening_cash,
             'total_cash' => (float) $session->total_cash,
             'total_qris' => (float) $session->total_qris,
@@ -81,7 +83,43 @@ class CashierSessionService
             'expected_cash' => $expectedCash,
             'actual_cash' => $actualCash,
             'variance' => $variance,
+            'sales_summary' => $this->salesSummary($session),
         ];
+
+        CashierSessionClosed::dispatch($session->fresh(['outlet', 'user']), $summary);
+
+        return $summary;
+    }
+
+    /**
+     * @return list<array{product: string, quantity: int, revenue: float}>
+     */
+    public function salesSummary(CashierSession $session): array
+    {
+        $orderIds = PosOrder::query()
+            ->where('cashier_session_id', $session->id)
+            ->where('status', PosOrder::STATUS_COMPLETED)
+            ->pluck('id');
+
+        if ($orderIds->isEmpty()) {
+            return [];
+        }
+
+        return Sale::query()
+            ->active()
+            ->whereIn('pos_order_id', $orderIds)
+            ->join('products', 'sales.product_id', '=', 'products.id')
+            ->selectRaw('products.name as product, SUM(sales.quantity) as quantity, SUM(sales.revenue) as revenue')
+            ->groupBy('products.name')
+            ->orderByDesc('revenue')
+            ->get()
+            ->map(fn ($row) => [
+                'product' => $row->product,
+                'quantity' => (int) $row->quantity,
+                'revenue' => round((float) $row->revenue, 2),
+            ])
+            ->values()
+            ->all();
     }
 
     public function ensureDefaultOutlet(Tenant $tenant): Outlet

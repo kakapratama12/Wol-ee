@@ -35,7 +35,7 @@ export default function PosLayout({
                     <div className="flex items-center gap-2">
                         {actions}
                         <Link
-                            href="/logout"
+                            href="/pos/logout"
                             method="post"
                             as="button"
                             className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"

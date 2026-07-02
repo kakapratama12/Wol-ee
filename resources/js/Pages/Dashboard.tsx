@@ -14,6 +14,7 @@ import {
     TableRow,
 } from '@/Components/ui/table';
 import { Input } from '@/Components/ui/input';
+import { Select } from '@/Components/ui/select';
 import { formatRupiah, formatPercent, formatNumber, formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
@@ -77,6 +78,11 @@ interface UpcomingPayable {
     due_date: string | null;
 }
 
+interface OutletOption {
+    id: number;
+    name: string;
+}
+
 /* ---------- Staff interfaces ---------- */
 
 interface OutletInventoryItem {
@@ -110,6 +116,8 @@ interface Props {
     recentPurchases?: RecentPurchase[];
     monthlyChart?: MonthlyChartPoint[];
     upcomingPayables?: UpcomingPayable[];
+    outletId?: number | null;
+    outlets?: OutletOption[];
 }
 
 const periodOptions = [
@@ -139,6 +147,8 @@ export default function Dashboard(props: Props) {
         recentPurchases = [],
         monthlyChart = [],
         upcomingPayables = [],
+        outletId = null,
+        outlets = [],
     } = props;
 
     // ─── Staff View ─────────────────────────────────────────────
@@ -276,21 +286,40 @@ export default function Dashboard(props: Props) {
     const [customStart, setCustomStart] = useState(startDate);
     const [customEnd, setCustomEnd] = useState(endDate);
 
+    const queryParams = (extra: Record<string, string | number | undefined> = {}) => ({
+        period: activePeriod,
+        ...(outletId ? { outlet_id: outletId } : {}),
+        ...extra,
+    });
+
     const changePeriod = (newPeriod: string) => {
         setActivePeriod(newPeriod);
         if (newPeriod !== 'custom') {
-            router.get(
-                '/dashboard',
-                { period: newPeriod },
-                { preserveState: true, preserveScroll: true },
-            );
+            router.get('/dashboard', queryParams({ period: newPeriod }), {
+                preserveState: true,
+                preserveScroll: true,
+            });
         }
+    };
+
+    const changeOutlet = (value: string) => {
+        router.get(
+            '/dashboard',
+            {
+                period: activePeriod,
+                ...(activePeriod === 'custom'
+                    ? { start_date: customStart, end_date: customEnd }
+                    : {}),
+                ...(value ? { outlet_id: value } : {}),
+            },
+            { preserveState: true, preserveScroll: true },
+        );
     };
 
     const applyCustom = () => {
         router.get(
             '/dashboard',
-            { period: 'custom', start_date: customStart, end_date: customEnd },
+            queryParams({ period: 'custom', start_date: customStart, end_date: customEnd }),
             { preserveState: true, preserveScroll: true },
         );
     };
@@ -301,6 +330,18 @@ export default function Dashboard(props: Props) {
 
             {/* Period Filter */}
             <div className="mb-4 flex flex-wrap items-center gap-3">
+                <Select
+                    value={outletId ? String(outletId) : ''}
+                    onChange={(e) => changeOutlet(e.target.value)}
+                    className="w-44"
+                >
+                    <option value="">Semua outlet</option>
+                    {outlets.map((o) => (
+                        <option key={o.id} value={o.id}>
+                            {o.name}
+                        </option>
+                    ))}
+                </Select>
                 <div className="flex gap-1 rounded-lg border border-border p-1">
                     {periodOptions.map((opt) => (
                         <button

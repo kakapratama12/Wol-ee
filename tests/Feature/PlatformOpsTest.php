@@ -29,7 +29,7 @@ it('menolak non super admin dari platform panel', function () {
 
 it('super admin bisa melihat platform overview tenant feedback dan usage', function () {
     $tenant = Tenant::factory()->create(['name' => 'A Kafe Demo', 'plan' => Tenant::PLAN_PRO]);
-    User::factory()->create(['tenant_id' => $tenant->id, 'role' => User::ROLE_OWNER]);
+    User::factory()->create(['tenant_id' => $tenant->id, 'role' => User::ROLE_PENGELOLA]);
     BotFeedback::create([
         'tenant_id' => $tenant->id,
         'telegram_user_id' => 123,

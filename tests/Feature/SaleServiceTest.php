@@ -81,7 +81,9 @@ it('menghapus penjualan dan mengembalikan stok', function () {
 
     $tepung = Ingredient::where('name', 'Tepung')->first();
     expect((float) $tepung->current_stock)->toBe(5000.0);
-    $this->assertDatabaseMissing('sales', ['id' => $sale->id]);
+    $sale->refresh();
+    expect($sale->status)->toBe(\App\Models\Sale::STATUS_VOID);
+    $this->assertDatabaseHas('sales', ['id' => $sale->id, 'status' => \App\Models\Sale::STATUS_VOID]);
 });
 
 it('memperbarui penjualan dan menyesuaikan stok', function () {

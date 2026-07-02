@@ -68,6 +68,12 @@ export default function OrderSuccess({ order }: Props) {
 
                 <div className="mt-6 flex flex-col gap-3">
                     <Link
+                        href={`/pos/orders/${order.id}/receipt`}
+                        className="inline-flex h-11 items-center justify-center rounded-md border border-border px-4 text-sm font-medium hover:bg-accent"
+                    >
+                        Cetak Struk
+                    </Link>
+                    <Link
                         href="/pos/register"
                         className="inline-flex h-12 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                     >

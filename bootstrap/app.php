@@ -4,6 +4,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -19,9 +20,23 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->redirectUsersTo(function (Request $request) {
+            if ($request->user()?->isStaff()) {
+                return route('pos.landing');
+            }
+
+            if ($request->user()?->isSuperAdmin()) {
+                return route('platform.overview');
+            }
+
+            return route('dashboard');
+        });
+
         $middleware->web(append: [
-            \App\Http\Middleware\HandleInertiaRequests::class,
+            HandleInertiaRequests::class,
             \App\Http\Middleware\SecurityHeaders::class,
+            \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+            \App\Http\Middleware\RedirectCashierToPos::class,
         ]);
 
         $middleware->alias([

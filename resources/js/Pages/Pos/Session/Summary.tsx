@@ -12,6 +12,7 @@ interface ProductSummary {
 interface Props {
     ready: ProductSummary[];
     attention: ProductSummary[];
+    outlet?: string | null;
 }
 
 function ProductRow({ item }: { item: ProductSummary }) {
@@ -28,9 +29,9 @@ function ProductRow({ item }: { item: ProductSummary }) {
     );
 }
 
-export default function SessionSummary({ ready, attention }: Props) {
+export default function SessionSummary({ ready, attention, outlet }: Props) {
     return (
-        <PosLayout title="Ringkasan Stok">
+        <PosLayout title="Ringkasan Stok" branch={outlet}>
             <Head title="Ringkasan Produk" />
 
             <p className="mb-4 text-sm text-muted-foreground">

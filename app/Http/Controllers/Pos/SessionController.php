@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Pos\CloseCashierSessionRequest;
 use App\Http\Requests\Pos\OpenCashierSessionRequest;
 use App\Models\CashierSession;
+use App\Models\PosOrder;
 use App\Services\CashierSessionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -22,7 +23,6 @@ class SessionController extends Controller
         $user = auth()->user();
         $today = Carbon::today();
 
-        // Get today's session
         $todaySession = CashierSession::query()
             ->where('user_id', $user->id)
             ->whereDate('opened_at', $today)
@@ -30,11 +30,10 @@ class SessionController extends Controller
             ->withCount('posOrders')
             ->first();
 
-        // Get recent sessions (last 5 days)
         $recentSessions = CashierSession::query()
             ->where('user_id', $user->id)
-            ->where('opened_at', '>=', $today->subDays(5))
-            ->where('closed_at', '!=', null)
+            ->where('opened_at', '>=', $today->copy()->subDays(5))
+            ->whereNotNull('closed_at')
             ->withSum('posOrders', 'total')
             ->withCount('posOrders')
             ->orderByDesc('opened_at')
@@ -56,15 +55,29 @@ class SessionController extends Controller
                 'date' => $s->opened_at?->format('d M Y'),
                 'opened_at' => $s->opened_at?->format('H:i'),
                 'closed_at' => $s->closed_at?->format('H:i'),
-                'total_omset' => (float) ($s->pos_orders_sum_total ?? 0),
+                'total_omset' => round(
+                    (float) $s->total_cash + (float) $s->total_qris + (float) $s->total_transfer,
+                    2,
+                ),
                 'total_orders' => $s->pos_orders_count ?? 0,
                 'outlet' => $user->outlet?->name,
+                'total_cash' => (float) $s->total_cash,
+                'total_qris' => (float) $s->total_qris,
+                'total_transfer' => (float) $s->total_transfer,
+                'expected_cash' => round((float) $s->opening_cash + (float) $s->total_cash, 2),
+                'variance' => (float) $s->variance,
             ]),
         ]);
     }
 
-    public function entry(CashierSessionService $sessions): RedirectResponse
+    public function entry(CashierSessionService $sessions): Response|RedirectResponse
     {
+        $session = $sessions->findOpenSession(auth()->user());
+
+        if ($session) {
+            return redirect()->route('pos.register');
+        }
+
         return redirect()->route('pos.landing');
     }
 
@@ -139,6 +152,7 @@ class SessionController extends Controller
         return Inertia::render('Pos/Session/Summary', [
             'ready' => $ready,
             'attention' => $attention,
+            'outlet' => auth()->user()->outlet?->name,
         ]);
     }
 
@@ -179,6 +193,8 @@ class SessionController extends Controller
                 'expected_cash' => round((float) $session->opening_cash + (float) $session->total_cash, 2),
                 'outlet' => $session->outlet?->name,
             ],
+            'salesSummary' => $sessions->salesSummary($session),
+            'orderCount' => $session->posOrders()->where('status', PosOrder::STATUS_COMPLETED)->count(),
         ]);
     }
 

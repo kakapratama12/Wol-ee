@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Outlet;
 use App\Models\Expense;
 use App\Models\Ingredient;
 use App\Models\OutletInventory;
@@ -99,6 +100,14 @@ class DashboardController extends Controller
     private function pengelolaDashboard(Request $request, PnlService $pnl, Carbon $now): Response
     {
         $period = $request->input('period', 'this_month');
+        $outletId = $request->filled('outlet_id') ? (int) $request->input('outlet_id') : null;
+
+        if ($outletId !== null) {
+            abort_unless(
+                Outlet::query()->where('id', $outletId)->exists(),
+                404,
+            );
+        }
 
         // Determine date range based on period
         switch ($period) {
@@ -147,6 +156,7 @@ class DashboardController extends Controller
         $recentSales = Sale::query()
             ->active()
             ->with('product:id,name')
+            ->when($outletId, fn ($q) => $q->where('outlet_id', $outletId))
             ->whereBetween('occurred_at', [$start->toDateString(), $end->endOfDay()->toIso8601String()])
             ->latest('occurred_at')
             ->take(8)
@@ -180,11 +190,13 @@ class DashboardController extends Controller
         // Metrics for selected period
         $periodRevenue = round((float) Sale::query()
             ->active()
+            ->when($outletId, fn ($q) => $q->where('outlet_id', $outletId))
             ->whereBetween('occurred_at', [$start->toDateString(), $end->endOfDay()->toIso8601String()])
             ->sum('revenue'), 2);
 
         $periodCogs = round((float) Sale::query()
             ->active()
+            ->when($outletId, fn ($q) => $q->where('outlet_id', $outletId))
             ->whereBetween('occurred_at', [$start->toDateString(), $end->endOfDay()->toIso8601String()])
             ->sum('cogs'), 2);
 
@@ -198,7 +210,7 @@ class DashboardController extends Controller
         $netProfit = round($grossProfit - $periodExpenses, 2);
 
         $monthlyChart = collect(range(5, 0))
-            ->map(function (int $monthsAgo) use ($now) {
+            ->map(function (int $monthsAgo) use ($now, $outletId) {
                 $period = $now->copy()->subMonths($monthsAgo);
                 $month = $period->month;
                 $year = $period->year;
@@ -209,6 +221,7 @@ class DashboardController extends Controller
                     'year' => $year,
                     'revenue' => round((float) Sale::query()
                         ->active()
+                        ->when($outletId, fn ($q) => $q->where('outlet_id', $outletId))
                         ->whereYear('occurred_at', $year)
                         ->whereMonth('occurred_at', $month)
                         ->sum('revenue'), 2),
@@ -219,12 +232,19 @@ class DashboardController extends Controller
                 ];
             });
 
+        $outlets = Outlet::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return Inertia::render('Dashboard', [
             'isStaff' => false,
             'period' => $period,
             'periodLabel' => $label,
             'startDate' => $start->toDateString(),
             'endDate' => $end->toDateString(),
+            'outletId' => $outletId,
+            'outlets' => $outlets,
             'metrics' => [
                 'revenue' => $periodRevenue,
                 'cogs' => $periodCogs,

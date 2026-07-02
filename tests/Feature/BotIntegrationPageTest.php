@@ -3,10 +3,10 @@
 use App\Models\Tenant;
 use App\Models\User;
 
-it('owner bisa akses halaman bot integration', function () {
+it('pengelola bisa akses halaman bot integration', function () {
     $tenant = Tenant::factory()->create();
     $owner = User::factory()->create([
-        'role' => 'owner',
+        'role' => User::ROLE_PENGELOLA,
         'tenant_id' => $tenant->id,
         'email_verified_at' => now(),
     ]);
@@ -16,10 +16,10 @@ it('owner bisa akses halaman bot integration', function () {
         ->assertOk();
 });
 
-it('admin tidak bisa akses halaman bot integration', function () {
+it('staff tidak bisa akses halaman bot integration', function () {
     $tenant = Tenant::factory()->create();
     $admin = User::factory()->create([
-        'role' => 'admin',
+        'role' => User::ROLE_STAFF,
         'tenant_id' => $tenant->id,
         'email_verified_at' => now(),
     ]);

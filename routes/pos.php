@@ -1,13 +1,20 @@
 <?php
 
 use App\Http\Controllers\Pos\OrderController;
+use App\Http\Controllers\Pos\PosAuthController;
 use App\Http\Controllers\Pos\RegisterController;
 use App\Http\Controllers\Pos\SessionController;
 use Illuminate\Support\Facades\Route;
 
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [PosAuthController::class, 'create'])->name('login');
+    Route::post('/login', [PosAuthController::class, 'store'])->name('login.store');
+});
+
 Route::middleware(['auth', 'staff'])->group(function () {
+    Route::post('/logout', [PosAuthController::class, 'destroy'])->name('logout');
     Route::get('/', [SessionController::class, 'landing'])->name('landing');
-    Route::get('/old-entry', [SessionController::class, 'entry'])->name('entry');
+    Route::get('/entry', [SessionController::class, 'entry'])->name('entry');
 
     Route::get('/session/open', [SessionController::class, 'openForm'])->name('session.open.form');
     Route::post('/session/open', [SessionController::class, 'open'])->name('session.open');
@@ -22,6 +29,7 @@ Route::middleware(['auth', 'staff'])->group(function () {
     Route::middleware('pos.session')->group(function () {
         Route::get('/register', [RegisterController::class, 'index'])->name('register');
         Route::get('/orders/{order}/success', [RegisterController::class, 'success'])->name('orders.success');
+        Route::get('/orders/{order}/receipt', [RegisterController::class, 'receipt'])->name('orders.receipt');
         Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
         Route::post('/orders/{order}/void', [OrderController::class, 'void'])->name('orders.void');
     });

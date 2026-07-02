@@ -13,7 +13,17 @@ class EnsureUserIsStaff
         $user = $request->user();
 
         if (! $user || ! $user->isStaff()) {
-            abort(403, 'Hanya staff yang dapat mengakses halaman ini.');
+            if ($user && $user->isPengelola()) {
+                return redirect()
+                    ->route('dashboard')
+                    ->with('error', 'POS hanya untuk akun staff. Gunakan /pos/login untuk staff.');
+            }
+
+            if ($request->expectsJson()) {
+                abort(403, 'Hanya staff yang dapat mengakses POS.');
+            }
+
+            return redirect()->route('pos.login');
         }
 
         return $next($request);

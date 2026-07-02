@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Expense;
 use App\Models\Sale;
+use Illuminate\Database\Eloquent\Builder;
 
 class PnlService
 {
@@ -12,13 +13,11 @@ class PnlService
      *
      * @return array<string, mixed>
      */
-    public function report(int $month, int $year): array
+    public function report(int $month, int $year, ?int $branchId = null): array
     {
-        // Revenue breakdown per product
-        $revenueByProduct = Sale::query()
-            ->active()
-            ->whereYear('occurred_at', $year)
-            ->whereMonth('occurred_at', $month)
+        $saleQuery = fn (): Builder => $this->salesForPeriod($month, $year, $branchId);
+
+        $revenueByProduct = $saleQuery()
             ->join('products', 'sales.product_id', '=', 'products.id')
             ->selectRaw('products.name as product, SUM(sales.revenue) as revenue')
             ->groupBy('products.name')
@@ -30,11 +29,7 @@ class PnlService
             ])
             ->all();
 
-        // COGS breakdown per product
-        $cogsByProduct = Sale::query()
-            ->active()
-            ->whereYear('occurred_at', $year)
-            ->whereMonth('occurred_at', $month)
+        $cogsByProduct = $saleQuery()
             ->join('products', 'sales.product_id', '=', 'products.id')
             ->selectRaw('products.name as product, SUM(sales.cogs) as cogs')
             ->groupBy('products.name')
@@ -50,7 +45,6 @@ class PnlService
         $cogs = round(array_sum(array_column($cogsByProduct, 'cogs')), 2);
         $grossProfit = round($revenue - $cogs, 2);
 
-        // Expense breakdown per item
         $expenseItems = Expense::query()
             ->where('period_year', $year)
             ->where('period_month', $month)
@@ -65,7 +59,6 @@ class PnlService
             ])
             ->all();
 
-        // Expense by category
         $expenseByCategory = Expense::query()
             ->where('period_year', $year)
             ->where('period_month', $month)
@@ -82,6 +75,7 @@ class PnlService
         return [
             'month' => $month,
             'year' => $year,
+            'branch_id' => $branchId,
             'revenue' => $revenue,
             'revenue_by_product' => $revenueByProduct,
             'cogs' => $cogs,
@@ -94,5 +88,19 @@ class PnlService
             'net_profit' => $netProfit,
             'net_margin' => $revenue > 0 ? round(($netProfit / $revenue) * 100, 2) : 0.0,
         ];
+    }
+
+    private function salesForPeriod(int $month, int $year, ?int $branchId): Builder
+    {
+        $query = Sale::query()
+            ->active()
+            ->whereYear('occurred_at', $year)
+            ->whereMonth('occurred_at', $month);
+
+        if ($branchId !== null) {
+            $query->where('branch_id', $branchId);
+        }
+
+        return $query;
     }
 }

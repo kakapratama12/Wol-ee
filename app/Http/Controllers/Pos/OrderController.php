@@ -9,6 +9,7 @@ use App\Models\PosOrder;
 use App\Services\CashierSessionService;
 use App\Services\PosOrderService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
 
@@ -18,10 +19,15 @@ class OrderController extends Controller
         StorePosOrderRequest $request,
         CashierSessionService $sessions,
         PosOrderService $orders,
-    ): JsonResponse {
+    ): JsonResponse|RedirectResponse {
         $session = $sessions->findOpenSession($request->user());
 
         if (! $session) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->route('pos.session.open.form')
+                    ->withErrors(['checkout' => 'Buka sesi kasir terlebih dahulu.']);
+            }
+
             return response()->json(['message' => 'Buka sesi kasir terlebih dahulu.'], 422);
         }
 
@@ -44,6 +50,13 @@ class OrderController extends Controller
                 note: $validated['note'] ?? null,
             );
         } catch (CartUnavailableException $e) {
+            if ($request->header('X-Inertia')) {
+                return back()->with('pos_cart_error', [
+                    'message' => $e->getMessage(),
+                    'unavailable_products' => $e->unavailableProducts,
+                ]);
+            }
+
             return response()->json([
                 'success' => false,
                 'error_code' => 'CART_UNAVAILABLE',
@@ -51,7 +64,15 @@ class OrderController extends Controller
                 'unavailable_products' => $e->unavailableProducts,
             ], 422);
         } catch (InvalidArgumentException $e) {
+            if ($request->header('X-Inertia')) {
+                return back()->withErrors(['checkout' => $e->getMessage()]);
+            }
+
             return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        if ($request->header('X-Inertia')) {
+            return redirect()->route('pos.orders.success', $order);
         }
 
         return response()->json([

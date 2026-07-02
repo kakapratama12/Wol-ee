@@ -31,8 +31,8 @@ class RegisterController extends Controller
             ->where('is_prep', false)
             ->orderBy('name')
             ->get()
-            ->map(function (Product $product) use ($availability) {
-                $max = $availability->estimateMaxPortions($product);
+            ->map(function (Product $product) use ($availability, $session) {
+                $max = $availability->estimateMaxPortions($product, $session->outlet_id);
 
                 return [
                     'id' => $product->id,
@@ -56,6 +56,8 @@ class RegisterController extends Controller
 
     public function success(PosOrder $order): Response
     {
+        $this->authorizePosOrder($order);
+
         $order->load(['sales.product', 'outlet']);
 
         return Inertia::render('Pos/Orders/Success', [
@@ -74,5 +76,39 @@ class RegisterController extends Controller
                 ]),
             ],
         ]);
+    }
+
+    public function receipt(PosOrder $order): Response
+    {
+        $this->authorizePosOrder($order);
+
+        $order->load(['sales.product', 'outlet', 'user']);
+
+        return Inertia::render('Pos/Orders/Receipt', [
+            'order' => [
+                'id' => $order->id,
+                'total' => (float) $order->total,
+                'payment_method' => $order->payment_method,
+                'amount_paid' => (float) $order->amount_paid,
+                'change_amount' => (float) $order->change_amount,
+                'outlet' => $order->outlet?->name,
+                'cashier' => $order->user?->name,
+                'created_at' => $order->created_at?->toIso8601String(),
+                'sales' => $order->sales->map(fn ($sale) => [
+                    'product' => $sale->product?->name,
+                    'quantity' => $sale->quantity,
+                    'unit_price' => (float) $sale->unit_price,
+                    'revenue' => (float) $sale->revenue,
+                ]),
+            ],
+        ]);
+    }
+
+    private function authorizePosOrder(PosOrder $order): void
+    {
+        $user = auth()->user();
+
+        abort_unless($user && $order->tenant_id === $user->tenant_id, 403);
+        abort_unless($user->isStaff(), 403);
     }
 }

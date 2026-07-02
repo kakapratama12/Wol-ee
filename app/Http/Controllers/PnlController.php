@@ -15,18 +15,27 @@ class PnlController extends Controller
     public function index(Request $request, PnlService $pnl): Response
     {
         [$month, $year] = $this->period($request);
+        $branchId = $request->filled('branch_id') ? (int) $request->integer('branch_id') : null;
+
+        $branches = \App\Models\Branch::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         return Inertia::render('Reports/Pnl', [
-            'report' => $pnl->report($month, $year),
+            'report' => $pnl->report($month, $year, $branchId),
             'period' => ['month' => $month, 'year' => $year],
             'periodLabel' => Carbon::create($year, $month)->translatedFormat('F Y'),
+            'branchId' => $branchId,
+            'branches' => $branches,
         ]);
     }
 
     public function export(Request $request, PnlService $pnl, PnlExport $export): StreamedResponse
     {
         [$month, $year] = $this->period($request);
-        $report = $pnl->report($month, $year);
+        $branchId = $request->filled('branch_id') ? (int) $request->integer('branch_id') : null;
+        $report = $pnl->report($month, $year, $branchId);
         $label = Carbon::create($year, $month)->translatedFormat('F Y');
 
         return $export->download($report, $label);

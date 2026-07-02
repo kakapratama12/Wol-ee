@@ -16,6 +16,8 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 
 - POS (Fase 1 foundation): cabang (`branches`), sesi kasir, order POS (`pos_orders`), role `cashier`, API `/pos/*` (buka/tutup sesi, checkout, void). Penjualan POS tercatat di `sales` dengan `source=pos`. Validasi stok keranjang holistik dengan pesan error per produk.
 - POS (Fase 2 UI): halaman kasir Inertia di `/pos` — buka/tutup sesi, ringkasan stok awal, register (grid produk + keranjang), modal pembayaran, halaman sukses transaksi. Login kasir redirect ke POS.
+- POS (Fase 3): pengelola kelola cabang & tim staff, laporan tutup sesi ke Telegram, `BranchStockService` seam untuk integrasi multi-outlet.
+- POS (Fase 4): cetak struk transaksi, filter laporan/dashboard per outlet.
 - Nomor PO (opsional) di invoice — tampil di PDF dan halaman detail hanya jika diisi.
 - Status Draft invoice — flow: draft → outstanding → partial → paid. Draft bisa diedit bebas.
 - Hapus invoice (draft & outstanding) dan arsipkan invoice (partial & paid) dari halaman list & detail.
@@ -32,8 +34,8 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 - Favicon, apple-touch-icon, dan sidebar/login logo dari brand image yang di-upload.
 - Report design standard: angka operasional selalu positif (tanpa minus/kurung). Hanya Laba/Rugi yang pakai hijau/merah.
 
-### Changed
-
+- POS: login staff terpisah (`/pos/login`), landing sesi dengan riwayat, checkout via Inertia (perbaikan tombol bayar), ringkasan penjualan saat tutup sesi, redirect staff dari dashboard pengelola.
+- POS UX kas: riwayat sesi menampilkan omset per metode (tunai/QRIS/transfer) dan selisih kas berlabel; tutup sesi menonjolkan kas laci seharusnya + tombol isi otomatis.
 - Void penjualan: soft void (`status=void`) menggantikan hard delete; laporan hanya menghitung penjualan aktif.
 
 - Dashboard metrics, penjualan terbaru, dan pembelian terbaru sekarang ikut filter tanggal yang dipilih.
@@ -45,6 +47,7 @@ murni (refactor, test, tooling) tidak perlu masuk changelog.
 ### Fixed
 
 - 500 error saat simpan penjualan/pembelian — `$idempotencyKey` tidak di-pass ke closure `DB::transaction` di SaleService & InventoryService.
+- POS checkout: idempotency key per baris penjualan melebihi batas kolom (36 karakter) saat keranjang multi-produk.
 - Quantity di PDF preview invoice tampil desimal (50.0000 → 50).
 - Race condition: stock deduction sekarang pake `lockForUpdate()` di InventoryService (recordUsage, reversePurchase, reverseSaleUsage, deductFinishedGoods) dan ProductionRunService. Mencegah oversell dari concurrent sales/production runs.
 - PnL server error: selectRaw terhapus oleh sed command, menyebabkan GROUP BY error.

@@ -26,7 +26,7 @@ export default function OpenSession({ outlet }: Props) {
             <div className="mx-auto max-w-md rounded-xl border border-border bg-card p-6 shadow-sm">
                 <h2 className="text-xl font-semibold">Mulai shift kasir</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Masukkan uang tunai di laci saat buka toko.
+                    Uang tunai fisik di laci saat buka toko.
                 </p>
 
                 <form onSubmit={submit} className="mt-6 space-y-4">

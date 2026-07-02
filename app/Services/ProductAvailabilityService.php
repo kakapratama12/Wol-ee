@@ -15,18 +15,22 @@ class ProductAvailabilityService
 
     private const LOW_THRESHOLD = 5;
 
+    public function __construct(
+        private readonly BranchStockService $branchStock,
+    ) {}
+
     /**
      * @param  list<array{product_id: int, quantity: int}>  $lineItems
      *
      * @throws CartUnavailableException
      */
-    public function validateCart(array $lineItems): void
+    public function validateCart(array $lineItems, ?int $branchId = null): void
     {
         if ($lineItems === []) {
             throw new CartUnavailableException('Keranjang kosong.');
         }
 
-        if ($this->canFulfillCart($lineItems)) {
+        if ($this->canFulfillCart($lineItems, $branchId)) {
             return;
         }
 
@@ -40,7 +44,7 @@ class ProductAvailabilityService
             }
 
             $requested = (int) $item['quantity'];
-            $max = $this->maxFulfillableQuantityInCart($lineItems, (int) $product->id);
+            $max = $this->maxFulfillableQuantityInCart($lineItems, (int) $product->id, $branchId);
 
             if ($max < $requested) {
                 $unavailable[] = [
@@ -67,12 +71,12 @@ class ProductAvailabilityService
         throw new CartUnavailableException($message, $unavailable);
     }
 
-    public function estimateMaxPortions(Product $product): int
+    public function estimateMaxPortions(Product $product, ?int $branchId = null): int
     {
         $product->loadMissing('recipeItems.ingredient');
 
         if ($product->isBatch()) {
-            return max(0, (int) floor($this->finishedGoodsStock($product)));
+            return max(0, (int) floor($this->branchStock->getFinishedGoodsStock($product, $branchId)));
         }
 
         if ($product->recipeItems->isEmpty()) {
@@ -86,7 +90,8 @@ class ProductAvailabilityService
                 return 0;
             }
 
-            $portions = (int) floor((float) $item->ingredient->current_stock / (float) $item->quantity);
+            $stock = $this->branchStock->getIngredientStock($item->ingredient_id, $branchId);
+            $portions = (int) floor($stock / (float) $item->quantity);
             $max = min($max, $portions);
         }
 
@@ -96,7 +101,7 @@ class ProductAvailabilityService
     /**
      * @return list<array<string, mixed>>
      */
-    public function buildOpeningSummary(Tenant $tenant): array
+    public function buildOpeningSummary(Tenant $tenant, ?int $branchId = null): array
     {
         $products = Product::query()
             ->withoutGlobalScope('tenant')
@@ -106,8 +111,8 @@ class ProductAvailabilityService
             ->orderBy('name')
             ->get();
 
-        return $products->map(function (Product $product) {
-            $max = $this->estimateMaxPortions($product);
+        return $products->map(function (Product $product) use ($branchId) {
+            $max = $this->estimateMaxPortions($product, $branchId);
 
             return [
                 'product_id' => $product->id,
@@ -122,7 +127,7 @@ class ProductAvailabilityService
     /**
      * @param  list<array{product_id: int, quantity: int}>  $lineItems
      */
-    private function canFulfillCart(array $lineItems): bool
+    private function canFulfillCart(array $lineItems, ?int $branchId): bool
     {
         $products = $this->loadProductsForCart($lineItems);
 
@@ -134,7 +139,7 @@ class ProductAvailabilityService
             }
 
             if ($product->isBatch()) {
-                if ($this->finishedGoodsStock($product) < (int) $item['quantity']) {
+                if ($this->branchStock->getFinishedGoodsStock($product, $branchId) < (int) $item['quantity']) {
                     return false;
                 }
             }
@@ -143,9 +148,7 @@ class ProductAvailabilityService
         $demand = $this->aggregateIngredientDemand($lineItems, $products);
 
         foreach ($demand as $ingredientId => $required) {
-            $ingredient = Ingredient::query()->find($ingredientId);
-
-            if (! $ingredient || (float) $ingredient->current_stock < $required) {
+            if ($this->branchStock->getIngredientStock($ingredientId, $branchId) < $required) {
                 return false;
             }
         }
@@ -156,7 +159,7 @@ class ProductAvailabilityService
     /**
      * @param  list<array{product_id: int, quantity: int}>  $lineItems
      */
-    private function maxFulfillableQuantityInCart(array $lineItems, int $productId): int
+    private function maxFulfillableQuantityInCart(array $lineItems, int $productId, ?int $branchId): int
     {
         $requested = (int) collect($lineItems)->firstWhere('product_id', $productId)['quantity'];
 
@@ -168,7 +171,7 @@ class ProductAvailabilityService
                 ->values()
                 ->all();
 
-            if ($this->canFulfillCart($testCart)) {
+            if ($this->canFulfillCart($testCart, $branchId)) {
                 return $qty;
             }
         }
@@ -219,17 +222,6 @@ class ProductAvailabilityService
             ->with('recipeItems.ingredient')
             ->get()
             ->keyBy('id');
-    }
-
-    private function finishedGoodsStock(Product $product): float
-    {
-        $finishedGoodsName = "{$product->name} ( Produk Jadi )";
-        $finishedGoods = Ingredient::query()
-            ->where('tenant_id', $product->tenant_id)
-            ->where('name', $finishedGoodsName)
-            ->first();
-
-        return $finishedGoods ? (float) $finishedGoods->current_stock : 0.0;
     }
 
     private function bucketFor(int $maxPortions): string

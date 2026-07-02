@@ -35,7 +35,7 @@ class PosOrderService
             throw new InvalidArgumentException('Sesi kasir sudah ditutup.');
         }
 
-        $this->availability->validateCart($lineItems);
+        $this->availability->validateCart($lineItems, $session->outlet_id);
 
         $products = Product::query()
             ->whereIn('id', collect($lineItems)->pluck('product_id'))
@@ -66,7 +66,7 @@ class PosOrderService
         return DB::transaction(function () use ($session, $user, $lineItems, $paymentMethod, $amountPaid, $change, $total, $note, $products) {
             $order = PosOrder::create([
                 'cashier_session_id' => $session->id,
-                'branch_id' => $session->branch_id,
+                'outlet_id' => $session->outlet_id,
                 'user_id' => $user->id,
                 'total' => $total,
                 'payment_method' => $paymentMethod,
@@ -75,8 +75,6 @@ class PosOrderService
                 'status' => PosOrder::STATUS_COMPLETED,
                 'note' => $note,
             ]);
-
-            $orderKey = Str::uuid()->toString();
 
             foreach ($lineItems as $item) {
                 $product = $products->get($item['product_id']);
@@ -89,9 +87,9 @@ class PosOrderService
                     note: $note,
                     occurredAt: Carbon::now(),
                     dispatchSaleRecorded: true,
-                    idempotencyKey: $orderKey.'-'.$product->id,
+                    idempotencyKey: Str::uuid()->toString(),
                     posOrderId: $order->id,
-                    branchId: $session->branch_id,
+                    outletId: $session->outlet_id,
                 );
             }
 

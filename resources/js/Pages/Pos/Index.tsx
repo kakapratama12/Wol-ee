@@ -3,6 +3,7 @@ import { Store, Clock, TrendingUp, ShoppingBag, ArrowRight } from 'lucide-react'
 import PosLayout from '@/Layouts/PosLayout';
 import { Button } from '@/Components/ui/button';
 import { formatRupiah } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 interface TodaySession {
     id: number;
@@ -23,6 +24,11 @@ interface RecentSession {
     total_omset: number;
     total_orders: number;
     outlet: string | null;
+    total_cash?: number;
+    total_qris?: number;
+    total_transfer?: number;
+    expected_cash?: number;
+    variance?: number;
 }
 
 interface Props {
@@ -126,6 +132,25 @@ export default function PosIndex({ todaySession, recentSessions }: Props) {
                                     <div className="text-right">
                                         <p className="text-sm font-semibold">{formatRupiah(session.total_omset)}</p>
                                         <p className="text-xs text-muted-foreground">{session.total_orders} transaksi</p>
+                                        {session.total_cash !== undefined && (
+                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                Tunai {formatRupiah(session.total_cash)} · QRIS{' '}
+                                                {formatRupiah(session.total_qris ?? 0)} · Transfer{' '}
+                                                {formatRupiah(session.total_transfer ?? 0)}
+                                            </p>
+                                        )}
+                                        {session.variance !== undefined && session.variance !== 0 && (
+                                            <p
+                                                className={cn(
+                                                    'mt-1 text-xs font-medium',
+                                                    session.variance < 0
+                                                        ? 'text-destructive'
+                                                        : 'text-amber-600 dark:text-amber-400',
+                                                )}
+                                            >
+                                                Selisih kas: {formatRupiah(session.variance)}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             ))}

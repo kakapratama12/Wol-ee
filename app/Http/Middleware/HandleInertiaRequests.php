@@ -39,6 +39,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
+                'pos_cart_error' => $request->session()->get('pos_cart_error'),
             ],
             'hasInvoices' => fn () => $request->user()
                 ? Invoice::query()->exists()

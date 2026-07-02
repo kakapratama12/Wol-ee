@@ -42,6 +42,8 @@ interface Props {
     report: Report;
     period: { month: number; year: number };
     periodLabel: string;
+    branchId: number | null;
+    branches: { id: number; name: string }[];
 }
 
 const months = [
@@ -75,14 +77,26 @@ const categoryColors: Record<string, string> = {
     non_operasional: 'text-slate-700',
 };
 
-export default function Pnl({ report, period, periodLabel }: Props) {
+export default function Pnl({ report, period, periodLabel, branchId, branches }: Props) {
     const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
     const [showRevenue, setShowRevenue] = useState(false);
     const [showCogs, setShowCogs] = useState(false);
     const [showExpenses, setShowExpenses] = useState(false);
 
     const changePeriod = (month: number, year: number) => {
-        router.get('/pnl', { month, year }, { preserveState: true, preserveScroll: true });
+        router.get(
+            '/pnl',
+            { month, year, ...(branchId ? { branch_id: branchId } : {}) },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    const changeBranch = (value: string) => {
+        router.get(
+            '/pnl',
+            { month: period.month, year: period.year, ...(value ? { branch_id: value } : {}) },
+            { preserveState: true, preserveScroll: true },
+        );
     };
 
     // Group expenses by category
@@ -120,6 +134,18 @@ export default function Pnl({ report, period, periodLabel }: Props) {
                         {years.map((y) => (
                             <option key={y} value={y}>
                                 {y}
+                            </option>
+                        ))}
+                    </Select>
+                    <Select
+                        className="w-40"
+                        value={branchId ? String(branchId) : ''}
+                        onChange={(e) => changeBranch(e.target.value)}
+                    >
+                        <option value="">Semua cabang</option>
+                        {branches.map((b) => (
+                            <option key={b.id} value={b.id}>
+                                {b.name}
                             </option>
                         ))}
                     </Select>

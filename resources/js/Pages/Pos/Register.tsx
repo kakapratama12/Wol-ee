@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Minus, Plus, Search, Trash2 } from 'lucide-react';
 import PosLayout from '@/Layouts/PosLayout';
 import PaymentModal from '@/Pages/Pos/components/PaymentModal';
@@ -7,6 +7,7 @@ import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { formatRupiah } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import type { PageProps } from '@/types';
 
 export interface PosProduct {
     id: number;
@@ -35,17 +36,31 @@ interface Props {
     products: PosProduct[];
 }
 
-function getCsrfToken(): string {
-    return decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? '');
-}
-
 export default function Register({ session, products }: Props) {
+    const { flash } = usePage<PageProps & {
+        flash?: {
+            pos_cart_error?: {
+                message: string;
+                unavailable_products?: { product_id: number }[];
+            };
+        };
+    }>().props;
     const [query, setQuery] = useState('');
     const [cart, setCart] = useState<CartLine[]>([]);
     const [unavailableIds, setUnavailableIds] = useState<number[]>([]);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [paymentOpen, setPaymentOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        const cartError = flash?.pos_cart_error;
+        if (!cartError) return;
+        setErrorMessage(cartError.message);
+        setUnavailableIds(
+            (cartError.unavailable_products ?? []).map((p) => p.product_id),
+        );
+        setPaymentOpen(false);
+    }, [flash?.pos_cart_error]);
 
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -103,48 +118,28 @@ export default function Register({ session, products }: Props) {
         );
     };
 
-    const checkout = async (paymentMethod: string, amountPaid: number) => {
+    const checkout = (paymentMethod: string, amountPaid: number) => {
         setSubmitting(true);
         setErrorMessage(null);
         setUnavailableIds([]);
 
-        try {
-            const res = await fetch('/pos/orders', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-XSRF-TOKEN': getCsrfToken(),
-                },
-                body: JSON.stringify({
-                    items: cart.map((l) => ({ product_id: l.product_id, quantity: l.quantity })),
-                    payment_method: paymentMethod,
-                    amount_paid: amountPaid,
-                }),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                if (data.error_code === 'CART_UNAVAILABLE') {
-                    setErrorMessage(data.message);
-                    setUnavailableIds(
-                        (data.unavailable_products ?? []).map(
-                            (p: { product_id: number }) => p.product_id,
-                        ),
+        router.post(
+            '/pos/orders',
+            {
+                items: cart.map((l) => ({ product_id: l.product_id, quantity: l.quantity })),
+                payment_method: paymentMethod,
+                amount_paid: amountPaid,
+            },
+            {
+                preserveScroll: true,
+                onError: (errors) => {
+                    setErrorMessage(
+                        (errors.checkout as string) ?? 'Gagal memproses transaksi.',
                     );
-                    setPaymentOpen(false);
-                    return;
-                }
-                setErrorMessage(data.message ?? 'Gagal memproses transaksi.');
-                return;
-            }
-
-            router.visit(`/pos/orders/${data.order.id}/success`);
-        } finally {
-            setSubmitting(false);
-        }
+                },
+                onFinish: () => setSubmitting(false),
+            },
+        );
     };
 
     return (

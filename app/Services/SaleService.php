@@ -32,7 +32,7 @@ class SaleService
         bool $dispatchSaleRecorded = true,
         ?string $idempotencyKey = null,
         ?int $posOrderId = null,
-        ?int $branchId = null,
+        ?int $outletId = null,
     ): Sale {
         if ($idempotencyKey !== null) {
             $existing = Sale::query()->where('idempotency_key', $idempotencyKey)->first();
@@ -42,7 +42,7 @@ class SaleService
             }
         }
 
-        $sale = DB::transaction(function () use ($product, $quantity, $unitPrice, $source, $userId, $note, $occurredAt, $idempotencyKey, $posOrderId, $branchId) {
+        $sale = DB::transaction(function () use ($product, $quantity, $unitPrice, $source, $userId, $note, $occurredAt, $idempotencyKey, $posOrderId, $outletId) {
             return $this->persistSale(
                 product: $product,
                 quantity: $quantity,
@@ -53,7 +53,7 @@ class SaleService
                 occurredAt: $occurredAt ?? Carbon::now(),
                 idempotencyKey: $idempotencyKey,
                 posOrderId: $posOrderId,
-                branchId: $branchId,
+                outletId: $outletId,
             );
         });
 
@@ -94,7 +94,7 @@ class SaleService
             $resolvedUserId = $userId ?? $sale->user_id;
             $resolvedOccurredAt = $occurredAt ?? $sale->occurred_at;
             $posOrderId = $sale->pos_order_id;
-            $branchId = $sale->branch_id;
+            $outletId = $sale->outlet_id;
 
             $this->inventory->reverseSaleUsage($sale);
             $sale->delete();
@@ -108,7 +108,7 @@ class SaleService
                 note: $note,
                 occurredAt: $resolvedOccurredAt,
                 posOrderId: $posOrderId,
-                branchId: $branchId,
+                outletId: $outletId,
             );
         });
     }
@@ -123,7 +123,7 @@ class SaleService
         CarbonInterface $occurredAt,
         ?string $idempotencyKey = null,
         ?int $posOrderId = null,
-        ?int $branchId = null,
+        ?int $outletId = null,
     ): Sale {
         $product->loadMissing('recipeItems.ingredient');
 
@@ -145,7 +145,7 @@ class SaleService
             'user_id' => $userId,
             'product_id' => $product->id,
             'pos_order_id' => $posOrderId,
-            'branch_id' => $branchId,
+            'outlet_id' => $outletId,
             'quantity' => $quantity,
             'unit_price' => $unitPrice,
             'revenue' => $revenue,

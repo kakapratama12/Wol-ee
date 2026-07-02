@@ -14,7 +14,7 @@ function owner(): User
     $tenant = Tenant::factory()->create();
 
     return User::factory()->create([
-        'role' => 'owner',
+        'role' => User::ROLE_PENGELOLA,
         'tenant_id' => $tenant->id,
         'email_verified_at' => now(),
     ]);
@@ -25,7 +25,7 @@ function staff(): User
     $tenant = Tenant::factory()->create();
 
     return User::factory()->create([
-        'role' => 'admin',
+        'role' => User::ROLE_STAFF,
         'tenant_id' => $tenant->id,
         'email_verified_at' => now(),
     ]);
@@ -38,7 +38,7 @@ it('mengarahkan tamu ke halaman login', function () {
 it('owner bisa mengakses semua halaman utama', function () {
     $this->actingAs(owner());
 
-    foreach (['/dashboard', '/inventory', '/transactions', '/sales', '/partners', '/invoices', '/products', '/tax', '/pnl', '/expenses', '/margin', '/settings/bot'] as $url) {
+    foreach (['/dashboard', '/inventory', '/transactions', '/sales', '/partners', '/invoices', '/products', '/tax', '/pnl', '/expenses', '/margin', '/settings/bot', '/settings/branches', '/settings/team'] as $url) {
         $this->get($url)->assertOk();
     }
 });
