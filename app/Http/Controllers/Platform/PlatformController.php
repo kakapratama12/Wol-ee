@@ -77,6 +77,7 @@ class PlatformController extends Controller
                     'pengelola_users' => $tenant->users->where('role', User::ROLE_PENGELOLA)->values()->map(fn ($u) => ['id' => $u->id, 'name' => $u->name, 'email' => $u->email]),
                     'staff_count' => $tenant->staff_count,
                     'has_bot_token' => ! empty($tenant->bot_token),
+                    'business_type' => $tenant->business_type ?? 'single',
                     'ai_usage_today' => $aiUsageToday,
                     'feedback_count' => $tenant->feedback_count,
                     'created_at' => $tenant->created_at?->toIso8601String(),
@@ -123,6 +124,7 @@ class PlatformController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('tenants', 'slug')->ignore($tenant->id)],
+            'business_type' => ['required', 'string', 'in:single,multi'],
         ]);
 
         $tenant->update($data);

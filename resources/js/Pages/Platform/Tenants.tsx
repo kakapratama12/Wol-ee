@@ -30,6 +30,7 @@ interface TenantRow {
     slug: string;
     plan: string;
     status: string;
+    business_type: string;
     users_count: number;
     pengelola_count: number;
     pengelola_users: PengelolaUser[];
@@ -58,6 +59,7 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
     const editForm = useForm({
         name: '',
         slug: '',
+        business_type: 'single',
     });
 
     const handleAdd = (e: React.FormEvent) => {
@@ -86,6 +88,7 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
         editForm.setData({
             name: tenant.name,
             slug: tenant.slug,
+            business_type: tenant.business_type || 'single',
         });
     };
 
@@ -278,6 +281,7 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                 <TableHead>Usaha</TableHead>
                                 <TableHead>Plan</TableHead>
                                 <TableHead>Status</TableHead>
+                                <TableHead>Tipe</TableHead>
                                 <TableHead>Users</TableHead>
                                 <TableHead>Bot Token</TableHead>
                                 <TableHead>AI Hari Ini</TableHead>
@@ -314,6 +318,15 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                         </TableCell>
                                         <TableCell className="uppercase text-xs text-muted-foreground">
                                             {tenant.status}
+                                        </TableCell>
+                                        <TableCell className="text-xs">
+                                            {tenant.business_type === 'multi' ? (
+                                                <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                                                    Multi Outlet
+                                                </span>
+                                            ) : (
+                                                <span className="text-muted-foreground">Single</span>
+                                            )}
                                         </TableCell>
                                         <TableCell>
                                             {formatNumber(tenant.users_count)}
@@ -435,6 +448,21 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                             {editForm.errors.slug}
                                         </p>
                                     )}
+                                </div>
+                                <div>
+                                    <Label htmlFor="edit-business-type">Tipe Usaha *</Label>
+                                    <Select
+                                        id="edit-business-type"
+                                        value={editForm.data.business_type}
+                                        onChange={(e) => editForm.setData('business_type', e.target.value)}
+                                        className="mt-1"
+                                    >
+                                        <option value="single">Single Outlet</option>
+                                        <option value="multi">Multi Outlet (Cabang)</option>
+                                    </Select>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        Single = 1 lokasi. Multi = banyak cabang + distribusi stok.
+                                    </p>
                                 </div>
                                 <div className="flex gap-2">
                                     <Button type="submit" disabled={editForm.processing}>
