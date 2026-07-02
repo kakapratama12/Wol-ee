@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Pos\CloseCashierSessionRequest;
 use App\Http\Requests\Pos\OpenCashierSessionRequest;
 use App\Models\CashierSession;
-use App\Models\OutletInventory;
 use App\Models\PosOrder;
 use App\Services\CashierSessionService;
+use App\Services\ProductAvailabilityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,12 +24,23 @@ class SessionController extends Controller
         $user = auth()->user();
         $today = Carbon::today();
 
-        $todaySession = CashierSession::query()
+        // Check for any open session (might be from earlier today or yesterday)
+        $activeSession = CashierSession::query()
             ->where('user_id', $user->id)
-            ->whereDate('opened_at', $today)
+            ->whereNull('closed_at')
             ->withSum('posOrders', 'total')
             ->withCount('posOrders')
             ->first();
+
+        // Also get today's session for summary
+        $todaySession = $activeSession && $activeSession->opened_at->isToday()
+            ? $activeSession
+            : CashierSession::query()
+                ->where('user_id', $user->id)
+                ->whereDate('opened_at', $today)
+                ->withSum('posOrders', 'total')
+                ->withCount('posOrders')
+                ->first();
 
         $recentSessions = CashierSession::query()
             ->where('user_id', $user->id)
@@ -41,27 +52,12 @@ class SessionController extends Controller
             ->get();
 
 
-        // Outlet stock summary for landing page
+        // Product availability based on outlet stock + recipes
         $outletId = $user->outlet_id;
         $stockSummary = [];
         if ($outletId) {
-            $stockSummary = OutletInventory::query()
-                ->with('ingredient:id,name,base_unit,minimum_stock')
-                ->where('outlet_id', $outletId)
-                ->whereHas('ingredient')
-                ->orderBy('ingredient_id')
-                ->get()
-                ->map(fn ($oi) => [
-                    'name' => $oi->ingredient?->name ?? '-',
-                    'quantity' => (float) $oi->quantity,
-                    'unit' => $oi->unit,
-                    'minimum_stock' => $oi->ingredient ? (float) $oi->ingredient->minimum_stock : 0,
-                    'status' => $oi->ingredient && $oi->ingredient->minimum_stock > 0
-                        ? ($oi->quantity <= 0 ? 'habis' : ($oi->quantity <= $oi->ingredient->minimum_stock ? 'menipis' : 'aman'))
-                        : 'aman',
-                ])
-                ->values()
-                ->all();
+            $availabilityService = app(ProductAvailabilityService::class);
+            $stockSummary = $availabilityService->buildOpeningSummary($user->tenant, $outletId);
         }
         return Inertia::render('Pos/Index', [
             'todaySession' => $todaySession ? [
@@ -92,6 +88,11 @@ class SessionController extends Controller
                 'variance' => (float) $s->variance,
             ]),
             'stockSummary' => $stockSummary,
+            'activeSession' => $activeSession ? [
+                'id' => $activeSession->id,
+                'opened_at' => $activeSession->opened_at?->toIso8601String(),
+                'opening_cash' => (float) $activeSession->opening_cash,
+            ] : null,
         ]);
     }
 
@@ -159,7 +160,7 @@ class SessionController extends Controller
             ], 201);
         }
 
-        return redirect()->route('pos.session.summary.page');
+        return redirect()->route('pos.register');
     }
 
     public function summaryPage(CashierSessionService $sessions): Response|RedirectResponse
