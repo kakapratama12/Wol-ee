@@ -206,8 +206,7 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                                     <TableHead>Qty</TableHead>
                                     <TableHead>Revenue</TableHead>
                                     <TableHead>COGS</TableHead>
-                                    <TableHead>Profit</TableHead>
-                                    <TableHead>Margin</TableHead>
+                                    <TableHead>Sumber</TableHead>
                                     <TableHead></TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -225,11 +224,10 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                                         <TableCell className="text-number">
                                             {formatRupiah(s.cogs)}
                                         </TableCell>
-                                        <TableCell className="text-number">
-                                            {formatRupiah(s.profit)}
-                                        </TableCell>
-                                        <TableCell className="text-number">
-                                            {formatPercent(s.margin)}
+                                        <TableCell>
+                                            <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                                                {s.source === 'pos' ? 'Outlet' : s.source === 'bot' ? 'Bot' : 'Dashboard'}
+                                            </span>
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-1">
@@ -254,7 +252,7 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                                 {sales.data.length === 0 && (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={8}
+                                            colSpan={7}
                                             className="h-24 text-center text-muted-foreground"
                                         >
                                             Belum ada penjualan.
