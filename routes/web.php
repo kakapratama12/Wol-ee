@@ -91,6 +91,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/outlets/{outlet}/stock/adjust', [\App\Http\Controllers\OutletStockController::class, 'adjust'])->name('outlets.stock.adjust');
     });
     Route::get('/outlets/{outlet}/stock/movements', [\App\Http\Controllers\OutletStockController::class, 'movements'])->name('outlets.stock.movements');
+    Route::get('/outlets/{outlet}/inventory/movements', [\App\Http\Controllers\OutletInventoryController::class, 'movements'])->name('outlets.stock.movements.page');
 
     // Owner only
     Route::middleware('owner')->group(function () {
