@@ -29,6 +29,7 @@ interface NavSingle {
     pengelolaOnly?: boolean;
     staffOnly?: boolean;
     superAdminOnly?: boolean;
+    multiOutletOnly?: boolean;
 }
 
 interface NavLink {
@@ -37,6 +38,7 @@ interface NavLink {
     pengelolaOnly?: boolean;
     staffOnly?: boolean;
     superAdminOnly?: boolean;
+    multiOutletOnly?: boolean;
     hideIfNoInvoices?: boolean;
 }
 
@@ -46,6 +48,7 @@ interface NavGroup {
     pengelolaOnly?: boolean;
     staffOnly?: boolean;
     superAdminOnly?: boolean;
+    multiOutletOnly?: boolean;
     children: NavLink[];
 }
 
@@ -66,12 +69,14 @@ const navigation: (NavSingle | NavGroup)[] = [
         href: '/distributions',
         icon: <Truck className="h-4 w-4" />,
         pengelolaOnly: true,
+        multiOutletOnly: true,
     },
     {
         label: 'Outlet',
         href: '/outlets',
         icon: <Building2 className="h-4 w-4" />,
         pengelolaOnly: true,
+        multiOutletOnly: true,
     },
     {
         label: 'Inventory',
@@ -154,6 +159,8 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
     const user = props.auth.user;
     const isPengelola = user.role === 'pengelola';
     const isSuperAdmin = user.role === 'super_admin';
+    const businessType = props.auth.businessType ?? 'single';
+    const isMultiOutlet = businessType === 'multi';
     const hasInvoices = props.hasInvoices ?? false;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -195,6 +202,7 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
                     if ('pengelolaOnly' in item && item.pengelolaOnly && !isPengelola) return null;
                     if ('superAdminOnly' in item && item.superAdminOnly && !isSuperAdmin)
                         return null;
+                    if ('multiOutletOnly' in item && item.multiOutletOnly && !isMultiOutlet) return null;
                     if (isSuperAdmin && !item.superAdminOnly) return null;
                     if (isStaff && !item.staffOnly) return null;
                     return item;
@@ -203,6 +211,7 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
                 if (item.staffOnly && !isStaff) return null;
                 if (item.pengelolaOnly && !isPengelola) return null;
                 if (item.superAdminOnly && !isSuperAdmin) return null;
+                if (item.multiOutletOnly && !isMultiOutlet) return null;
                 if (isSuperAdmin && !item.superAdminOnly) return null;
                 if (isStaff && !item.staffOnly) return null;
 
@@ -210,6 +219,7 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
                     if (child.staffOnly && !isStaff) return false;
                     if (child.pengelolaOnly && !isPengelola) return false;
                     if (child.superAdminOnly && !isSuperAdmin) return false;
+                    if (child.multiOutletOnly && !isMultiOutlet) return false;
                     if (child.hideIfNoInvoices && !hasInvoices) return false;
                     if (isStaff && !child.staffOnly) return false;
                     return true;
@@ -220,7 +230,7 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
                 return { ...item, children };
             })
             .filter(Boolean) as (NavSingle | NavGroup)[];
-    }, [isPengelola, isSuperAdmin, hasInvoices, user.role]);
+    }, [isPengelola, isSuperAdmin, isMultiOutlet, hasInvoices, user.role]);
 
     useEffect(() => {
         const initial: Record<string, boolean> = {};

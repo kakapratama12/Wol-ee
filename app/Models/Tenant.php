@@ -30,6 +30,7 @@ class Tenant extends Model
         'bank_account',
         'bank_account_name',
         'logo',
+        'business_type',
     ];
 
     protected $hidden = [
