@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Branch;
 use App\Models\Expense;
 use App\Models\Ingredient;
+use App\Models\Outlet;
 use App\Models\PriceHistory;
 use App\Models\Product;
 use App\Models\RecipeItem;
@@ -55,9 +55,13 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Staff', 'password' => Hash::make('password'), 'role' => User::ROLE_STAFF],
         );
 
-        $branch = Branch::withoutGlobalScope('tenant')->firstOrCreate(
-            ['tenant_id' => $tenant->id, 'name' => 'Cabang Utama'],
-            ['is_active' => true],
+        $outlet = Outlet::withoutGlobalScope('tenant')->firstOrCreate(
+            ['tenant_id' => $tenant->id, 'name' => 'Outlet Bandung'],
+            [
+                'type' => Outlet::TYPE_OUTLET,
+                'address' => 'Jl. Asia Afrika No. 10, Bandung',
+                'is_active' => true,
+            ],
         );
 
         User::updateOrCreate(
@@ -65,8 +69,8 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Kasir Demo',
                 'password' => Hash::make('password'),
-                'role' => User::ROLE_CASHIER,
-                'branch_id' => $branch->id,
+                'role' => User::ROLE_STAFF,
+                'outlet_id' => $outlet->id,
             ],
         );
     }

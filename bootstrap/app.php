@@ -22,7 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectUsersTo(function (Request $request) {
             if ($request->user()?->isStaff()) {
-                return route('pos.register');
+                return route('pos.landing');
             }
 
             if ($request->user()?->isSuperAdmin()) {

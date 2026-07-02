@@ -40,7 +40,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         if ($user->isStaff()) {
-            return redirect()->route('dashboard');
+            return redirect()->route('pos.landing');
         }
 
         return redirect()->intended(route('dashboard', absolute: false));

@@ -8,10 +8,8 @@ use App\Http\Controllers\Pos\StockController;
 use App\Http\Controllers\Pos\TodayController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [PosAuthController::class, 'create'])->name('login');
-    Route::post('/login', [PosAuthController::class, 'store'])->name('login.store');
-});
+// Login sudah di /login (satu halaman untuk semua role)
+Route::redirect('/login', '/login')->name('login');
 
 Route::middleware(['auth', 'staff'])->group(function () {
     Route::post('/logout', [PosAuthController::class, 'destroy'])->name('logout');
