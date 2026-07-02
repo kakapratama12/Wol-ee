@@ -27,7 +27,7 @@ export default function StockIndex({ outlet, ingredients }: Props) {
         <PosLayout title="Stok Outlet" branch={outlet.name} activeTab="stok">
             <Head title="Stok Outlet" />
 
-            <div className="mx-auto max-w-2xl space-y-6">
+            <div className="mx-auto max-w-2xl space-y-7">
                 {/* Header */}
                 <div>
                     <h2 className="text-lg font-semibold">Stok Outlet</h2>
@@ -66,7 +66,7 @@ export default function StockIndex({ outlet, ingredients }: Props) {
                 </div>
 
                 {/* Sections below quick actions - extra spacing */}
-                <div className="space-y-6 pt-2">
+                <div className="space-y-7 pt-1">
                     {/* Riwayat */}
                     <Link href="/pos/stock/movements">
                         <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition hover:border-primary hover:shadow-md">
