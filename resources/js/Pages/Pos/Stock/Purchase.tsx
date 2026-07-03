@@ -32,10 +32,7 @@ export default function Purchase({ outlet, ingredients }: Props) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        const url = outlet
-            ? `/pos/outlets/${outlet.id}/stock/purchase`
-            : '/pos/stock/purchase';
-        post(url, {
+        post('/pos/stock/purchase', {
             onSuccess: () => {
                 router.visit('/pos/stock');
             },

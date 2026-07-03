@@ -35,19 +35,13 @@ Route::middleware(['auth', 'staff'])->group(function () {
         Route::post('/orders/{order}/void', [OrderController::class, 'void'])->name('orders.void');
     });
 
-    // Stock management
+    // Stock management — unified (all users have outlet)
     Route::prefix('stock')->name('stock.')->group(function () {
         Route::get('/', [StockController::class, 'index'])->name('index');
         Route::get('/purchase', [StockController::class, 'purchaseForm'])->name('purchase');
         Route::get('/adjust', [StockController::class, 'adjustForm'])->name('adjust');
         Route::get('/movements', [StockController::class, 'movements'])->name('movements');
-
-        // Single-outlet stock operations
-        Route::post('/purchase', [StockController::class, 'purchaseSingle'])->name('purchase.single');
-        Route::post('/adjust', [StockController::class, 'adjustSingle'])->name('adjust.single');
+        Route::post('/purchase', [StockController::class, 'purchase'])->name('purchase.store');
+        Route::post('/adjust', [StockController::class, 'adjust'])->name('adjust.store');
     });
-
-    // Stock mutations (staff can purchase & adjust for their outlet)
-    Route::post('/outlets/{outlet}/stock/purchase', [\App\Http\Controllers\OutletStockController::class, 'purchase'])->name('outlets.stock.purchase');
-    Route::post('/outlets/{outlet}/stock/adjust', [\App\Http\Controllers\OutletStockController::class, 'adjust'])->name('outlets.stock.adjust');
 });
