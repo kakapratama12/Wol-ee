@@ -21,7 +21,7 @@ interface Movement {
 }
 
 interface Props {
-    outlet: Outlet;
+    outlet: Outlet | null;
     movements: Movement[];
 }
 
@@ -57,7 +57,7 @@ function getTypeIcon(type: string) {
 
 export default function Movements({ outlet, movements }: Props) {
     return (
-        <PosLayout title="Riwayat Stok" branch={outlet.name}>
+        <PosLayout title="Riwayat Stok" branch={outlet?.name ?? 'Riwayat Stok'} activeTab="stok">
             <Head title="Riwayat Stok" />
 
             <div className="mx-auto max-w-2xl space-y-6">
@@ -70,7 +70,7 @@ export default function Movements({ outlet, movements }: Props) {
                     </Link>
                     <div>
                         <h2 className="text-lg font-semibold">Riwayat Pergerakan Stok</h2>
-                        <p className="text-sm text-muted-foreground">{outlet.name}</p>
+                        {outlet && <p className="text-sm text-muted-foreground">{outlet.name}</p>}
                     </div>
                 </div>
 

@@ -16,7 +16,7 @@ interface Ingredient {
 }
 
 interface Props {
-    outlet: Outlet;
+    outlet: Outlet | null;
     ingredients: Ingredient[];
 }
 
@@ -24,14 +24,14 @@ export default function StockIndex({ outlet, ingredients }: Props) {
     const hasNegativeStock = ingredients.some((i) => i.stock < 0);
 
     return (
-        <PosLayout title="Stok Outlet" branch={outlet.name} activeTab="stok">
-            <Head title="Stok Outlet" />
+        <PosLayout title={outlet ? 'Stok Outlet' : 'Stok'} branch={outlet?.name ?? 'Stok'} activeTab="stok">
+            <Head title={outlet ? 'Stok Outlet' : 'Stok'} />
 
             <div className="mx-auto max-w-2xl space-y-7">
                 {/* Header */}
                 <div>
-                    <h2 className="text-lg font-semibold">Stok Outlet</h2>
-                    <p className="text-sm text-muted-foreground">{outlet.name}</p>
+                    <h2 className="text-lg font-semibold">{outlet ? 'Stok Outlet' : 'Stok'}</h2>
+                    {outlet && <p className="text-sm text-muted-foreground">{outlet.name}</p>}
                 </div>
 
                 {/* Negative stock warning */}
