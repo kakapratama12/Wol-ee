@@ -31,21 +31,19 @@ class CashierSessionService
 
     public function open(User $user, float $openingCash): CashierSession
     {
-        if ($user->outlet_id === null) {
-            throw new InvalidArgumentException('Kasir belum di-assign ke outlet.');
-        }
-
         $existing = $this->findOpenSession($user);
 
         if ($existing) {
             throw new InvalidArgumentException('Masih ada sesi kasir yang belum ditutup.');
         }
 
-        $snapshot = $this->availability->buildOpeningSummary($user->tenant, $user->outlet_id);
+        $outletId = $user->outlet_id; // null for single outlet — OK
+
+        $snapshot = $this->availability->buildOpeningSummary($user->tenant, $outletId);
 
         return CashierSession::create([
             'tenant_id' => $user->tenant_id,
-            'outlet_id' => $user->outlet_id,
+            'outlet_id' => $outletId,
             'user_id' => $user->id,
             'opening_cash' => round($openingCash, 2),
             'opening_availability_snapshot' => $snapshot,

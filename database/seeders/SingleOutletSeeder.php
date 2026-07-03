@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Expense;
 use App\Models\Ingredient;
-use App\Models\Outlet;
 use App\Models\PriceHistory;
 use App\Models\Product;
 use App\Models\RecipeItem;
@@ -59,24 +58,14 @@ class SingleOutletSeeder extends Seeder
             ],
         );
 
-        // Outlet (single outlet — still needs one for POS)
-        $outlet = Outlet::withoutGlobalScope('tenant')->updateOrCreate(
-            ['tenant_id' => $tenant->id, 'name' => 'Chockles Cafe'],
-            [
-                'type' => Outlet::TYPE_OUTLET,
-                'address' => 'Jl. Jambon No. 5, Yogyakarta',
-                'is_active' => true,
-            ],
-        );
-
-        // Staff / Kasir
+        // Staff / Kasir — no outlet for single outlet (outlet_id = null)
         User::updateOrCreate(
             ['email' => 'kasir@chockles.test', 'tenant_id' => $tenant->id],
             [
                 'name' => 'Kasir Chockles',
                 'password' => Hash::make('password'),
                 'role' => User::ROLE_STAFF,
-                'outlet_id' => $outlet->id,
+                'outlet_id' => null,
             ],
         );
 

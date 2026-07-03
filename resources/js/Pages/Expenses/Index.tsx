@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { type PageProps } from '@/types';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import Modal from '@/Components/ui/modal';
@@ -90,6 +91,8 @@ export default function ExpensesIndex({
     period,
     periodLabel,
 }: Props) {
+    const { props } = usePage<PageProps>();
+    const isMultiOutlet = props.auth.businessType === 'multi';
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     const defaultDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
@@ -262,45 +265,49 @@ export default function ExpensesIndex({
                                     onChange={(e) => form.setData('occurred_at', e.target.value)}
                                 />
                             </div>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    id="is_outlet_expense"
-                                    className="h-4 w-4 rounded border-gray-300"
-                                    checked={form.data.is_outlet_expense}
-                                    onChange={(e) => {
-                                        form.setData('is_outlet_expense', e.target.checked);
-                                        if (!e.target.checked) form.setData('outlet_id', '');
-                                        else if (outlets.length > 0 && !form.data.outlet_id) {
-                                            form.setData('outlet_id', String(outlets[0].id));
-                                        }
-                                    }}
-                                />
-                                <Label htmlFor="is_outlet_expense" className="cursor-pointer text-sm font-medium">
-                                    Biaya outlet
-                                </Label>
-                            </div>
-                            {form.data.is_outlet_expense && (
-                                <div>
-                                    <Label htmlFor="outlet_id">Outlet</Label>
-                                    <Select
-                                        id="outlet_id"
-                                        value={form.data.outlet_id}
-                                        onChange={(e) => form.setData('outlet_id', e.target.value)}
-                                    >
-                                        <option value="">Pilih outlet…</option>
-                                        {outlets.map((o) => (
-                                            <option key={o.id} value={o.id}>
-                                                {o.name}
-                                            </option>
-                                        ))}
-                                    </Select>
-                                    {form.errors.outlet_id && (
-                                        <p className="mt-1 text-xs text-destructive">
-                                            {form.errors.outlet_id}
-                                        </p>
+                            {isMultiOutlet && (
+                                <>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            id="is_outlet_expense"
+                                            className="h-4 w-4 rounded border-gray-300"
+                                            checked={form.data.is_outlet_expense}
+                                            onChange={(e) => {
+                                                form.setData('is_outlet_expense', e.target.checked);
+                                                if (!e.target.checked) form.setData('outlet_id', '');
+                                                else if (outlets.length > 0 && !form.data.outlet_id) {
+                                                    form.setData('outlet_id', String(outlets[0].id));
+                                                }
+                                            }}
+                                        />
+                                        <Label htmlFor="is_outlet_expense" className="cursor-pointer text-sm font-medium">
+                                            Biaya outlet
+                                        </Label>
+                                    </div>
+                                    {form.data.is_outlet_expense && (
+                                        <div>
+                                            <Label htmlFor="outlet_id">Outlet</Label>
+                                            <Select
+                                                id="outlet_id"
+                                                value={form.data.outlet_id}
+                                                onChange={(e) => form.setData('outlet_id', e.target.value)}
+                                            >
+                                                <option value="">Pilih outlet…</option>
+                                                {outlets.map((o) => (
+                                                    <option key={o.id} value={o.id}>
+                                                        {o.name}
+                                                    </option>
+                                                ))}
+                                            </Select>
+                                            {form.errors.outlet_id && (
+                                                <p className="mt-1 text-xs text-destructive">
+                                                    {form.errors.outlet_id}
+                                                </p>
+                                            )}
+                                        </div>
                                     )}
-                                </div>
+                                </>
                             )}
                             <Button type="submit" className="w-full" disabled={form.processing}>
                                 <Plus className="h-4 w-4" /> Tambah
@@ -433,44 +440,48 @@ export default function ExpensesIndex({
                             onChange={(e) => editForm.setData('occurred_at', e.target.value)}
                         />
                     </div>
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="edit_is_outlet_expense"
-                            className="h-4 w-4 rounded border-gray-300"
-                            checked={editForm.data.is_outlet_expense}
-                            onChange={(e) => {
-                                editForm.setData('is_outlet_expense', e.target.checked);
-                                if (!e.target.checked) editForm.setData('outlet_id', '');
-                                else if (outlets.length > 0 && !editForm.data.outlet_id) {
-                                    editForm.setData('outlet_id', String(outlets[0].id));
-                                }
-                            }}
-                        />
-                        <Label htmlFor="edit_is_outlet_expense" className="cursor-pointer text-sm font-medium">
-                            Biaya outlet
-                        </Label>
-                    </div>
-                    {editForm.data.is_outlet_expense && (
-                        <div>
-                            <Label>Outlet</Label>
-                            <Select
-                                value={editForm.data.outlet_id}
-                                onChange={(e) => editForm.setData('outlet_id', e.target.value)}
-                            >
-                                <option value="">Pilih outlet…</option>
-                                {outlets.map((o) => (
-                                    <option key={o.id} value={o.id}>
-                                        {o.name}
-                                    </option>
-                                ))}
-                            </Select>
-                            {editForm.errors.outlet_id && (
-                                <p className="mt-1 text-xs text-destructive">
-                                    {editForm.errors.outlet_id}
-                                </p>
+                    {isMultiOutlet && (
+                        <>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="edit_is_outlet_expense"
+                                    className="h-4 w-4 rounded border-gray-300"
+                                    checked={editForm.data.is_outlet_expense}
+                                    onChange={(e) => {
+                                        editForm.setData('is_outlet_expense', e.target.checked);
+                                        if (!e.target.checked) editForm.setData('outlet_id', '');
+                                        else if (outlets.length > 0 && !editForm.data.outlet_id) {
+                                            editForm.setData('outlet_id', String(outlets[0].id));
+                                        }
+                                    }}
+                                />
+                                <Label htmlFor="edit_is_outlet_expense" className="cursor-pointer text-sm font-medium">
+                                    Biaya outlet
+                                </Label>
+                            </div>
+                            {editForm.data.is_outlet_expense && (
+                                <div>
+                                    <Label>Outlet</Label>
+                                    <Select
+                                        value={editForm.data.outlet_id}
+                                        onChange={(e) => editForm.setData('outlet_id', e.target.value)}
+                                    >
+                                        <option value="">Pilih outlet…</option>
+                                        {outlets.map((o) => (
+                                            <option key={o.id} value={o.id}>
+                                                {o.name}
+                                            </option>
+                                        ))}
+                                    </Select>
+                                    {editForm.errors.outlet_id && (
+                                        <p className="mt-1 text-xs text-destructive">
+                                            {editForm.errors.outlet_id}
+                                        </p>
+                                    )}
+                                </div>
                             )}
-                        </div>
+                        </>
                     )}
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={() => setEditing(null)}>
