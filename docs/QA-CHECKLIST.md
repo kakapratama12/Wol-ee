@@ -42,9 +42,9 @@
 | # | Test | Expected |
 |---|------|----------|
 | A2.1 | "Kelola Outlet" di sidebar | **ADA** |
-| A2.2 | "Distribusi" di sidebar | **ADA** |
+| A2.2 | "Distribusi" di sidebar | **TIDAK ADA** (ada under Kelola Outlet, bukan item terpisah) |
 | A2.3 | "Biaya outlet" checkbox di form expense | **ADA** |
-| A2.4 | Outlet picker di Buka Sesi | **ADA** (pilih outlet) |
+| A2.4 | Outlet picker di Buka Sesi | **TIDAK ADA** (1 staff = 1 outlet, auto-login ke outlet yang di-assign) |
 
 #### A3. Data Source — Single Outlet
 
