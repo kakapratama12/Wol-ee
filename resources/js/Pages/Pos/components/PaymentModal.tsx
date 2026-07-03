@@ -30,7 +30,7 @@ export default function PaymentModal({
     onConfirm,
 }: PaymentModalProps) {
     const [method, setMethod] = useState<PaymentMethod>('tunai');
-    const [amountPaid, setAmountPaid] = useState('');
+    const [amountPaid, setAmountPaid] = useState(() => String(Math.ceil(total)));
 
     useEffect(() => {
         if (open) {
