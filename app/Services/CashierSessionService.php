@@ -37,7 +37,7 @@ class CashierSessionService
             throw new InvalidArgumentException('Masih ada sesi kasir yang belum ditutup.');
         }
 
-        $outletId = $user->outlet_id; // null for single outlet — OK
+        $outletId = $user->outlet_id; // All users now have an outlet
 
         $snapshot = $this->availability->buildOpeningSummary($user->tenant, $outletId);
 
