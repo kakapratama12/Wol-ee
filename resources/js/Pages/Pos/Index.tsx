@@ -41,6 +41,7 @@ interface Props {
     todaySession: TodaySession | null;
     recentSessions: RecentSession[];
     activeSession: ActiveSession | null;
+    outletName: string | null;
     stockSummary: Array<{
         product_id: number;
         name: string;
@@ -50,11 +51,11 @@ interface Props {
     }>;
 }
 
-export default function PosIndex({ todaySession, recentSessions, activeSession, stockSummary }: Props) {
+export default function PosIndex({ todaySession, recentSessions, activeSession, stockSummary, outletName }: Props) {
     const isOpen = !!activeSession;
 
     return (
-        <PosLayout title="POS" branch={todaySession?.outlet}>
+        <PosLayout title="POS" branch={outletName || todaySession?.outlet}>
             <Head title="POS" />
 
             <div className="mx-auto max-w-2xl space-y-7">
