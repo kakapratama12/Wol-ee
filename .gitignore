@@ -30,3 +30,4 @@ Thumbs.db
 # Playwright
 tests/e2e-report/
 test-results/
+qa_screenshots/
