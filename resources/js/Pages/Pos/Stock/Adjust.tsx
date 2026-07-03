@@ -23,7 +23,7 @@ interface Reason {
 }
 
 interface Props {
-    outlet: Outlet;
+    outlet: Outlet | null;
     ingredients: Ingredient[];
     reasons: Reason[];
 }
@@ -39,7 +39,10 @@ export default function Adjust({ outlet, ingredients, reasons }: Props) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(`/pos/outlets/${outlet.id}/stock/adjust`, {
+        const url = outlet
+            ? `/pos/outlets/${outlet.id}/stock/adjust`
+            : '/pos/stock/adjust';
+        post(url, {
             onSuccess: () => {
                 router.visit('/pos/stock');
             },
@@ -49,7 +52,7 @@ export default function Adjust({ outlet, ingredients, reasons }: Props) {
     const selectedIngredient = ingredients.find((i) => i.id === Number(data.ingredient_id));
 
     return (
-        <PosLayout title="Adjust Stok" branch={outlet.name}>
+        <PosLayout title="Adjust Stok" branch={outlet?.name ?? 'Adjust Stok'}>
             <Head title="Adjust Stok" />
 
             <div className="mx-auto max-w-md space-y-6">

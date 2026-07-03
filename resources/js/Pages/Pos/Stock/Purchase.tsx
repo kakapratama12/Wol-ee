@@ -18,7 +18,7 @@ interface Ingredient {
 }
 
 interface Props {
-    outlet: Outlet;
+    outlet: Outlet | null;
     ingredients: Ingredient[];
 }
 
@@ -32,7 +32,10 @@ export default function Purchase({ outlet, ingredients }: Props) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(`/pos/outlets/${outlet.id}/stock/purchase`, {
+        const url = outlet
+            ? `/pos/outlets/${outlet.id}/stock/purchase`
+            : '/pos/stock/purchase';
+        post(url, {
             onSuccess: () => {
                 router.visit('/pos/stock');
             },
@@ -42,7 +45,7 @@ export default function Purchase({ outlet, ingredients }: Props) {
     const selectedIngredient = ingredients.find((i) => i.id === Number(data.ingredient_id));
 
     return (
-        <PosLayout title="Beli Bahan" branch={outlet.name}>
+        <PosLayout title="Beli Bahan" branch={outlet?.name ?? 'Beli Bahan'}>
             <Head title="Beli Bahan" />
 
             <div className="mx-auto max-w-md space-y-6">
