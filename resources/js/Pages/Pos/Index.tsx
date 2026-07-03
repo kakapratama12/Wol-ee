@@ -41,6 +41,7 @@ interface Props {
     todaySession: TodaySession | null;
     recentSessions: RecentSession[];
     activeSession: ActiveSession | null;
+    outletName: string | null;
     stockSummary: Array<{
         product_id: number;
         name: string;
