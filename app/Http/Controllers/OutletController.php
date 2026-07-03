@@ -11,8 +11,17 @@ use Inertia\Inertia;
 
 class OutletController extends Controller
 {
+    private function abortIfSingleOutlet(): void
+    {
+        if (auth()->user()?->tenant?->business_type === 'single') {
+            abort(403, 'Manajemen outlet tidak tersedia untuk usaha single outlet.');
+        }
+    }
+
     public function index()
     {
+        $this->abortIfSingleOutlet();
+
         $outlets = Outlet::where('is_active', true)->withCount('inventory')
             ->orderBy('type')
             ->orderBy('name')
@@ -26,6 +35,8 @@ class OutletController extends Controller
 
     public function show(Outlet $outlet)
     {
+        $this->abortIfSingleOutlet();
+
         $outlet->loadCount('inventory');
         $inventory = $outlet->inventory()->with(['product', 'ingredient'])->get();
 
@@ -57,6 +68,8 @@ class OutletController extends Controller
 
     public function store(Request $request)
     {
+        $this->abortIfSingleOutlet();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:pusat,outlet',
@@ -71,6 +84,8 @@ class OutletController extends Controller
 
     public function update(Request $request, Outlet $outlet)
     {
+        $this->abortIfSingleOutlet();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:pusat,outlet',
@@ -86,6 +101,8 @@ class OutletController extends Controller
 
     public function destroy(Outlet $outlet)
     {
+        $this->abortIfSingleOutlet();
+
         $outlet->update(['is_active' => false]);
 
         return redirect()->route('outlets.index')

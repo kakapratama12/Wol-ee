@@ -22,9 +22,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\FinishedGoodsController;
 use App\Http\Controllers\PrepStockController;
 use App\Http\Controllers\ProductionRunController;
-use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CompanySettingsController;
-use App\Http\Controllers\TeamController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -128,16 +126,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/settings/company', [CompanySettingsController::class, 'edit'])->name('settings.company');
         Route::put('/settings/company', [CompanySettingsController::class, 'update'])->name('settings.company.update');
-
-        Route::get('/settings/branches', [BranchController::class, 'index'])->name('settings.branches');
-        Route::post('/settings/branches', [BranchController::class, 'store'])->name('settings.branches.store');
-        Route::put('/settings/branches/{branch}', [BranchController::class, 'update'])->name('settings.branches.update');
-        Route::delete('/settings/branches/{branch}', [BranchController::class, 'destroy'])->name('settings.branches.destroy');
-
-        Route::get('/settings/team', [TeamController::class, 'index'])->name('settings.team');
-        Route::post('/settings/team', [TeamController::class, 'store'])->name('settings.team.store');
-        Route::put('/settings/team/{user}', [TeamController::class, 'update'])->name('settings.team.update');
-
         Route::post('/partners', [PartnerController::class, 'store'])->name('partners.store');
         Route::post('/partners/json', [PartnerController::class, 'storeJson'])->name('partners.store-json');
         Route::put('/partners/{partner}', [PartnerController::class, 'update'])->name('partners.update');
