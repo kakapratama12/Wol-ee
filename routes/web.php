@@ -147,11 +147,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/payables/{payable}/archive', [PayableController::class, 'archive'])->name('payables.archive');
 
     // Staff management (pengelola only)
-    Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
-    Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
-    Route::put('/staff/{staff}', [StaffController::class, 'update'])->name('staff.update');
-    Route::put('/staff/{staff}/password', [StaffController::class, 'resetPassword'])->name('staff.password');
-    Route::delete('/staff/{staff}', [StaffController::class, 'destroy'])->name('staff.destroy');
+    Route::middleware('owner')->group(function () {
+        Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
+        Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
+        Route::put('/staff/{staff}', [StaffController::class, 'update'])->name('staff.update');
+        Route::put('/staff/{staff}/password', [StaffController::class, 'resetPassword'])->name('staff.password');
+        Route::delete('/staff/{staff}', [StaffController::class, 'destroy'])->name('staff.destroy');
+    });
 });
 
 Route::middleware(['auth', 'verified', 'super_admin'])
