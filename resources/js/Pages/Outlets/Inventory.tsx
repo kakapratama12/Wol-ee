@@ -21,7 +21,6 @@ import { formatDate } from '@/lib/format';
 interface Outlet {
     id: number;
     name: string;
-    type: string;
 }
 
 interface InventoryItem {
@@ -175,9 +174,6 @@ export default function OutletInventory({ outlet, inventory, products, ingredien
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                             Stok - {outlet.name}
                         </h1>
-                        <span className="mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                            {outlet.type === 'pusat' ? 'Pusat' : 'Outlet'}
-                        </span>
                     </div>
                     <Link
                         href={route('outlets.stock.movements.page', outlet.id)}

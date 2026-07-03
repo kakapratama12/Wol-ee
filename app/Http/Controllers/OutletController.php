@@ -23,7 +23,6 @@ class OutletController extends Controller
         $this->abortIfSingleOutlet();
 
         $outlets = Outlet::where('is_active', true)->withCount('inventory')
-            ->orderBy('type')
             ->orderBy('name')
             ->get();
 
@@ -72,7 +71,6 @@ class OutletController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|in:pusat,outlet',
             'address' => 'nullable|string|max:500',
         ]);
 
@@ -88,7 +86,6 @@ class OutletController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|in:pusat,outlet',
             'address' => 'nullable|string|max:500',
             'is_active' => 'boolean',
         ]);

@@ -20,7 +20,7 @@ class DistributionController extends Controller
             ->orderByDesc('distributed_at')
             ->get();
 
-        $outlets = Outlet::where('is_active', true)->orderBy('type')->get();
+        $outlets = Outlet::where('is_active', true)->orderBy('name')->get();
         $products = Product::where('is_active', true)->orderBy('name')->get();
         $ingredients = Ingredient::orderBy('name')->get();
 
@@ -90,7 +90,7 @@ class DistributionController extends Controller
     public function edit($id)
     {
         $distribution = Distribution::with(['items'])->findOrFail($id);
-        $outlets = Outlet::where('is_active', true)->orderBy('type')->get();
+        $outlets = Outlet::where('is_active', true)->orderBy('name')->get();
         $products = Product::where('is_active', true)->orderBy('name')->get();
         $ingredients = Ingredient::orderBy('name')->get();
 

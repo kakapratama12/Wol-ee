@@ -20,7 +20,6 @@ import { formatDate } from '@/lib/format';
 interface Outlet {
     id: number;
     name: string;
-    type: 'pusat' | 'outlet';
     address: string | null;
     is_active: boolean;
     inventory_count: number;
@@ -87,7 +86,6 @@ export default function OutletShow({ outlet, inventory, movements, products, ing
     /* ── Edit form ── */
     const editForm = useForm({
         name: outlet.name,
-        type: outlet.type,
         address: outlet.address || '',
         is_active: outlet.is_active,
     });
@@ -163,13 +161,6 @@ export default function OutletShow({ outlet, inventory, movements, products, ing
                             <div className="space-y-2">
                                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{outlet.name}</h1>
                                 <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                        outlet.type === 'pusat'
-                                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                                            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                                    }`}>
-                                        {outlet.type === 'pusat' ? 'Pusat / Dapur' : 'Outlet'}
-                                    </span>
                                     {outlet.address && (
                                         <span className="inline-flex items-center gap-1">
                                             <MapPin className="h-3.5 w-3.5" />
@@ -329,18 +320,6 @@ export default function OutletShow({ outlet, inventory, movements, products, ing
                     <div>
                         <Label htmlFor="edit-name">Nama Outlet</Label>
                         <Input id="edit-name" value={editForm.data.name} onChange={(e) => editForm.setData('name', e.target.value)} />
-                    </div>
-                    <div>
-                        <Label htmlFor="edit-type">Tipe</Label>
-                        <select
-                            id="edit-type"
-                            value={editForm.data.type}
-                            onChange={(e) => editForm.setData('type', e.target.value as 'pusat' | 'outlet')}
-                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                        >
-                            <option value="pusat">Pusat / Dapur</option>
-                            <option value="outlet">Outlet</option>
-                        </select>
                     </div>
                     <div>
                         <Label htmlFor="edit-address">Alamat</Label>
