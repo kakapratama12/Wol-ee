@@ -22,7 +22,7 @@ class StockController extends Controller
     /**
      * Stock management page for staff — shows outlet-specific inventory only.
      */
-    public function index(): Response
+    public function index(): Response|RedirectResponse
     {
         $user = auth()->user();
         $outlet = $user->outlet;
@@ -57,7 +57,7 @@ class StockController extends Controller
     /**
      * Purchase form page — shows outlet ingredients for direct purchase.
      */
-    public function purchaseForm(): Response
+    public function purchaseForm(): Response|RedirectResponse
     {
         $user = auth()->user();
         $outlet = $user->outlet;
@@ -87,7 +87,7 @@ class StockController extends Controller
     /**
      * Adjust stock form page — shows outlet-specific inventory for adjustment.
      */
-    public function adjustForm(): Response
+    public function adjustForm(): Response|RedirectResponse
     {
         $user = auth()->user();
         $outlet = $user->outlet;
@@ -128,7 +128,7 @@ class StockController extends Controller
     /**
      * Stock movements history page.
      */
-    public function movements(): Response
+    public function movements(): Response|RedirectResponse
     {
         $user = auth()->user();
         $outlet = $user->outlet;
