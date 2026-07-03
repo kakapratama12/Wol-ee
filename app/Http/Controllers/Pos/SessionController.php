@@ -60,6 +60,7 @@ class SessionController extends Controller
             $stockSummary = $availabilityService->buildOpeningSummary($user->tenant, $outletId);
         }
         return Inertia::render('Pos/Index', [
+            'outletName' => $user->outlet?->name,
             'todaySession' => $todaySession ? [
                 'id' => $todaySession->id,
                 'status' => $todaySession->isOpen() ? 'open' : 'closed',

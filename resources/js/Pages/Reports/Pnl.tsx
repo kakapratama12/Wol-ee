@@ -142,7 +142,7 @@ export default function Pnl({ report, period, periodLabel, branchId, branches }:
                         value={branchId ? String(branchId) : ''}
                         onChange={(e) => changeBranch(e.target.value)}
                     >
-                        <option value="">Semua cabang</option>
+                        <option value="">Semua outlet</option>
                         {branches.map((b) => (
                             <option key={b.id} value={b.id}>
                                 {b.name}
