@@ -54,7 +54,7 @@ export default function PosIndex({ todaySession, recentSessions, activeSession, 
     const isOpen = !!activeSession;
 
     return (
-        <PosLayout title="POS">
+        <PosLayout title="POS" branch={todaySession?.outlet}>
             <Head title="POS" />
 
             <div className="mx-auto max-w-2xl space-y-7">
