@@ -1,0 +1,506 @@
+[
+  {
+    "id": "S-A1",
+    "desc": "Owner login \u2192 /pos",
+    "status": "FAIL",
+    "detail": "URL: https://staging.wolee.my.id/dashboard",
+    "screenshot": "/var/www/wol-ee/qa_screenshots/single/S-A1_fail.png"
+  },
+  {
+    "id": "S-A2",
+    "desc": "Dashboard stock warning visible",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-A3",
+    "desc": "Kelola Outlet menu hidden for single",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-A4",
+    "desc": "Distribusi menu hidden for single",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-A5",
+    "desc": "/outlets should be inaccessible for single",
+    "status": "FAIL",
+    "detail": "Page loaded!",
+    "screenshot": "/var/www/wol-ee/qa_screenshots/single/S-A5_fail.png"
+  },
+  {
+    "id": "S-F1",
+    "desc": "Smoke: Dashboard",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F2",
+    "desc": "Smoke: Inventory",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F3",
+    "desc": "Smoke: Products",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F4",
+    "desc": "Smoke: Transactions",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F5",
+    "desc": "Smoke: Sales",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F6",
+    "desc": "Smoke: Expenses",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F7",
+    "desc": "Smoke: P&L",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F8",
+    "desc": "Smoke: Margin",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F9",
+    "desc": "Smoke: Tax",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F10",
+    "desc": "Smoke: Partners",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F11",
+    "desc": "Smoke: Invoices",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F12",
+    "desc": "Smoke: Payables",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F13",
+    "desc": "Smoke: Cashflow",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F14",
+    "desc": "Smoke: Aging",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F15",
+    "desc": "Smoke: Settings Company",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F16",
+    "desc": "Smoke: Settings Team",
+    "status": "FAIL",
+    "detail": "Server errors: ['500 https://staging.wolee.my.id/settings/team']",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F17",
+    "desc": "Smoke: Profile",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F18",
+    "desc": "Smoke: Production Runs",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F19",
+    "desc": "Smoke: Finished Goods",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-F20",
+    "desc": "Smoke: Prep Stocks",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-D2",
+    "desc": "Expense 'Biaya outlet' checkbox hidden for single",
+    "status": "FAIL",
+    "detail": "Checkbox visible!",
+    "screenshot": "/var/www/wol-ee/qa_screenshots/single/S-D2_fail.png"
+  },
+  {
+    "id": "S-B1",
+    "desc": "Kasir login \u2192 /pos",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-B2",
+    "desc": "Buka Sesi - session already active",
+    "status": "PASS",
+    "detail": "Skipped (session exists)",
+    "screenshot": ""
+  },
+  {
+    "id": "S-B3",
+    "desc": "POS register: products visible",
+    "status": "PASS",
+    "detail": "4 items found",
+    "screenshot": ""
+  },
+  {
+    "id": "S-B4",
+    "desc": "Add item to cart",
+    "status": "FAIL",
+    "detail": "Locator.count: Unexpected token \"=\" while parsing css selector \"[class*='cart'], [class*='order'], t",
+    "screenshot": ""
+  },
+  {
+    "id": "S-B5",
+    "desc": "Complete sale",
+    "status": "FAIL",
+    "detail": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\"button:has-text('Konfirm",
+    "screenshot": ""
+  },
+  {
+    "id": "S-B8",
+    "desc": "Hari Ini page loads",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-E1",
+    "desc": "Kasir blocked from /settings/company (403)",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "S-E2",
+    "desc": "Kasir blocked from /staff",
+    "status": "FAIL",
+    "detail": "Page loaded!",
+    "screenshot": "/var/www/wol-ee/qa_screenshots/single/S-E2_fail.png"
+  },
+  {
+    "id": "M-A1",
+    "desc": "Owner login \u2192 /pos",
+    "status": "FAIL",
+    "detail": "URL: https://staging.wolee.my.id/dashboard",
+    "screenshot": "/var/www/wol-ee/qa_screenshots/multi/M-A1_fail.png"
+  },
+  {
+    "id": "M-A2",
+    "desc": "Dashboard stock warning visible",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-A3",
+    "desc": "Kelola Outlet menu visible for multi",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-A4",
+    "desc": "Distribusi menu visible for multi",
+    "status": "FAIL",
+    "detail": "Menu not found!",
+    "screenshot": "/var/www/wol-ee/qa_screenshots/multi/M-A4_fail.png"
+  },
+  {
+    "id": "M-A5",
+    "desc": "/outlets page loads for multi",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F1",
+    "desc": "Smoke: Dashboard",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F2",
+    "desc": "Smoke: Inventory",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F3",
+    "desc": "Smoke: Products",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F4",
+    "desc": "Smoke: Transactions",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F5",
+    "desc": "Smoke: Sales",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F6",
+    "desc": "Smoke: Expenses",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F7",
+    "desc": "Smoke: P&L",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F8",
+    "desc": "Smoke: Margin",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F9",
+    "desc": "Smoke: Tax",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F10",
+    "desc": "Smoke: Partners",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F11",
+    "desc": "Smoke: Invoices",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F12",
+    "desc": "Smoke: Payables",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F13",
+    "desc": "Smoke: Cashflow",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F14",
+    "desc": "Smoke: Aging",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F15",
+    "desc": "Smoke: Settings Company",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F16",
+    "desc": "Smoke: Settings Team",
+    "status": "FAIL",
+    "detail": "Server errors: ['500 https://staging.wolee.my.id/settings/team']",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F17",
+    "desc": "Smoke: Settings Branches",
+    "status": "FAIL",
+    "detail": "Server errors: ['500 https://staging.wolee.my.id/settings/branches']",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F18",
+    "desc": "Smoke: Profile",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F19",
+    "desc": "Smoke: Outlets",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F20",
+    "desc": "Smoke: Distributions",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F21",
+    "desc": "Smoke: Production Runs",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F22",
+    "desc": "Smoke: Finished Goods",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-F23",
+    "desc": "Smoke: Prep Stocks",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-D2",
+    "desc": "Expense 'Biaya outlet' checkbox visible for multi",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-B1",
+    "desc": "Kasir login \u2192 /pos",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-B2",
+    "desc": "Buka Sesi - session already active",
+    "status": "PASS",
+    "detail": "Skipped",
+    "screenshot": ""
+  },
+  {
+    "id": "M-B3",
+    "desc": "POS register: products visible",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-B7",
+    "desc": "Outlet name displayed in POS",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-B4",
+    "desc": "Add item to cart",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-B5",
+    "desc": "Complete sale",
+    "status": "FAIL",
+    "detail": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\"button:has-text('Konfirm",
+    "screenshot": ""
+  },
+  {
+    "id": "M-B8",
+    "desc": "Hari Ini page loads",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-E1",
+    "desc": "Kasir blocked from /settings/company (403)",
+    "status": "PASS",
+    "detail": "",
+    "screenshot": ""
+  },
+  {
+    "id": "M-E2",
+    "desc": "Kasir blocked from /staff",
+    "status": "FAIL",
+    "detail": "Page loaded!",
+    "screenshot": "/var/www/wol-ee/qa_screenshots/multi/M-E2_fail.png"
+  }
+]

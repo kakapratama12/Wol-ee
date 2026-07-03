@@ -29,6 +29,7 @@ interface NavSingle {
     staffOnly?: boolean;
     superAdminOnly?: boolean;
     multiOutletOnly?: boolean;
+    singleOutletOnly?: boolean;
 }
 
 interface NavLink {
@@ -38,6 +39,7 @@ interface NavLink {
     staffOnly?: boolean;
     superAdminOnly?: boolean;
     multiOutletOnly?: boolean;
+    singleOutletOnly?: boolean;
     hideIfNoInvoices?: boolean;
 }
 
@@ -48,6 +50,7 @@ interface NavGroup {
     staffOnly?: boolean;
     superAdminOnly?: boolean;
     multiOutletOnly?: boolean;
+    singleOutletOnly?: boolean;
     children: NavLink[];
 }
 
@@ -62,7 +65,7 @@ const navigation: (NavSingle | NavGroup)[] = [
             { label: 'Biaya', href: '/expenses', pengelolaOnly: true },
         ],
     },
-    { label: 'POS', href: '/pos', icon: <Receipt className="h-4 w-4" />, staffOnly: true },
+    { label: 'POS', href: '/pos', icon: <Receipt className="h-4 w-4" />, singleOutletOnly: true, staffOnly: true },
 
 
     {
@@ -196,6 +199,12 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
         return navigation
             .map((item) => {
                 if (!isNavGroup(item)) {
+                    // singleOutletOnly: visible to staff always, visible to pengelola if single-outlet
+                    if ('singleOutletOnly' in item && item.singleOutletOnly) {
+                        if (isStaff) return item;
+                        if (isPengelola && !isMultiOutlet) return item;
+                        return null;
+                    }
                     if ('staffOnly' in item && item.staffOnly && !isStaff) return null;
                     if ('pengelolaOnly' in item && item.pengelolaOnly && !isPengelola) return null;
                     if ('superAdminOnly' in item && item.superAdminOnly && !isSuperAdmin)
@@ -206,10 +215,17 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
                     return item;
                 }
 
+                // NavGroup: singleOutletOnly check
+                if (item.singleOutletOnly) {
+                    if (isStaff) { /* continue to children filtering */ }
+                    else if (isPengelola && !isMultiOutlet) { /* continue */ }
+                    else return null;
+                }
                 if (item.staffOnly && !isStaff) return null;
                 if (item.pengelolaOnly && !isPengelola) return null;
                 if (item.superAdminOnly && !isSuperAdmin) return null;
                 if (item.multiOutletOnly && !isMultiOutlet) return null;
+                if (item.singleOutletOnly && (isMultiOutlet && !isStaff)) return null;
                 if (isSuperAdmin && !item.superAdminOnly) return null;
                 if (isStaff && !item.staffOnly) return null;
 

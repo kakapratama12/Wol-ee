@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-07-03T06:48:00.913564",
+  "test_type": "QA Exploratory \u2014 Single Outlet",
+  "business": "Chockles",
+  "total_findings": 3,
+  "critical": 1,
+  "high": 1,
+  "medium": 1,
+  "low": 0,
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "title": "Nav: 'Biaya' not found",
+      "steps": "View navigation",
+      "expected": "'Biaya' should be visible",
+      "actual": "Not found in nav",
+      "screenshot": null,
+      "timestamp": "2026-07-03T06:47:40.919422"
+    },
+    {
+      "severity": "HIGH",
+      "title": "Expense: Failed to create expense with outlet",
+      "steps": "Check outlet, fill form, submit",
+      "expected": "Expense should appear in list",
+      "actual": "Not found",
+      "screenshot": null,
+      "timestamp": "2026-07-03T06:47:55.047926"
+    },
+    {
+      "severity": "CRITICAL",
+      "title": "Login page not accessible",
+      "steps": "Navigate to /login",
+      "expected": "Login form visible",
+      "actual": "URL: https://staging.wolee.my.id/dashboard",
+      "screenshot": null,
+      "timestamp": "2026-07-03T06:48:00.913495"
+    }
+  ],
+  "console_errors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
+  ]
+}
