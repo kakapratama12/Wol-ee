@@ -58,18 +58,7 @@ class IngredientController extends Controller
     public function store(StoreIngredientRequest $request): RedirectResponse
     {
         try {
-            $data = $request->validated();
-            $data['current_stock'] = $data['current_stock'] ?? 0;
-            $data['weighted_avg_price'] = $data['unit_price'];
-
-            $ingredient = Ingredient::create($data);
-
-            PriceHistory::create([
-                'ingredient_id' => $ingredient->id,
-                'unit_price' => $ingredient->unit_price,
-                'recorded_at' => Carbon::today(),
-            ]);
-
+            $ingredient = $this->createIngredient($request->validated());
             return back()->with('success', 'Bahan ditambahkan.');
         } catch (\Throwable $e) {
             \Log::error('Ingredient store failed', ['error' => $e->getMessage()]);
@@ -80,18 +69,7 @@ class IngredientController extends Controller
     public function storeJson(StoreIngredientRequest $request): JsonResponse
     {
         try {
-            $data = $request->validated();
-            $data['current_stock'] = $data['current_stock'] ?? 0;
-            $data['weighted_avg_price'] = $data['unit_price'];
-
-            $ingredient = Ingredient::create($data);
-
-            PriceHistory::create([
-                'ingredient_id' => $ingredient->id,
-                'unit_price' => $ingredient->unit_price,
-                'recorded_at' => Carbon::today(),
-            ]);
-
+            $ingredient = $this->createIngredient($request->validated());
             return response()->json([
                 'id' => $ingredient->id,
                 'name' => $ingredient->name,
@@ -156,5 +134,21 @@ class IngredientController extends Controller
     private function isPengelola(): bool
     {
         return (bool) request()->user()?->isPengelola();
+    }
+
+    private function createIngredient(array $data): Ingredient
+    {
+        $data['current_stock'] = $data['current_stock'] ?? 0;
+        $data['weighted_avg_price'] = $data['unit_price'];
+
+        $ingredient = Ingredient::create($data);
+
+        PriceHistory::create([
+            'ingredient_id' => $ingredient->id,
+            'unit_price' => $ingredient->unit_price,
+            'recorded_at' => Carbon::today(),
+        ]);
+
+        return $ingredient;
     }
 }

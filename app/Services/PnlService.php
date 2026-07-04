@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Expense;
 use App\Models\Sale;
+use App\Support\CalculationHelper;
 use Illuminate\Database\Eloquent\Builder;
 
 class PnlService
@@ -81,12 +82,12 @@ class PnlService
             'cogs' => $cogs,
             'cogs_by_product' => $cogsByProduct,
             'gross_profit' => $grossProfit,
-            'gross_margin' => $revenue > 0 ? round(($grossProfit / $revenue) * 100, 2) : 0.0,
+            'gross_margin' => CalculationHelper::marginPercent($revenue, $cogs),
             'expenses' => $expenseItems,
             'total_expenses' => $totalExpenses,
             'expenses_by_category' => $expenseByCategory,
             'net_profit' => $netProfit,
-            'net_margin' => $revenue > 0 ? round(($netProfit / $revenue) * 100, 2) : 0.0,
+            'net_margin' => CalculationHelper::marginPercent($revenue, $cogs + $totalExpenses),
         ];
     }
 

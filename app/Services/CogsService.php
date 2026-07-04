@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Ingredient;
 use App\Models\Product;
+use App\Support\CalculationHelper;
 
 class CogsService
 {
@@ -76,13 +77,9 @@ class CogsService
     public function margin(Product $product): float
     {
         $price = (float) $product->selling_price;
-        if ($price <= 0) {
-            return 0.0;
-        }
-
         $cogs = $this->cogsForProduct($product);
 
-        return round((($price - $cogs) / $price) * 100, 2);
+        return CalculationHelper::marginPercent($price, $cogs);
     }
 
     /**

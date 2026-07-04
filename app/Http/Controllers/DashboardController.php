@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Support\CalculationHelper;
 
 class DashboardController extends Controller
 {
@@ -207,7 +208,7 @@ class DashboardController extends Controller
             ->sum('amount'), 2);
 
         $grossProfit = round($periodRevenue - $periodCogs, 2);
-        $grossMargin = $periodRevenue > 0 ? round(($grossProfit / $periodRevenue) * 100, 2) : 0.0;
+        $grossMargin = CalculationHelper::marginPercent($periodRevenue, $periodCogs);
         $netProfit = round($grossProfit - $periodExpenses, 2);
 
         $monthlyChart = collect(range(5, 0))

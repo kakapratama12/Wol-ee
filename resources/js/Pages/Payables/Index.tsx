@@ -1,4 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
+import PayableStatusBadge from '@/Components/PayableStatusBadge';
+import { formatRupiah, formatDate } from '@/lib/format';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { ArrowLeft, Eye, Plus, Search } from 'lucide-react';
@@ -20,46 +22,6 @@ interface PaginatedPayables {
     last_page: number;
     per_page: number;
     total: number;
-}
-
-function formatRupiah(amount: number): string {
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    }).format(amount);
-}
-
-function formatDate(date: string | null): string {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    });
-}
-
-function StatusBadge({ status }: { status: string }) {
-    const styles: Record<string, string> = {
-        outstanding: 'bg-yellow-100 text-yellow-800',
-        partial: 'bg-blue-100 text-blue-800',
-        paid: 'bg-green-100 text-green-800',
-        draft: 'bg-gray-100 text-gray-600',
-    };
-
-    const labels: Record<string, string> = {
-        outstanding: 'Belum Lunas',
-        partial: 'Sebagian',
-        paid: 'Lunas',
-        draft: 'Draft',
-    };
-
-    return (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${styles[status] || styles.draft}`}>
-            {labels[status] || status}
-        </span>
-    );
 }
 
 export default function Index({
@@ -146,7 +108,7 @@ export default function Index({
                                             <td className="px-4 py-3 text-right">{formatRupiah(payable.paid_amount)}</td>
                                             <td className="px-4 py-3 text-right font-medium">{formatRupiah(remaining)}</td>
                                             <td className="px-4 py-3">{formatDate(payable.due_date)}</td>
-                                            <td className="px-4 py-3"><StatusBadge status={payable.status} /></td>
+                                            <td className="px-4 py-3"><PayableStatusBadge status={payable.status} /></td>
                                             <td className="px-4 py-3 text-center">
                                                 <Link
                                                     href={`/payables/${payable.id}`}

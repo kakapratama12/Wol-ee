@@ -75,36 +75,7 @@ class InvoiceController extends Controller
         }
 
         return Inertia::render('Invoices/Show', [
-            'invoice' => [
-                'id' => $invoice->id,
-                'invoice_number' => $invoice->invoice_number,
-                'po_number' => $invoice->po_number,
-                'partner_id' => $invoice->partner_id,
-                'partner' => $invoice->partner?->name,
-                'amount' => (float) $invoice->amount,
-                'paid_amount' => (float) $invoice->paid_amount,
-                'remaining' => $invoice->remaining,
-                'due_date' => $invoice->due_date->toDateString(),
-                'status' => $invoice->status,
-                'note' => $invoice->note,
-                'paid_at' => $invoice->paid_at?->toDateString(),
-                'subtotal' => (float) $invoice->subtotal,
-                'archived_at' => $invoice->archived_at?->toDateString(),
-                'items' => $invoice->items->map(fn ($item) => [
-                    'id' => $item->id,
-                    'description' => $item->description,
-                    'quantity' => (float) $item->quantity,
-                    'unit_price' => (float) $item->unit_price,
-                    'total' => (float) $item->total,
-                ]),
-                'fees' => $invoice->fees->map(fn ($fee) => [
-                    'id' => $fee->id,
-                    'name' => $fee->name,
-                    'type' => $fee->type,
-                    'value' => (float) $fee->value,
-                    'amount' => (float) $fee->amount,
-                ]),
-            ],
+            'invoice' => $this->invoiceToArray($invoice),
             'payments' => $payments,
         ]);
     }
@@ -123,33 +94,7 @@ class InvoiceController extends Controller
             ->get(['id', 'name']);
 
         return Inertia::render('Invoices/Edit', [
-            'invoice' => [
-                'id' => $invoice->id,
-                'invoice_number' => $invoice->invoice_number,
-                'po_number' => $invoice->po_number,
-                'partner_id' => $invoice->partner_id,
-                'partner' => $invoice->partner?->name,
-                'amount' => (float) $invoice->amount,
-                'paid_amount' => (float) $invoice->paid_amount,
-                'due_date' => $invoice->due_date->toDateString(),
-                'status' => $invoice->status,
-                'note' => $invoice->note,
-                'subtotal' => (float) $invoice->subtotal,
-                'items' => $invoice->items->map(fn ($item) => [
-                    'id' => $item->id,
-                    'description' => $item->description,
-                    'quantity' => (float) $item->quantity,
-                    'unit_price' => (float) $item->unit_price,
-                    'total' => (float) $item->total,
-                ]),
-                'fees' => $invoice->fees->map(fn ($fee) => [
-                    'id' => $fee->id,
-                    'name' => $fee->name,
-                    'type' => $fee->type,
-                    'value' => (float) $fee->value,
-                    'amount' => (float) $fee->amount,
-                ]),
-            ],
+            'invoice' => $this->invoiceToArray($invoice),
             'customers' => $customers,
         ]);
     }
@@ -310,5 +255,39 @@ class InvoiceController extends Controller
         }
 
         return back()->with('success', 'Pembayaran tercatat.');
+    }
+
+    private function invoiceToArray(Invoice $invoice): array
+    {
+        return [
+            'id' => $invoice->id,
+            'invoice_number' => $invoice->invoice_number,
+            'po_number' => $invoice->po_number,
+            'partner_id' => $invoice->partner_id,
+            'partner' => $invoice->partner?->name,
+            'amount' => (float) $invoice->amount,
+            'paid_amount' => (float) $invoice->paid_amount,
+            'remaining' => $invoice->remaining,
+            'due_date' => $invoice->due_date->toDateString(),
+            'status' => $invoice->status,
+            'note' => $invoice->note,
+            'paid_at' => $invoice->paid_at?->toDateString(),
+            'subtotal' => (float) $invoice->subtotal,
+            'archived_at' => $invoice->archived_at?->toDateString(),
+            'items' => $invoice->items->map(fn ($item) => [
+                'id' => $item->id,
+                'description' => $item->description,
+                'quantity' => (float) $item->quantity,
+                'unit_price' => (float) $item->unit_price,
+                'total' => (float) $item->total,
+            ]),
+            'fees' => $invoice->fees->map(fn ($fee) => [
+                'id' => $fee->id,
+                'name' => $fee->name,
+                'type' => $fee->type,
+                'value' => (float) $fee->value,
+                'amount' => (float) $fee->amount,
+            ]),
+        ];
     }
 }

@@ -9,6 +9,7 @@ use App\Models\Sale;
 use App\Services\AgingService;
 use App\Services\MarginService;
 use App\Services\PnlService;
+use App\Support\CalculationHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -37,7 +38,7 @@ class ReportController extends Controller
             'revenue' => $revenue,
             'cogs' => $cogs,
             'profit' => $profit,
-            'margin' => $revenue > 0 ? round(($profit / $revenue) * 100, 2) : 0.0,
+            'margin' => CalculationHelper::marginPercent($revenue, $cogs),
             'transactions' => $count,
         ]);
     }
