@@ -96,7 +96,8 @@ export default function OutletsIndex({ outlets }: Props) {
 
                 <Card>
                     <CardContent className="p-0">
-                        <Table>
+                        <div className="overflow-x-auto">
+<Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Nama</TableHead>
@@ -143,6 +144,7 @@ export default function OutletsIndex({ outlets }: Props) {
                                 ))}
                             </TableBody>
                         </Table>
+</div>
                     </CardContent>
                 </Card>
             </div>

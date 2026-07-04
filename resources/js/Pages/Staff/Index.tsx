@@ -203,7 +203,8 @@ export default function StaffIndex({ staff, outlets }: { staff: StaffUser[]; out
             {/* Staff Table */}
             <Card>
                 <CardContent className="p-0">
-                    <Table>
+                    <div className="overflow-x-auto">
+<Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Nama</TableHead>
@@ -270,6 +271,7 @@ export default function StaffIndex({ staff, outlets }: { staff: StaffUser[]; out
                             )}
                         </TableBody>
                     </Table>
+</div>
                 </CardContent>
             </Card>
 

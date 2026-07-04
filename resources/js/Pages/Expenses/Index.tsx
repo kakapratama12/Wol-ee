@@ -263,7 +263,8 @@ export default function ExpensesIndex({
                         <span className="text-sm font-semibold">Total: {formatRupiah(total)}</span>
                     </CardHeader>
                     <CardContent className="p-0">
-                        <Table>
+                        <div className="overflow-x-auto">
+<Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-32">Kategori</TableHead>
@@ -330,6 +331,7 @@ export default function ExpensesIndex({
                                 ))}
                             </TableBody>
                         </Table>
+</div>
                     </CardContent>
                 </Card>
             </div>

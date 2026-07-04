@@ -197,7 +197,8 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
 
                 <Card className="lg:col-span-2">
                     <CardContent className="p-0">
-                        <Table>
+                        <div className="overflow-x-auto">
+<Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Tanggal</TableHead>
@@ -260,6 +261,7 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
                                 )}
                             </TableBody>
                         </Table>
+</div>
                         <div className="border-t px-4 py-3">
                             <Pagination links={sales.links} />
                         </div>

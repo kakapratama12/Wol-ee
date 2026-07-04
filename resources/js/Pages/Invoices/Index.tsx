@@ -203,7 +203,8 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                         </div>
                     </div>
 
-                    <Table>
+                    <div className="overflow-x-auto">
+<Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Nomor</TableHead>
@@ -280,6 +281,7 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
                             )}
                         </TableBody>
                     </Table>
+</div>
                 </CardContent>
             </Card>
 

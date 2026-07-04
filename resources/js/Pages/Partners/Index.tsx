@@ -157,7 +157,8 @@ export default function PartnersIndex({ partners, filters }: Props) {
                         </form>
                     </div>
 
-                    <Table>
+                    <div className="overflow-x-auto">
+<Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Nama</TableHead>
@@ -231,6 +232,7 @@ export default function PartnersIndex({ partners, filters }: Props) {
                             )}
                         </TableBody>
                     </Table>
+</div>
                 </CardContent>
             </Card>
 

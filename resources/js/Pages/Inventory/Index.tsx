@@ -127,7 +127,8 @@ export default function InventoryIndex({ ingredients, itemType, counts, canManag
 
             <Card>
                 <CardContent className="p-0">
-                    <Table>
+                    <div className="overflow-x-auto">
+<Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Bahan</TableHead>
@@ -207,6 +208,7 @@ export default function InventoryIndex({ ingredients, itemType, counts, canManag
                             ))}
                         </TableBody>
                     </Table>
+</div>
                 </CardContent>
             </Card>
 

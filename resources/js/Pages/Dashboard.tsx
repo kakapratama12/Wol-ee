@@ -345,7 +345,7 @@ export default function Dashboard(props: Props) {
                         </option>
                     ))}
                 </Select>
-                <div className="flex gap-1 rounded-lg border border-border p-1">
+                <div className="flex flex-wrap gap-1 rounded-lg border border-border p-1">
                     {periodOptions.map((opt) => (
                         <button
                             key={opt.value}

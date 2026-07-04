@@ -265,6 +265,7 @@ export default function TransactionsIndex({
 
                 <Card className="lg:col-span-2">
                     <CardContent className="p-0">
+                        <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -328,6 +329,7 @@ export default function TransactionsIndex({
                                 )}
                             </TableBody>
                         </Table>
+                        </div>
                         <div className="border-t px-4 py-3">
                             <Pagination links={transactions.links} />
                         </div>
