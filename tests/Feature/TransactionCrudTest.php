@@ -13,7 +13,7 @@ beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
     $this->owner = User::factory()->create([
         'tenant_id' => $this->tenant->id,
-        'role' => 'owner',
+        'role' => 'pengelola',
         'email_verified_at' => now(),
     ]);
     $this->admin = User::factory()->create([
@@ -23,8 +23,8 @@ beforeEach(function () {
     ]);
 });
 
-it('admin bisa update dan delete penjualan', function () {
-    $this->actingAs($this->admin);
+it('owner bisa update dan delete penjualan', function () {
+    $this->actingAs($this->owner);
 
     $tepung = Ingredient::create([
         'tenant_id' => $this->tenant->id,
@@ -70,8 +70,8 @@ it('admin bisa update dan delete penjualan', function () {
     expect(Sale::first()->status)->toBe(Sale::STATUS_VOID);
 });
 
-it('admin bisa update dan delete pembelian', function () {
-    $this->actingAs($this->admin);
+it('owner bisa update dan delete pembelian', function () {
+    $this->actingAs($this->owner);
 
     $ingredient = Ingredient::create([
         'tenant_id' => $this->tenant->id,

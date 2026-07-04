@@ -21,7 +21,7 @@ beforeEach(function () {
     $this->cashier = User::factory()->create([
         'tenant_id' => $this->tenant->id,
         'branch_id' => $this->branch->id,
-        'role' => User::ROLE_CASHIER,
+        'role' => 'kasir',
         'email_verified_at' => now(),
     ]);
 });
