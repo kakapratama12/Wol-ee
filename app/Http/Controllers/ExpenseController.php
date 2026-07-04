@@ -46,6 +46,7 @@ class ExpenseController extends Controller
             'outlets' => Outlet::select('id', 'name')->orderBy('name')->get(),
             'period' => ['month' => $month, 'year' => $year],
             'periodLabel' => Carbon::create($year, $month)->translatedFormat('F Y'),
+            'businessType' => auth()->user()->tenant?->business_type ?? 'single',
         ]);
     }
 
@@ -54,8 +55,8 @@ class ExpenseController extends Controller
         $data = $request->validated();
         $data['occurred_at'] = $request->date('occurred_at') ?? now();
 
-        // Auto-assign to user's outlet
-        $data['outlet_id'] = auth()->user()->outlet_id;
+        // Use provided outlet_id, or auto-assign from user's outlet
+        $data['outlet_id'] = $request->input('outlet_id') ?? auth()->user()->outlet_id;
 
         Expense::create($data);
 

@@ -39,6 +39,7 @@ interface Props {
     outlets: Outlet[];
     period: { month: number; year: number };
     periodLabel: string;
+    businessType: string;
 }
 
 const categoryColors: Record<string, string> = {
@@ -84,6 +85,7 @@ export default function ExpensesIndex({
     outlets,
     period,
     periodLabel,
+    businessType,
 }: Props) {
     const { props } = usePage<PageProps>();
     const now = new Date();
@@ -97,6 +99,7 @@ export default function ExpensesIndex({
         period_month: period.month,
         period_year: period.year,
         occurred_at: defaultDate,
+        outlet_id: '',
     });
     const editForm = useForm({
         category: 'operasional',
@@ -105,6 +108,7 @@ export default function ExpensesIndex({
         period_month: period.month,
         period_year: period.year,
         occurred_at: '',
+        outlet_id: '',
     });
     const [editing, setEditing] = useState<Expense | null>(null);
     const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
@@ -132,6 +136,7 @@ export default function ExpensesIndex({
             period_month: expense.period_month,
             period_year: expense.period_year,
             occurred_at: toDatetimeLocal(expense.occurred_at),
+            outlet_id: expense.outlet_id ? String(expense.outlet_id) : '',
         });
         editForm.clearErrors();
     };
@@ -214,6 +219,23 @@ export default function ExpensesIndex({
                                     </p>
                                 )}
                             </div>
+                            {businessType === 'multi' && outlets.length > 0 && (
+                                <div>
+                                    <Label htmlFor="outlet_id">Outlet</Label>
+                                    <Select
+                                        id="outlet_id"
+                                        value={form.data.outlet_id}
+                                        onChange={(e) => form.setData('outlet_id', e.target.value)}
+                                    >
+                                        <option value="">Semua Outlet</option>
+                                        {outlets.map((o) => (
+                                            <option key={o.id} value={String(o.id)}>
+                                                {o.name}
+                                            </option>
+                                        ))}
+                                    </Select>
+                                </div>
+                            )}
                             <div>
                                 <Label htmlFor="description">Deskripsi (opsional)</Label>
                                 <Input
@@ -337,6 +359,22 @@ export default function ExpensesIndex({
                             </p>
                         )}
                     </div>
+                    {businessType === 'multi' && outlets.length > 0 && (
+                        <div>
+                            <Label>Outlet</Label>
+                            <Select
+                                value={editForm.data.outlet_id}
+                                onChange={(e) => editForm.setData('outlet_id', e.target.value)}
+                            >
+                                <option value="">Semua Outlet</option>
+                                {outlets.map((o) => (
+                                    <option key={o.id} value={String(o.id)}>
+                                        {o.name}
+                                    </option>
+                                ))}
+                            </Select>
+                        </div>
+                    )}
                     <div>
                         <Label>Deskripsi</Label>
                         <Input
