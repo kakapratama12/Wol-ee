@@ -10,7 +10,21 @@ class OpenCashierSessionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isStaff() ?? false;
+        $user = $this->user();
+        if (! $user) {
+            return false;
+        }
+
+        if ($user->isStaff()) {
+            return true;
+        }
+
+        // Allow pengelola (owner) from single-outlet businesses to open POS session
+        if ($user->isPengelola() && $user->tenant?->business_type === 'single') {
+            return true;
+        }
+
+        return false;
     }
 
     /**
