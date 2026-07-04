@@ -238,6 +238,21 @@ class DashboardController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        // Daily revenue for last 30 days (for chart)
+        $dailyRevenue = Sale::query()
+            ->active()
+            ->when($outletId, fn ($q) => $q->where('outlet_id', $outletId))
+            ->where('occurred_at', '>=', $now->copy()->subDays(30)->startOfDay())
+            ->selectRaw("DATE(occurred_at) as date, SUM(revenue) as revenue")
+            ->groupByRaw("DATE(occurred_at)")
+            ->orderBy('date')
+            ->get()
+            ->map(fn ($row) => [
+                'date' => $row->date,
+                'label' => Carbon::parse($row->date)->translatedFormat('d M'),
+                'revenue' => round((float) $row->revenue, 2),
+            ]);
+
         return Inertia::render('Dashboard', [
             'isStaff' => false,
             'period' => $period,
@@ -257,6 +272,7 @@ class DashboardController extends Controller
             'recentSales' => $recentSales,
             'recentPurchases' => $recentPurchases,
             'monthlyChart' => $monthlyChart,
+            'dailyRevenue' => $dailyRevenue,
             'upcomingPayables' => \App\Models\Payable::query()
                 ->with('partner:id,name')
                 ->whereIn('status', ['outstanding', 'partial'])

@@ -17,6 +17,7 @@ import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
 import { formatRupiah, formatPercent, formatNumber, formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import DailyRevenueChart from '@/Components/DailyRevenueChart';
 
 /* ---------- Shared interfaces ---------- */
 
@@ -115,6 +116,7 @@ interface Props {
     // recentSales reused but typed differently for pengelola
     recentPurchases?: RecentPurchase[];
     monthlyChart?: MonthlyChartPoint[];
+    dailyRevenue?: Array<{ date: string; label: string; revenue: number }>;
     upcomingPayables?: UpcomingPayable[];
     outletId?: number | null;
     outlets?: OutletOption[];
@@ -146,6 +148,7 @@ export default function Dashboard(props: Props) {
         lowStock = [],
         recentPurchases = [],
         monthlyChart = [],
+        dailyRevenue = [],
         upcomingPayables = [],
         outletId = null,
         outlets = [],
@@ -413,6 +416,10 @@ export default function Dashboard(props: Props) {
                     accent={metrics.net_profit < 0 ? 'danger' : 'success'}
                     icon={<Percent className="h-5 w-5" />}
                 />
+            </div>
+
+            <div className="mt-6">
+                <DailyRevenueChart data={dailyRevenue} />
             </div>
 
             <Card className="mt-6">
