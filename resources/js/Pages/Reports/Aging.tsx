@@ -97,7 +97,8 @@ function AgingTable({ report, isSupplier }: { report: AgingReport; isSupplier?: 
                         Tidak ada {isSupplier ? 'tagihan' : 'piutang'} outstanding.
                     </p>
                 ) : (
-                    <Table>
+                    <div className="overflow-x-auto">
+<Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>{isSupplier ? 'Supplier' : 'Partner'}</TableHead>
@@ -133,6 +134,7 @@ function AgingTable({ report, isSupplier }: { report: AgingReport; isSupplier?: 
                             ))}
                         </TableBody>
                     </Table>
+</div>
                 )}
             </CardContent>
         </Card>

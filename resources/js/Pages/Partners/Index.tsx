@@ -1,21 +1,13 @@
 import { useState } from 'react';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { Pencil, Plus, Search, Trash2, Users } from 'lucide-react';
+import { ArrowLeft, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import Modal from '@/Components/ui/modal';
 import { Button } from '@/Components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Select } from '@/Components/ui/select';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/Components/ui/table';
+import { MobileCardTable } from '@/Components/ui/mobile-card-table';
 import { Badge } from '@/Components/ui/badge';
 import { formatRupiah } from '@/lib/format';
 import type { PageProps } from '@/types';
@@ -113,126 +105,124 @@ export default function PartnersIndex({ partners, filters }: Props) {
         <AppLayout title="Partners">
             <Head title="Partners" />
 
-            <Card>
-                <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                        <Users className="h-5 w-5" />
-                        Partners
-                    </CardTitle>
+            <div className="mb-4">
+                <Link
+                    href="/dashboard"
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Kembali
+                </Link>
+            </div>
+
+            {/* Filter + Search + Add button */}
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-wrap gap-2">
+                    {[
+                        { key: '', label: 'Semua' },
+                        { key: 'customer', label: 'Customer' },
+                        { key: 'supplier', label: 'Supplier' },
+                    ].map((f) => (
+                        <Button
+                            key={f.key}
+                            size="sm"
+                            variant={filters.type === f.key ? 'default' : 'outline'}
+                            onClick={() => applyFilters(f.key)}
+                        >
+                            {f.label}
+                        </Button>
+                    ))}
+                </div>
+                <div className="flex items-center gap-2">
+                    <form onSubmit={submitSearch} className="flex gap-2">
+                        <Input
+                            placeholder="Cari nama..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full sm:w-64"
+                        />
+                        <Button type="submit" variant="outline" size="icon">
+                            <Search className="h-4 w-4" />
+                        </Button>
+                    </form>
                     {isOwner && (
-                        <Button onClick={openCreate}>
-                            <Plus className="mr-2 h-4 w-4" />
+                        <Button size="sm" onClick={openCreate}>
+                            <Plus className="mr-1 h-4 w-4" />
                             Tambah
                         </Button>
                     )}
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex gap-2">
-                            {[
-                                { key: '', label: 'Semua' },
-                                { key: 'customer', label: 'Customer' },
-                                { key: 'supplier', label: 'Supplier' },
-                            ].map((f) => (
-                                <Button
-                                    key={f.key}
-                                    size="sm"
-                                    variant={filters.type === f.key ? 'default' : 'outline'}
-                                    onClick={() => applyFilters(f.key)}
-                                >
-                                    {f.label}
-                                </Button>
-                            ))}
-                        </div>
-                        <form onSubmit={submitSearch} className="flex gap-2">
-                            <Input
-                                placeholder="Cari nama..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="w-full sm:w-64"
-                            />
-                            <Button type="submit" variant="outline" size="icon">
-                                <Search className="h-4 w-4" />
-                            </Button>
-                        </form>
-                    </div>
+                </div>
+            </div>
 
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Nama</TableHead>
-                                <TableHead>Tipe</TableHead>
-                                <TableHead>Kontak</TableHead>
-                                <TableHead>Telepon</TableHead>
-                                <TableHead className="text-right">Outstanding</TableHead>
-                                {isOwner && <TableHead className="w-24" />}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {partners.length === 0 ? (
-                                <TableRow>
-                                    <TableCell
-                                        colSpan={isOwner ? 6 : 5}
-                                        className="text-center text-muted-foreground"
-                                    >
-                                        Belum ada partner.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                partners.map((partner) => (
-                                    <TableRow
-                                        key={partner.id}
-                                        className="cursor-pointer hover:bg-muted/50"
-                                    >
-                                        <TableCell>
-                                            <Link
-                                                href={`/partners/${partner.id}`}
-                                                className="font-medium hover:underline"
-                                            >
-                                                {partner.name}
-                                            </Link>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline">
-                                                {partner.type === 'customer'
-                                                    ? 'Customer'
-                                                    : 'Supplier'}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>{partner.contact ?? '-'}</TableCell>
-                                        <TableCell>{partner.phone ?? '-'}</TableCell>
-                                        <TableCell className="text-right">
-                                            {partner.outstanding_count > 0
-                                                ? formatRupiah(partner.total_outstanding)
-                                                : '-'}
-                                        </TableCell>
-                                        {isOwner && (
-                                            <TableCell>
-                                                <div className="flex gap-1">
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        onClick={() => openEdit(partner)}
-                                                    >
-                                                        <Pencil className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        onClick={() => remove(partner)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        )}
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+            {/* Table */}
+            <div className="rounded-lg border border-border bg-card">
+                <MobileCardTable
+                    data={partners}
+                    keyFn={(p) => p.id}
+                    emptyMessage="Belum ada partner."
+                    columns={[
+                        {
+                            header: 'Nama',
+                            render: (p) => (
+                                <Link
+                                    href={`/partners/${p.id}`}
+                                    className="font-medium hover:underline"
+                                >
+                                    {p.name}
+                                </Link>
+                            ),
+                            primary: true,
+                        },
+                        {
+                            header: 'Tipe',
+                            render: (p) => (
+                                <Badge variant="outline">
+                                    {p.type === 'customer' ? 'Customer' : 'Supplier'}
+                                </Badge>
+                            ),
+                            badge: true,
+                        },
+                        {
+                            header: 'Kontak',
+                            render: (p) => p.contact ?? '-',
+                            secondary: true,
+                        },
+                        {
+                            header: 'Telepon',
+                            render: (p) => p.phone ?? '-',
+                            hideOnMobile: true,
+                        },
+                        {
+                            header: 'Outstanding',
+                            render: (p) =>
+                                p.outstanding_count > 0
+                                    ? formatRupiah(p.total_outstanding)
+                                    : '-',
+                            amount: true,
+                        },
+                    ]}
+                    actions={(p) =>
+                        isOwner ? (
+                            <div className="flex gap-1">
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => openEdit(p)}
+                                >
+                                    <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => remove(p)}
+                                >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                            </div>
+                        ) : null
+                    }
+                />
+            </div>
 
             <Modal
                 open={formOpen}

@@ -9,6 +9,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
+use App\Support\CalculationHelper;
 
 class SaleService
 {
@@ -152,7 +153,7 @@ class SaleService
         $revenue = round($unitPrice * $quantity, 2);
         $cogsTotal = round($cogsPerUnit * $quantity, 2);
         $profit = round($revenue - $cogsTotal, 2);
-        $margin = $revenue > 0 ? round(($profit / $revenue) * 100, 2) : 0.0;
+        $margin = CalculationHelper::marginPercent($revenue, $cogsTotal);
 
         $sale = Sale::create([
             'idempotency_key' => $idempotencyKey,

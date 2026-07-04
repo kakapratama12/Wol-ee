@@ -19,7 +19,6 @@ import {
 interface Outlet {
     id: number;
     name: string;
-    type: 'pusat' | 'outlet';
     address: string | null;
     is_active: boolean;
     inventory_count: number;
@@ -35,13 +34,11 @@ export default function OutletsIndex({ outlets }: Props) {
 
     const form = useForm({
         name: '',
-        type: 'outlet',
         address: '',
     });
 
     const editForm = useForm({
         name: '',
-        type: 'outlet',
         address: '',
         is_active: true,
     });
@@ -73,7 +70,6 @@ export default function OutletsIndex({ outlets }: Props) {
     const startEdit = (outlet: Outlet) => {
         editForm.setData({
             name: outlet.name,
-            type: outlet.type,
             address: outlet.address || '',
             is_active: outlet.is_active,
         });
@@ -89,7 +85,7 @@ export default function OutletsIndex({ outlets }: Props) {
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Outlet</h1>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Kelola pusat dan outlet kamu
+                            Kelola outlet kamu
                         </p>
                     </div>
                     <Button onClick={() => setShowCreateModal(true)}>
@@ -100,11 +96,11 @@ export default function OutletsIndex({ outlets }: Props) {
 
                 <Card>
                     <CardContent className="p-0">
-                        <Table>
+                        <div className="overflow-x-auto">
+<Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Nama</TableHead>
-                                    <TableHead>Tipe</TableHead>
                                     <TableHead>Alamat</TableHead>
                                     <TableHead className="text-center">Stok Item</TableHead>
                                     <TableHead>Status</TableHead>
@@ -119,15 +115,6 @@ export default function OutletsIndex({ outlets }: Props) {
                                         onClick={() => router.visit(route('outlets.show', outlet.id))}
                                     >
                                         <TableCell className="font-medium">{outlet.name}</TableCell>
-                                        <TableCell>
-                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                                outlet.type === 'pusat'
-                                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                                                    : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                                            }`}>
-                                                {outlet.type === 'pusat' ? 'Pusat' : 'Outlet'}
-                                            </span>
-                                        </TableCell>
                                         <TableCell className="text-gray-500 dark:text-gray-400">
                                             {outlet.address || '-'}
                                         </TableCell>
@@ -157,6 +144,7 @@ export default function OutletsIndex({ outlets }: Props) {
                                 ))}
                             </TableBody>
                         </Table>
+</div>
                     </CardContent>
                 </Card>
             </div>
@@ -176,18 +164,6 @@ export default function OutletsIndex({ outlets }: Props) {
                             {form.errors.name && (
                                 <p className="text-sm text-red-500 mt-1">{form.errors.name}</p>
                             )}
-                        </div>
-                        <div>
-                            <Label htmlFor="type">Tipe</Label>
-                            <select
-                                id="type"
-                                value={form.data.type}
-                                onChange={(e) => form.setData('type', e.target.value)}
-                                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                            >
-                                <option value="pusat">Pusat / Dapur</option>
-                                <option value="outlet">Outlet</option>
-                            </select>
                         </div>
                         <div>
                             <Label htmlFor="address">Alamat</Label>
@@ -221,18 +197,6 @@ export default function OutletsIndex({ outlets }: Props) {
                                 value={editForm.data.name}
                                 onChange={(e) => editForm.setData('name', e.target.value)}
                             />
-                        </div>
-                        <div>
-                            <Label htmlFor="edit-type">Tipe</Label>
-                            <select
-                                id="edit-type"
-                                value={editForm.data.type}
-                                onChange={(e) => editForm.setData('type', e.target.value)}
-                                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                            >
-                                <option value="pusat">Pusat / Dapur</option>
-                                <option value="outlet">Outlet</option>
-                            </select>
                         </div>
                         <div>
                             <Label htmlFor="edit-address">Alamat</Label>

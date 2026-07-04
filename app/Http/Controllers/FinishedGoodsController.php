@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Support\CalculationHelper;
 
 class FinishedGoodsController extends Controller
 {
@@ -64,7 +65,7 @@ class FinishedGoodsController extends Controller
                     'current_stock' => $currentStock,
                     'avg_cogs' => $avgCogs,
                     'margin' => $product->selling_price > 0
-                        ? round((($product->selling_price - $avgCogs) / $product->selling_price) * 100, 2)
+                        ? CalculationHelper::marginPercent((float) $product->selling_price, $avgCogs)
                         : 0,
                     'production_count' => $product->productionRuns->count(),
                     'production_details' => $productionDetails,

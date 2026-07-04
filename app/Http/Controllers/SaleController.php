@@ -44,47 +44,59 @@ class SaleController extends Controller
 
     public function store(StoreSaleRequest $request, SaleService $sales): RedirectResponse
     {
-        $data = $request->validated();
-        $product = Product::findOrFail($data['product_id']);
+        try {
+            $data = $request->validated();
+            $product = Product::findOrFail($data['product_id']);
 
-        $idempotencyKey = $data['idempotency_key'] ?? null;
+            $idempotencyKey = $data['idempotency_key'] ?? null;
 
-        $sales->record(
-            product: $product,
-            quantity: (int) $data['quantity'],
-            unitPrice: isset($data['unit_price']) ? (float) $data['unit_price'] : null,
-            source: 'web',
-            userId: $request->user()->id,
-            note: $data['note'] ?? null,
-            occurredAt: $request->date('occurred_at'),
-            idempotencyKey: $idempotencyKey,
-        );
+            $sales->record(
+                product: $product,
+                quantity: (int) $data['quantity'],
+                unitPrice: isset($data['unit_price']) ? (float) $data['unit_price'] : null,
+                source: 'web',
+                userId: $request->user()->id,
+                note: $data['note'] ?? null,
+                occurredAt: $request->date('occurred_at'),
+                idempotencyKey: $idempotencyKey,
+            );
 
-        return back()->with('success', 'Penjualan tercatat & stok dikurangi.');
+            return back()->with('success', 'Penjualan tercatat & stok dikurangi.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+        }
     }
 
     public function update(UpdateSaleRequest $request, Sale $sale, SaleService $sales): RedirectResponse
     {
-        $data = $request->validated();
-        $product = Product::findOrFail($data['product_id']);
+        try {
+            $data = $request->validated();
+            $product = Product::findOrFail($data['product_id']);
 
-        $sales->update(
-            sale: $sale,
-            product: $product,
-            quantity: (int) $data['quantity'],
-            unitPrice: isset($data['unit_price']) ? (float) $data['unit_price'] : null,
-            note: $data['note'] ?? null,
-            occurredAt: $request->date('occurred_at'),
-            userId: $request->user()->id,
-        );
+            $sales->update(
+                sale: $sale,
+                product: $product,
+                quantity: (int) $data['quantity'],
+                unitPrice: isset($data['unit_price']) ? (float) $data['unit_price'] : null,
+                note: $data['note'] ?? null,
+                occurredAt: $request->date('occurred_at'),
+                userId: $request->user()->id,
+            );
 
-        return back()->with('success', 'Penjualan diperbarui & stok disesuaikan.');
+            return back()->with('success', 'Penjualan diperbarui & stok disesuaikan.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+        }
     }
 
     public function destroy(Sale $sale, SaleService $sales): RedirectResponse
     {
-        $sales->void($sale);
+        try {
+            $sales->void($sale);
 
-        return back()->with('success', 'Penjualan dihapus & stok dikembalikan.');
+            return back()->with('success', 'Penjualan dihapus & stok dikembalikan.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+        }
     }
 }

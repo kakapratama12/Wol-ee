@@ -12,14 +12,6 @@ class Outlet extends Model
 {
     use BelongsToTenant, HasFactory;
 
-    public const TYPE_PUSAT = 'pusat';
-    public const TYPE_OUTLET = 'outlet';
-
-    public const TYPES = [
-        self::TYPE_PUSAT => 'Pusat',
-        self::TYPE_OUTLET => 'Outlet',
-    ];
-
     protected $fillable = [
         'tenant_id',
         'name',
@@ -72,28 +64,8 @@ class Outlet extends Model
         return $this->hasMany(OutletInventory::class);
     }
 
-    public function scopePusat($query)
-    {
-        return $query->where('type', self::TYPE_PUSAT);
-    }
-
-    public function scopeOutlet($query)
-    {
-        return $query->where('type', self::TYPE_OUTLET);
-    }
-
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
-    }
-
-    public function isPusat(): bool
-    {
-        return $this->type === self::TYPE_PUSAT;
-    }
-
-    public function isOutlet(): bool
-    {
-        return $this->type === self::TYPE_OUTLET;
     }
 }

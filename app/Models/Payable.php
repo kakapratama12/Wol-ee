@@ -47,4 +47,9 @@ class Payable extends Model
     {
         return $this->hasMany(PayableItem::class);
     }
+
+    public function getRemainingAttribute(): float
+    {
+        return max(0, round((float) $this->amount - (float) $this->paid_amount, 2));
+    }
 }

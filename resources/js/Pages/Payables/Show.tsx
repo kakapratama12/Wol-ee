@@ -1,4 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
+import PayableStatusBadge from '@/Components/PayableStatusBadge';
+import { formatRupiah, formatDate } from '@/lib/format';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -26,46 +28,6 @@ interface Payable {
     paid_at: string | null;
     items: PayableItem[];
     created_at: string;
-}
-
-function formatRupiah(amount: number): string {
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    }).format(amount);
-}
-
-function formatDate(date: string | null): string {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    });
-}
-
-function StatusBadge({ status }: { status: string }) {
-    const styles: Record<string, string> = {
-        outstanding: 'bg-yellow-100 text-yellow-800',
-        partial: 'bg-blue-100 text-blue-800',
-        paid: 'bg-green-100 text-green-800',
-        draft: 'bg-gray-100 text-gray-600',
-    };
-
-    const labels: Record<string, string> = {
-        outstanding: 'Belum Lunas',
-        partial: 'Sebagian',
-        paid: 'Lunas',
-        draft: 'Draft',
-    };
-
-    return (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${styles[status] || styles.draft}`}>
-            {labels[status] || status}
-        </span>
-    );
 }
 
 export default function Show({
@@ -103,16 +65,16 @@ export default function Show({
                 </Link>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-3">
+            <div className="grid gap-6 lg:grid-cols-3 *:min-w-0">
                 {/* Detail Tagihan */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="rounded-lg border border-border bg-card p-6">
                         <div className="mb-4 flex items-center justify-between">
                             <h3 className="text-lg font-semibold">{payable.payable_number}</h3>
-                            <StatusBadge status={payable.status} />
+                            <PayableStatusBadge status={payable.status} />
                         </div>
 
-                        <dl className="grid grid-cols-2 gap-4 text-sm">
+                        <dl className="grid grid-cols-2 gap-4 *:min-w-0 text-sm">
                             <div>
                                 <dt className="text-muted-foreground">Supplier</dt>
                                 <dd className="font-medium">{payable.partner.name}</dd>

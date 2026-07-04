@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Expense;
 use App\Models\Ingredient;
+use App\Models\Outlet;
+use App\Models\OutletInventory;
 use App\Models\PriceHistory;
 use App\Models\Product;
 use App\Models\RecipeItem;
@@ -36,17 +38,30 @@ class SingleOutletSeeder extends Seeder
         // Ensure single business_type
         $tenant->update(['business_type' => 'single']);
 
-        $this->seedUsers($tenant);
-        $ingredients = $this->seedIngredients($tenant);
+        $outlet = $this->seedOutlet($tenant);
+        $this->seedUsers($tenant, $outlet);
+        $ingredients = $this->seedIngredients($tenant, $outlet);
         $this->seedPriceHistory($tenant, $ingredients);
         $products = $this->seedProducts($tenant, $ingredients);
-        $this->seedActivity($tenant, $ingredients, $products);
-        $this->seedExpenses($tenant);
+        $this->seedActivity($tenant, $outlet, $ingredients, $products);
+        $this->seedExpenses($tenant, $outlet);
 
         $this->command->info('✅ Single outlet demo (Chockles) seeded successfully!');
     }
 
-    private function seedUsers(Tenant $tenant): void
+    private function seedOutlet(Tenant $tenant): Outlet
+    {
+        return Outlet::withoutGlobalScope('tenant')->updateOrCreate(
+            ['tenant_id' => $tenant->id, 'name' => 'Chockles'],
+            [
+                'type' => 'outlet',
+                'address' => 'Jl. Chockles No. 1',
+                'is_active' => true,
+            ],
+        );
+    }
+
+    private function seedUsers(Tenant $tenant, Outlet $outlet): void
     {
         // Owner
         User::updateOrCreate(
@@ -58,14 +73,14 @@ class SingleOutletSeeder extends Seeder
             ],
         );
 
-        // Staff / Kasir — no outlet for single outlet (outlet_id = null)
+        // Staff / Kasir — assigned to the single outlet
         User::updateOrCreate(
             ['email' => 'kasir@chockles.test', 'tenant_id' => $tenant->id],
             [
                 'name' => 'Kasir Chockles',
                 'password' => Hash::make('password'),
                 'role' => User::ROLE_STAFF,
-                'outlet_id' => null,
+                'outlet_id' => $outlet->id,
             ],
         );
 
@@ -75,7 +90,7 @@ class SingleOutletSeeder extends Seeder
     /**
      * @return array<string, Ingredient>
      */
-    private function seedIngredients(Tenant $tenant): array
+    private function seedIngredients(Tenant $tenant, Outlet $outlet): array
     {
         $rows = [
             ['Tepung Terigu', 'gramasi', 'g', 18, 5000, 800],
@@ -90,7 +105,7 @@ class SingleOutletSeeder extends Seeder
 
         $ingredients = [];
         foreach ($rows as [$name, $type, $unit, $price, $stock, $min]) {
-            $ingredients[$name] = Ingredient::withoutGlobalScope('tenant')->updateOrCreate(
+            $ingredient = Ingredient::withoutGlobalScope('tenant')->updateOrCreate(
                 ['name' => $name, 'tenant_id' => $tenant->id],
                 [
                     'unit_type' => $type,
@@ -100,6 +115,23 @@ class SingleOutletSeeder extends Seeder
                     'minimum_stock' => $min,
                 ],
             );
+
+            // Populate outlet_inventories from current_stock
+            OutletInventory::withoutGlobalScope('tenant')->updateOrCreate(
+                [
+                    'tenant_id' => $tenant->id,
+                    'outlet_id' => $outlet->id,
+                    'ingredient_id' => $ingredient->id,
+                    'product_id' => null,
+                ],
+                [
+                    'quantity' => $stock,
+                    'unit' => $unit,
+                    'last_updated' => now(),
+                ],
+            );
+
+            $ingredients[$name] = $ingredient;
         }
 
         return $ingredients;
@@ -176,7 +208,7 @@ class SingleOutletSeeder extends Seeder
      * @param  array<string, Ingredient>  $ingredients
      * @param  array<string, Product>  $products
      */
-    private function seedActivity(Tenant $tenant, array $ingredients, array $products): void
+    private function seedActivity(Tenant $tenant, Outlet $outlet, array $ingredients, array $products): void
     {
         $owner = User::where('email', 'owner@chockles.test')->where('tenant_id', $tenant->id)->first();
         auth()->login($owner);
@@ -210,7 +242,7 @@ class SingleOutletSeeder extends Seeder
         $this->command->info('Activity seeded: purchases + 7 days of sales');
     }
 
-    private function seedExpenses(Tenant $tenant): void
+    private function seedExpenses(Tenant $tenant, Outlet $outlet): void
     {
         $now = Carbon::now();
         $rows = [
@@ -230,7 +262,7 @@ class SingleOutletSeeder extends Seeder
                     'period_year' => $now->year,
                     'tenant_id' => $tenant->id,
                 ],
-                ['amount' => $amount],
+                ['amount' => $amount, 'outlet_id' => $outlet->id],
             );
         }
 

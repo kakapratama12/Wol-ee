@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BotAiRequest;
 use App\Models\BotAiUsage;
 use App\Models\BotFeedback;
+use App\Models\Outlet;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -105,16 +106,25 @@ class PlatformController extends Controller
             'name' => $data['name'],
             'slug' => $slug,
             'plan' => $data['plan'],
+            'business_type' => 'single',
             'status' => Tenant::STATUS_ACTIVE,
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $data['pengelola_name'],
             'email' => $data['pengelola_email'],
             'password' => $data['pengelola_password'],
             'role' => User::ROLE_PENGELOLA,
             'tenant_id' => $tenant->id,
         ]);
+
+        // Single outlet: auto-create outlet + assign to owner
+        $outlet = Outlet::create([
+            'tenant_id' => $tenant->id,
+            'name' => $tenant->name,
+            'is_active' => true,
+        ]);
+        $user->update(['outlet_id' => $outlet->id]);
 
         return redirect()->route('platform.tenants')->with('success', 'Usaha berhasil dibuat.');
     }

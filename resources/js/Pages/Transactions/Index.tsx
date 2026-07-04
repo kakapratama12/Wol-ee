@@ -11,14 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import CreatableCombobox from '@/Components/ui/creatable-combobox';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/Components/ui/table';
+import { MobileCardTable } from '@/Components/ui/mobile-card-table';
 import { formatRupiah, formatNumber, formatDate } from '@/lib/format';
 import type { Paginated } from '@/types';
 
@@ -265,69 +258,60 @@ export default function TransactionsIndex({
 
                 <Card className="lg:col-span-2">
                     <CardContent className="p-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Tanggal</TableHead>
-                                    <TableHead>Bahan</TableHead>
-                                    <TableHead>Jumlah</TableHead>
-                                    <TableHead>Total</TableHead>
-                                    <TableHead>Sumber</TableHead>
-                                    <TableHead></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {transactions.data.map((t) => (
-                                    <TableRow key={t.id}>
-                                        <TableCell className="text-sm">
-                                            {formatDate(t.occurred_at)}
-                                        </TableCell>
-                                        <TableCell className="font-medium">
-                                            {t.ingredient}
-                                        </TableCell>
-                                        <TableCell className="text-number">
-                                            {formatNumber(t.quantity)} {t.base_unit}
-                                        </TableCell>
-                                        <TableCell className="text-number">
-                                            {formatRupiah(t.total)}
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                                                {t.source}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex justify-end gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => openEdit(t)}
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => remove(t)}
-                                                >
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                {transactions.data.length === 0 && (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={6}
-                                            className="h-24 text-center text-muted-foreground"
-                                        >
-                                            Belum ada pembelian.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                        <MobileCardTable
+                            data={transactions.data}
+                            keyFn={(t) => t.id}
+                            emptyMessage="Belum ada pembelian."
+                            columns={[
+                                {
+                                    header: 'Tanggal',
+                                    render: (t) => formatDate(t.occurred_at),
+                                    secondary: true,
+                                },
+                                {
+                                    header: 'Bahan',
+                                    render: (t) => t.ingredient,
+                                    primary: true,
+                                },
+                                {
+                                    header: 'Jumlah',
+                                    render: (t) => `${formatNumber(t.quantity)} ${t.base_unit}`,
+                                    secondary: true,
+                                },
+                                {
+                                    header: 'Total',
+                                    render: (t) => formatRupiah(t.total),
+                                    amount: true,
+                                },
+                                {
+                                    header: 'Sumber',
+                                    render: (t) => (
+                                        <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                                            {t.source}
+                                        </span>
+                                    ),
+                                    badge: true,
+                                },
+                            ]}
+                            actions={(t) => (
+                                <div className="flex justify-end gap-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => openEdit(t)}
+                                    >
+                                        <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => remove(t)}
+                                    >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </div>
+                            )}
+                        />
                         <div className="border-t px-4 py-3">
                             <Pagination links={transactions.links} />
                         </div>

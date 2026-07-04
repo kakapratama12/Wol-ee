@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { Store, Clock, ShoppingBag } from 'lucide-react';
+import { Store, Clock, ShoppingBag, Lock } from 'lucide-react';
 import PosLayout from '@/Layouts/PosLayout';
 import { Button } from '@/Components/ui/button';
 import { formatRupiah } from '@/lib/format';
@@ -76,7 +76,7 @@ export default function PosIndex({ todaySession, recentSessions, activeSession, 
                     </div>
 
                     {isOpen && todaySession && todaySession.status === 'open' && (
-                        <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+                        <div className="mt-4 grid grid-cols-3 gap-4 *:min-w-0 text-center">
                             <div>
                                 <p className="text-2xl font-bold text-primary">{formatRupiah(todaySession.total_omset)}</p>
                                 <p className="text-xs text-muted-foreground">Omset Hari Ini</p>
@@ -113,12 +113,18 @@ export default function PosIndex({ todaySession, recentSessions, activeSession, 
                                 </div>
                             </>
                         ) : (
-                            <Link href="/pos/session/open">
-                                <Button className="h-12 w-full text-base" size="lg">
-                                    <Store className="mr-2 h-5 w-5" />
-                                    Buka Toko
-                                </Button>
-                            </Link>
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+                                    <Lock className="h-4 w-4 flex-shrink-0" />
+                                    <span>Menu kasir belum bisa diakses. <strong>Buka toko dulu</strong> untuk mulai jualan hari ini.</span>
+                                </div>
+                                <Link href="/pos/session/open">
+                                    <Button className="h-12 w-full text-base" size="lg">
+                                        <Store className="mr-2 h-5 w-5" />
+                                        Buka Toko
+                                    </Button>
+                                </Link>
+                            </div>
                         )}
                     </div>
                 </div>

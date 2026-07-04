@@ -39,10 +39,7 @@ export default function Adjust({ outlet, ingredients, reasons }: Props) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        const url = outlet
-            ? `/pos/outlets/${outlet.id}/stock/adjust`
-            : '/pos/stock/adjust';
-        post(url, {
+        post('/pos/stock/adjust', {
             onSuccess: () => {
                 router.visit('/pos/stock');
             },

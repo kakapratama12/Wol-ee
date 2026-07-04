@@ -7,6 +7,7 @@ use App\Models\Product;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use App\Support\CalculationHelper;
 
 class MarginService
 {
@@ -24,7 +25,7 @@ class MarginService
     {
         $price = (float) $product->selling_price;
         $cogs = $this->cogs->cogsForProduct($product);
-        $margin = $price > 0 ? round((($price - $cogs) / $price) * 100, 2) : 0.0;
+        $margin = CalculationHelper::marginPercent($price, $cogs);
 
         return [
             'product_id' => $product->id,
@@ -58,8 +59,8 @@ class MarginService
                 $currentCogs = $this->cogsAsOf($product, $now);
                 $previousCogs = $this->cogsAsOf($product, $reference);
 
-                $currentMargin = round((($price - $currentCogs) / $price) * 100, 2);
-                $previousMargin = round((($price - $previousCogs) / $price) * 100, 2);
+                $currentMargin = CalculationHelper::marginPercent($price, $currentCogs);
+                $previousMargin = CalculationHelper::marginPercent($price, $previousCogs);
                 $drop = round($previousMargin - $currentMargin, 2);
 
                 if ($drop < self::ALERT_THRESHOLD) {
@@ -92,8 +93,8 @@ class MarginService
         $currentCogs = $this->cogs->cogsForProduct($product);
         $newCogs = round($currentCogs * (1 + ($increasePercent / 100)), 2);
 
-        $currentMargin = $price > 0 ? round((($price - $currentCogs) / $price) * 100, 2) : 0.0;
-        $newMargin = $price > 0 ? round((($price - $newCogs) / $price) * 100, 2) : 0.0;
+        $currentMargin = CalculationHelper::marginPercent($price, $currentCogs);
+        $newMargin = CalculationHelper::marginPercent($price, $newCogs);
 
         // Harga jual agar margin kembali ke level saat ini.
         $recommendedPrice = $currentMargin < 100

@@ -5,6 +5,7 @@ use App\Models\Product;
 use App\Models\RecipeItem;
 use App\Services\CogsService;
 use App\Services\InventoryService;
+use App\Services\BranchStockService;
 use App\Services\SaleService;
 
 function setupProduct(): Product
@@ -36,7 +37,7 @@ function setupProduct(): Product
 
 function saleService(): SaleService
 {
-    return new SaleService(new CogsService(), new InventoryService());
+    return new SaleService(new CogsService(), new InventoryService(), new BranchStockService());
 }
 
 it('mencatat penjualan dengan snapshot COGS dan profit', function () {

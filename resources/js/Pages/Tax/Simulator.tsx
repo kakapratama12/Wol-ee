@@ -53,7 +53,7 @@ export default function TaxSimulator({ defaults, result }: Props) {
         <AppLayout title="Tax Simulator">
             <Head title="Tax Simulator" />
 
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-6 *:min-w-0 lg:grid-cols-2">
                 <Card>
                     <CardHeader>
                         <CardTitle>Input Simulasi</CardTitle>
@@ -102,7 +102,7 @@ export default function TaxSimulator({ defaults, result }: Props) {
                                     Otomatis dari tracking, bisa diubah manual.
                                 </p>
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-2 gap-3 *:min-w-0">
                                 <div>
                                     <Label htmlFor="expense">Biaya lain (Rp)</Label>
                                     <Input
@@ -136,7 +136,7 @@ export default function TaxSimulator({ defaults, result }: Props) {
                 <div className="space-y-4">
                     {result ? (
                         <>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-4 *:min-w-0">
                                 <Card
                                     className={
                                         result.recommended === 'pp23'

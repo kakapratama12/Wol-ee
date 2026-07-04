@@ -5,7 +5,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { buttonVariants } from '@/Components/ui/button';
 import { CurrencyInput } from '@/Components/ui/currency-input';
-import CreatableCombobox from '@/Components/CreatableCombobox';
+import CreatableCombobox from '@/Components/ui/creatable-combobox';
 import InvoiceFormFields, { type FeeRow } from '@/Components/InvoiceFormFields';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
@@ -148,11 +148,14 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
                         <div>
                             <Label htmlFor="partner_id">Customer</Label>
                             <CreatableCombobox
-                                options={customers}
+                                options={customers.map((c) => ({ id: c.id, label: c.name }))}
                                 value={form.data.partner_id}
-                                onChange={(v) => form.setData('partner_id', String(v))}
-                                placeholder="- Pilih atau buat customer baru -"
-                                onCreate={async (name) => {
+                                onChange={(v) => form.setData('partner_id', v)}
+                                placeholder="- Pilih customer -"
+                                error={form.errors.partner_id}
+                                onCreateNew={async () => {
+                                    const name = window.prompt('Nama customer baru:');
+                                    if (!name?.trim()) return;
                                     const res = await fetch('/partners/json', {
                                         method: 'POST',
                                         headers: {
@@ -163,21 +166,16 @@ export default function InvoicesEdit({ invoice, customers: initialCustomers }: P
                                                     '',
                                             ),
                                         },
-                                        body: JSON.stringify({ name, type: 'customer' }),
+                                        body: JSON.stringify({ name: name.trim(), type: 'customer' }),
                                     });
                                     const data = await res.json();
                                     setCustomers((prev) => [
                                         ...prev,
                                         { id: data.id, name: data.name },
                                     ]);
-                                    return { id: data.id, name: data.name };
+                                    form.setData('partner_id', String(data.id));
                                 }}
                             />
-                            {form.errors.partner_id && (
-                                <p className="mt-1 text-xs text-destructive">
-                                    {form.errors.partner_id}
-                                </p>
-                            )}
                         </div>
                         <div>
                             <Label htmlFor="po_number">Nomor PO (opsional)</Label>

@@ -122,7 +122,7 @@ export default function StaffIndex({ staff, outlets }: { staff: StaffUser[]; out
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleAdd} className="space-y-4">
-                            <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="grid *:min-w-0 gap-4 sm:grid-cols-2">
                                 <div>
                                     <Label htmlFor="add-name">Nama</Label>
                                     <Input
@@ -203,7 +203,8 @@ export default function StaffIndex({ staff, outlets }: { staff: StaffUser[]; out
             {/* Staff Table */}
             <Card>
                 <CardContent className="p-0">
-                    <Table>
+                    <div className="overflow-x-auto">
+<Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Nama</TableHead>
@@ -270,6 +271,7 @@ export default function StaffIndex({ staff, outlets }: { staff: StaffUser[]; out
                             )}
                         </TableBody>
                     </Table>
+</div>
                 </CardContent>
             </Card>
 

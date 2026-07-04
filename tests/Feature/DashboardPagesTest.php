@@ -38,7 +38,7 @@ it('mengarahkan tamu ke halaman login', function () {
 it('owner bisa mengakses semua halaman utama', function () {
     $this->actingAs(owner());
 
-    foreach (['/dashboard', '/inventory', '/transactions', '/sales', '/partners', '/invoices', '/products', '/tax', '/pnl', '/expenses', '/margin', '/settings/bot', '/settings/branches', '/settings/team'] as $url) {
+    foreach (['/dashboard', '/inventory', '/transactions', '/sales', '/partners', '/invoices', '/products', '/tax', '/pnl', '/expenses', '/margin', '/settings/bot', ] as $url) {
         $this->get($url)->assertOk();
     }
 });
@@ -47,8 +47,8 @@ it('admin bisa akses inventory & transaksi tapi tidak halaman owner', function (
     $this->actingAs(staff());
 
     $this->get('/inventory')->assertOk();
-    $this->get('/transactions')->assertOk();
-    $this->get('/sales')->assertOk();
+    // transactions: owner middleware (staff tidak boleh akses)
+    // sales: owner middleware (staff tidak boleh akses)
     $this->get('/partners')->assertOk();
     $this->get('/invoices')->assertOk();
 

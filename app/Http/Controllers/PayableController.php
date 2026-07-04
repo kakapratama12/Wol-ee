@@ -47,7 +47,7 @@ class PayableController extends Controller
 
         return Inertia::render('Payables/Show', [
             'payable' => $payable,
-            'remaining' => $this->payableService->remainingAmount($payable),
+            'remaining' => $payable->remaining,
         ]);
     }
 
@@ -56,10 +56,14 @@ class PayableController extends Controller
      */
     public function store(StorePayableRequest $request): RedirectResponse
     {
-        $this->payableService->create($request->validated());
+        try {
+            $this->payableService->create($request->validated());
 
-        return redirect()->route('payables.index')
-            ->with('success', 'Tagihan supplier berhasil dibuat.');
+            return redirect()->route('payables.index')
+                ->with('success', 'Tagihan supplier berhasil dibuat.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+        }
     }
 
     /**
@@ -67,16 +71,20 @@ class PayableController extends Controller
      */
     public function pay(Payable $payable, PayPaymentRequest $request): RedirectResponse
     {
-        $this->payableService->recordPayment($payable, $request->validated());
+        try {
+            $this->payableService->recordPayment($payable, $request->validated());
 
-        $remaining = $this->payableService->remainingAmount($payable->fresh());
+            $remaining = $payable->fresh()->remaining;
 
-        $message = $remaining <= 0
-            ? 'Tagihan berhasil dilunasi.'
-            : 'Pembayaran berhasil dicatat. Sisa: Rp ' . number_format($remaining, 0, ',', '.');
+            $message = $remaining <= 0
+                ? 'Tagihan berhasil dilunasi.'
+                : 'Pembayaran berhasil dicatat. Sisa: Rp ' . number_format($remaining, 0, ',', '.');
 
-        return redirect()->route('payables.show', $payable)
-            ->with('success', $message);
+            return redirect()->route('payables.show', $payable)
+                ->with('success', $message);
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+        }
     }
 
     /**
@@ -84,9 +92,13 @@ class PayableController extends Controller
      */
     public function archive(Payable $payable): RedirectResponse
     {
-        $payable->update(['archived_at' => now()]);
+        try {
+            $payable->update(['archived_at' => now()]);
 
-        return redirect()->route('payables.index')
-            ->with('success', 'Tagihan berhasil diarsipkan.');
+            return redirect()->route('payables.index')
+                ->with('success', 'Tagihan berhasil diarsipkan.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+        }
     }
 }

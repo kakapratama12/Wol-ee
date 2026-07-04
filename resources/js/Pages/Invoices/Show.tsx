@@ -110,7 +110,7 @@ export default function InvoicesShow({ invoice, payments }: Props) {
             </div>
 
             <div className="space-y-8">
-                <div className="grid gap-6 lg:grid-cols-3">
+                <div className="grid gap-6 *:min-w-0 lg:grid-cols-3">
                     <Card className="lg:col-span-2">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -190,7 +190,7 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                                 )}
                             </div>
                         </CardHeader>
-                        <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
+                        <CardContent className="grid gap-3 *:min-w-0 text-sm sm:grid-cols-2">
                             <p>
                                 <span className="text-muted-foreground">Partner:</span>{' '}
                                 {invoice.partner ?? '-'}
@@ -281,6 +281,7 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                         <CardTitle>Rincian Item</CardTitle>
                     </CardHeader>
                     <CardContent>
+                        <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -307,6 +308,7 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                                 ))}
                             </TableBody>
                         </Table>
+                        </div>
 
                         {/* Fees */}
                         {fees.length > 0 && (
@@ -314,6 +316,7 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                                 <p className="mb-2 text-sm font-medium text-muted-foreground">
                                     Biaya Tambahan
                                 </p>
+                                <div className="overflow-x-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -344,6 +347,7 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                                         ))}
                                     </TableBody>
                                 </Table>
+                                </div>
                             </div>
                         )}
 
@@ -379,6 +383,7 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                         <CardTitle>Riwayat Pembayaran</CardTitle>
                     </CardHeader>
                     <CardContent>
+                        <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -408,6 +413,7 @@ export default function InvoicesShow({ invoice, payments }: Props) {
                                 )}
                             </TableBody>
                         </Table>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

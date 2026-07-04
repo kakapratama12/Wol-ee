@@ -17,6 +17,7 @@ import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
 import { formatRupiah, formatPercent, formatNumber, formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import DailyRevenueChart from '@/Components/DailyRevenueChart';
 
 /* ---------- Shared interfaces ---------- */
 
@@ -115,6 +116,7 @@ interface Props {
     // recentSales reused but typed differently for pengelola
     recentPurchases?: RecentPurchase[];
     monthlyChart?: MonthlyChartPoint[];
+    dailyRevenue?: Array<{ date: string; label: string; revenue: number }>;
     upcomingPayables?: UpcomingPayable[];
     outletId?: number | null;
     outlets?: OutletOption[];
@@ -146,6 +148,7 @@ export default function Dashboard(props: Props) {
         lowStock = [],
         recentPurchases = [],
         monthlyChart = [],
+        dailyRevenue = [],
         upcomingPayables = [],
         outletId = null,
         outlets = [],
@@ -163,7 +166,7 @@ export default function Dashboard(props: Props) {
                 </div>
 
                 {/* Today's Sales Summary */}
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 *:min-w-0 sm:grid-cols-3">
                     <StatCard
                         label="Omset Hari Ini"
                         value={formatRupiah(todayRevenue)}
@@ -342,7 +345,7 @@ export default function Dashboard(props: Props) {
                         </option>
                     ))}
                 </Select>
-                <div className="flex gap-1 rounded-lg border border-border p-1">
+                <div className="flex flex-wrap gap-1 rounded-lg border border-border p-1">
                     {periodOptions.map((opt) => (
                         <button
                             key={opt.value}
@@ -388,7 +391,7 @@ export default function Dashboard(props: Props) {
                 <span className="text-sm text-muted-foreground ml-auto">{periodLabel}</span>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 *:min-w-0 sm:grid-cols-2 lg:grid-cols-4">
                 <StatCard
                     label="Omset"
                     value={formatRupiah(metrics.revenue)}
@@ -415,6 +418,10 @@ export default function Dashboard(props: Props) {
                 />
             </div>
 
+            <div className="mt-6">
+                <DailyRevenueChart data={dailyRevenue} />
+            </div>
+
             <Card className="mt-6">
                 <CardHeader>
                     <CardTitle>Revenue vs Expense Bulanan</CardTitle>
@@ -436,7 +443,7 @@ export default function Dashboard(props: Props) {
                                     Expense
                                 </span>
                             </div>
-                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            <div className="grid gap-4 *:min-w-0 sm:grid-cols-2 lg:grid-cols-3">
                                 {monthlyChart.map((point) => (
                                     <div
                                         key={`${point.year}-${point.month}`}
@@ -481,7 +488,7 @@ export default function Dashboard(props: Props) {
                 </CardContent>
             </Card>
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+            <div className="mt-6 grid gap-6 *:min-w-0 lg:grid-cols-2">
                 <Card>
                     <CardHeader>
                         <CardTitle>Stok Perlu Perhatian</CardTitle>
@@ -582,6 +589,7 @@ export default function Dashboard(props: Props) {
                                 Belum ada pembelian.
                             </p>
                         ) : (
+                            <div className="overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -612,6 +620,7 @@ export default function Dashboard(props: Props) {
                                     ))}
                                 </TableBody>
                             </Table>
+                            </div>
                         )}
                         <Link
                             href="/transactions"

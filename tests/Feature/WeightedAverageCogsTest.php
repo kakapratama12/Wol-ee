@@ -6,6 +6,7 @@ use App\Models\RecipeItem;
 use App\Models\Sale;
 use App\Services\CogsService;
 use App\Services\InventoryService;
+use App\Services\BranchStockService;
 use App\Services\SaleService;
 
 beforeEach(function () {
@@ -71,7 +72,7 @@ it('snapshot COGS penjualan tidak berubah setelah pembelian baru', function () {
     // weighted avg = (10*10000 + 5*12000) / 15 = 10666.6667
     $expectedCogsPerUnit = round(10666.6667 * 1, 2);
 
-    $saleService = new SaleService(new CogsService(), $inventory);
+    $saleService = new SaleService(new CogsService(), $inventory, new BranchStockService());
     $sale = $saleService->record($product, quantity: 1);
 
     expect((float) $sale->cogs)->toBe($expectedCogsPerUnit);

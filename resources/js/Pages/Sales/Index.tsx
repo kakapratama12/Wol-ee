@@ -11,14 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import CreatableCombobox from '@/Components/ui/creatable-combobox';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/Components/ui/table';
+import { MobileCardTable, type Column } from '@/Components/ui/mobile-card-table';
 import { formatRupiah, formatDate } from '@/lib/format';
 import type { Paginated } from '@/types';
 
@@ -197,69 +190,65 @@ export default function SalesIndex({ sales, products: initialProducts }: Props) 
 
                 <Card className="lg:col-span-2">
                     <CardContent className="p-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Tanggal</TableHead>
-                                    <TableHead>Produk</TableHead>
-                                    <TableHead>Qty</TableHead>
-                                    <TableHead>Revenue</TableHead>
-                                    <TableHead>COGS</TableHead>
-                                    <TableHead>Sumber</TableHead>
-                                    <TableHead></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {sales.data.map((s) => (
-                                    <TableRow key={s.id}>
-                                        <TableCell className="text-sm">
-                                            {formatDate(s.occurred_at)}
-                                        </TableCell>
-                                        <TableCell className="font-medium">{s.product}</TableCell>
-                                        <TableCell className="text-number">{s.quantity}</TableCell>
-                                        <TableCell className="text-number">
-                                            {formatRupiah(s.revenue)}
-                                        </TableCell>
-                                        <TableCell className="text-number">
-                                            {formatRupiah(s.cogs)}
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                                                {s.source === 'pos' ? (s.outlet || 'Outlet') : s.source === 'bot' ? 'Bot' : 'Dashboard'}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex justify-end gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => openEdit(s)}
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => remove(s)}
-                                                >
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                {sales.data.length === 0 && (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={7}
-                                            className="h-24 text-center text-muted-foreground"
-                                        >
-                                            Belum ada penjualan.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                        <MobileCardTable
+                            data={sales.data}
+                            keyFn={(s) => s.id}
+                            emptyMessage="Belum ada penjualan."
+                            columns={[
+                                {
+                                    header: 'Tanggal',
+                                    render: (s) => formatDate(s.occurred_at),
+                                    secondary: true,
+                                },
+                                {
+                                    header: 'Produk',
+                                    render: (s) => s.product,
+                                    primary: true,
+                                },
+                                {
+                                    header: 'Qty',
+                                    render: (s) => String(s.quantity),
+                                    hideOnMobile: true,
+                                },
+                                {
+                                    header: 'Revenue',
+                                    render: (s) => formatRupiah(s.revenue),
+                                    amount: true,
+                                },
+                                {
+                                    header: 'COGS',
+                                    render: (s) => formatRupiah(s.cogs),
+                                    hideOnMobile: true,
+                                },
+                                {
+                                    header: 'Sumber',
+                                    render: (s) => (
+                                        <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                                            {s.source === 'pos' ? (s.outlet || 'Outlet') : s.source === 'bot' ? 'Bot' : 'Dashboard'}
+                                        </span>
+                                    ),
+                                    badge: true,
+                                },
+                            ]}
+                            actions={(s) => (
+                                <div className="flex justify-end gap-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => openEdit(s)}
+                                    >
+                                        <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => remove(s)}
+                                    >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </div>
+                            )}
+                        />
                         <div className="border-t px-4 py-3">
                             <Pagination links={sales.links} />
                         </div>

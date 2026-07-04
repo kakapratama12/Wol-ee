@@ -114,7 +114,7 @@ export default function Pnl({ report, period, periodLabel, branchId, branches }:
             <Head title="Laporan P&L" />
 
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <Select
                         className="w-40"
                         value={period.month}

@@ -4,20 +4,14 @@ import { type PageProps } from '@/types';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import Modal from '@/Components/ui/modal';
+import Pagination from '@/Components/Pagination';
 import { Button } from '@/Components/ui/button';
 import { CurrencyInput } from '@/Components/ui/currency-input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
+import { MobileCardTable } from '@/Components/ui/mobile-card-table';
 import { Select } from '@/Components/ui/select';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/Components/ui/table';
 import { formatRupiah, formatDate } from '@/lib/format';
 
 interface Outlet {
@@ -92,7 +86,6 @@ export default function ExpensesIndex({
     periodLabel,
 }: Props) {
     const { props } = usePage<PageProps>();
-    const isMultiOutlet = props.auth.businessType === 'multi';
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     const defaultDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
@@ -104,8 +97,6 @@ export default function ExpensesIndex({
         period_month: period.month,
         period_year: period.year,
         occurred_at: defaultDate,
-        is_outlet_expense: false,
-        outlet_id: '',
     });
     const editForm = useForm({
         category: 'operasional',
@@ -114,8 +105,6 @@ export default function ExpensesIndex({
         period_month: period.month,
         period_year: period.year,
         occurred_at: '',
-        is_outlet_expense: false,
-        outlet_id: '',
     });
     const [editing, setEditing] = useState<Expense | null>(null);
     const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
@@ -128,13 +117,9 @@ export default function ExpensesIndex({
             form.setData('period_month', p.month);
             form.setData('period_year', p.year);
         }
-        // Only send outlet_id when checkbox is checked
-        if (!form.data.is_outlet_expense) {
-            form.setData('outlet_id', '');
-        }
         form.post('/expenses', {
             preserveScroll: true,
-            onSuccess: () => form.setData({ amount: '', is_outlet_expense: false, outlet_id: '' }),
+            onSuccess: () => form.setData({ amount: '' }),
         });
     };
 
@@ -147,8 +132,6 @@ export default function ExpensesIndex({
             period_month: expense.period_month,
             period_year: expense.period_year,
             occurred_at: toDatetimeLocal(expense.occurred_at),
-            is_outlet_expense: expense.outlet_id !== null,
-            outlet_id: expense.outlet_id !== null ? String(expense.outlet_id) : '',
         });
         editForm.clearErrors();
     };
@@ -161,10 +144,6 @@ export default function ExpensesIndex({
             const p = getPeriodFromDate(editForm.data.occurred_at);
             editForm.setData('period_month', p.month);
             editForm.setData('period_year', p.year);
-        }
-        // Only send outlet_id when checkbox is checked
-        if (!editForm.data.is_outlet_expense) {
-            editForm.setData('outlet_id', '');
         }
         editForm.put(`/expenses/${editing.id}`, {
             preserveScroll: true,
@@ -265,50 +244,6 @@ export default function ExpensesIndex({
                                     onChange={(e) => form.setData('occurred_at', e.target.value)}
                                 />
                             </div>
-                            {isMultiOutlet && (
-                                <>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="checkbox"
-                                            id="is_outlet_expense"
-                                            className="h-4 w-4 rounded border-gray-300"
-                                            checked={form.data.is_outlet_expense}
-                                            onChange={(e) => {
-                                                form.setData('is_outlet_expense', e.target.checked);
-                                                if (!e.target.checked) form.setData('outlet_id', '');
-                                                else if (outlets.length > 0 && !form.data.outlet_id) {
-                                                    form.setData('outlet_id', String(outlets[0].id));
-                                                }
-                                            }}
-                                        />
-                                        <Label htmlFor="is_outlet_expense" className="cursor-pointer text-sm font-medium">
-                                            Biaya outlet
-                                        </Label>
-                                    </div>
-                                    {form.data.is_outlet_expense && (
-                                        <div>
-                                            <Label htmlFor="outlet_id">Outlet</Label>
-                                            <Select
-                                                id="outlet_id"
-                                                value={form.data.outlet_id}
-                                                onChange={(e) => form.setData('outlet_id', e.target.value)}
-                                            >
-                                                <option value="">Pilih outlet…</option>
-                                                {outlets.map((o) => (
-                                                    <option key={o.id} value={o.id}>
-                                                        {o.name}
-                                                    </option>
-                                                ))}
-                                            </Select>
-                                            {form.errors.outlet_id && (
-                                                <p className="mt-1 text-xs text-destructive">
-                                                    {form.errors.outlet_id}
-                                                </p>
-                                            )}
-                                        </div>
-                                    )}
-                                </>
-                            )}
                             <Button type="submit" className="w-full" disabled={form.processing}>
                                 <Plus className="h-4 w-4" /> Tambah
                             </Button>
@@ -322,73 +257,62 @@ export default function ExpensesIndex({
                         <span className="text-sm font-semibold">Total: {formatRupiah(total)}</span>
                     </CardHeader>
                     <CardContent className="p-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-32">Kategori</TableHead>
-                                    <TableHead>Tanggal</TableHead>
-                                    <TableHead>Deskripsi</TableHead>
-                                    <TableHead className="w-36">Outlet</TableHead>
-                                    <TableHead className="text-right">Jumlah</TableHead>
-                                    <TableHead></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {expenses.length === 0 && (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={6}
-                                            className="py-8 text-center text-muted-foreground"
+                        <MobileCardTable
+                            data={expenses}
+                            keyFn={(e) => e.id}
+                            emptyMessage="Belum ada biaya."
+                            columns={[
+                                {
+                                    header: 'Kategori',
+                                    render: (e) => (
+                                        <span
+                                            className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${categoryColors[e.category] ?? 'bg-gray-100 text-gray-800'}`}
                                         >
-                                            Belum ada biaya.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                                {expenses.map((e) => (
-                                    <TableRow key={e.id}>
-                                        <TableCell className="font-medium">
-                                            <span
-                                                className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${categoryColors[e.category] ?? 'bg-gray-100 text-gray-800'}`}
-                                            >
-                                                {categories[e.category] ?? e.category}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className="text-sm">
-                                            {formatDate(e.occurred_at)}
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground">
-                                            {e.description ?? '-'}
-                                        </TableCell>
-                                        <TableCell className="text-sm">
-                                            {e.outlet_name ?? (
-                                                <span className="text-muted-foreground">—</span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {formatRupiah(e.amount)}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex justify-end gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => openEdit(e)}
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => remove(e.id)}
-                                                >
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                            {categories[e.category] ?? e.category}
+                                        </span>
+                                    ),
+                                    badge: true,
+                                },
+                                {
+                                    header: 'Tanggal',
+                                    render: (e) => formatDate(e.occurred_at),
+                                    secondary: true,
+                                },
+                                {
+                                    header: 'Deskripsi',
+                                    render: (e) => e.description ?? '-',
+                                    primary: true,
+                                },
+                                {
+                                    header: 'Outlet',
+                                    render: (e) => e.outlet_name ?? '—',
+                                    hideOnMobile: true,
+                                },
+                                {
+                                    header: 'Jumlah',
+                                    render: (e) => formatRupiah(e.amount),
+                                    amount: true,
+                                },
+                            ]}
+                            actions={(e) => (
+                                <div className="flex justify-end gap-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => openEdit(e)}
+                                    >
+                                        <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => remove(e.id)}
+                                    >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </div>
+                            )}
+                        />
                     </CardContent>
                 </Card>
             </div>
@@ -440,49 +364,6 @@ export default function ExpensesIndex({
                             onChange={(e) => editForm.setData('occurred_at', e.target.value)}
                         />
                     </div>
-                    {isMultiOutlet && (
-                        <>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    id="edit_is_outlet_expense"
-                                    className="h-4 w-4 rounded border-gray-300"
-                                    checked={editForm.data.is_outlet_expense}
-                                    onChange={(e) => {
-                                        editForm.setData('is_outlet_expense', e.target.checked);
-                                        if (!e.target.checked) editForm.setData('outlet_id', '');
-                                        else if (outlets.length > 0 && !editForm.data.outlet_id) {
-                                            editForm.setData('outlet_id', String(outlets[0].id));
-                                        }
-                                    }}
-                                />
-                                <Label htmlFor="edit_is_outlet_expense" className="cursor-pointer text-sm font-medium">
-                                    Biaya outlet
-                                </Label>
-                            </div>
-                            {editForm.data.is_outlet_expense && (
-                                <div>
-                                    <Label>Outlet</Label>
-                                    <Select
-                                        value={editForm.data.outlet_id}
-                                        onChange={(e) => editForm.setData('outlet_id', e.target.value)}
-                                    >
-                                        <option value="">Pilih outlet…</option>
-                                        {outlets.map((o) => (
-                                            <option key={o.id} value={o.id}>
-                                                {o.name}
-                                            </option>
-                                        ))}
-                                    </Select>
-                                    {editForm.errors.outlet_id && (
-                                        <p className="mt-1 text-xs text-destructive">
-                                            {editForm.errors.outlet_id}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-                        </>
-                    )}
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={() => setEditing(null)}>
                             Batal

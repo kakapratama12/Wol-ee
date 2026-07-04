@@ -53,6 +53,10 @@ class ExpenseController extends Controller
     {
         $data = $request->validated();
         $data['occurred_at'] = $request->date('occurred_at') ?? now();
+
+        // Auto-assign to user's outlet
+        $data['outlet_id'] = auth()->user()->outlet_id;
+
         Expense::create($data);
 
         return back()->with('success', 'Biaya ditambahkan.');

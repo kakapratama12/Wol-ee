@@ -338,7 +338,7 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
     );
 
     return (
-        <div className="min-h-screen bg-muted/30">
+        <div className="min-h-screen overflow-x-hidden bg-muted/30">
             <aside
                 className={cn(
                     'fixed inset-y-0 left-0 z-40 w-64 transform border-r border-border bg-card transition-transform lg:translate-x-0',
@@ -414,7 +414,7 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
                     </div>
                 </header>
 
-                <main className="p-4 sm:p-6">{children}</main>
+                <main className="overflow-hidden p-4 sm:p-6">{children}</main>
             </div>
 
             {toast && (

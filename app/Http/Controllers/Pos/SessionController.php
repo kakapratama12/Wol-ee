@@ -54,11 +54,8 @@ class SessionController extends Controller
 
         // Product availability based on outlet stock + recipes
         $outletId = $user->outlet_id;
-        $stockSummary = [];
-        if ($outletId) {
-            $availabilityService = app(ProductAvailabilityService::class);
-            $stockSummary = $availabilityService->buildOpeningSummary($user->tenant, $outletId);
-        }
+        $availabilityService = app(ProductAvailabilityService::class);
+        $stockSummary = $availabilityService->buildOpeningSummary($user->tenant, $outletId);
         return Inertia::render('Pos/Index', [
             'outletName' => $user->outlet?->name,
             'todaySession' => $todaySession ? [
