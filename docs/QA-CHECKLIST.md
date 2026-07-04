@@ -46,23 +46,23 @@
 | A2.3 | "Biaya outlet" checkbox di form expense | **ADA** |
 | A2.4 | Outlet picker di Buka Sesi | **TIDAK ADA** (1 staff = 1 outlet, auto-login ke outlet yang di-assign) |
 
-#### A3. Data Source — Single Outlet
+#### A3. Data Source — Unified Outlet Model
+
+> **Catatan:** Sejak unified outlet model (Jul 2026), SEMUA business (single + multi) pakai `outlet_inventories`. Single outlet = 1 auto-created outlet.
 
 | # | Test | Expected |
 |---|------|----------|
-| A3.1 | POS register → stok bahan | dari `ingredients.current_stock` |
-| A3.2 | Adjust stok → stok berubah | `ingredients.current_stock` berubah |
-| A3.3 | Sale → stok berkurang | `ingredients.current_stock` berkurang |
-| A3.4 | Tidak ada `outlet_inventories` | tabel kosong atau tidak dipakai |
+| A3.1 | POS register → stok bahan | dari `outlet_inventories` (bukan `ingredients.current_stock`) |
+| A3.2 | Adjust stok → stok berubah | `outlet_inventories` berubah |
+| A3.3 | Sale → stok berkurang | `outlet_inventories` berkurang |
+| A3.4 | Single outlet punya 1 outlet di `outlet_inventories` | auto-created, nama = nama usaha |
 
-#### A4. Data Source — Multi Outlet
+#### A4. Distribusi (Multi Outlet Only)
 
 | # | Test | Expected |
 |---|------|----------|
-| A4.1 | POS register → stok bahan | dari `outlet_inventories` per outlet |
-| A4.2 | Adjust stok → stok berubah | `outlet_inventories` berubah |
-| A4.3 | Sale → stok berkurang | `outlet_inventories` berkurang |
-| A4.4 | Distribusi → stok berpindah | `ingredients` berkurang, `outlet_inventories` bertambah |
+| A4.1 | Distribusi → stok berpindah | `ingredients` berkurang, `outlet_inventories` bertambah |
+| A4.2 | Distribusi Antar Outlet | from berkurang, to bertambah |
 
 #### A5. Cross-type Isolation
 
@@ -177,6 +177,7 @@
 | I6 | `/pos/stock/purchase` | Form pembelian |
 | I7 | `/pos/stock/movements` | Riwayat mutasi |
 | I8 | `/pos/session/summary` | Ringkasan sesi |
+| I9 | `/pos/history` | Riwayat transaksi outlet (baru) |
 
 **Tier 2 Total: ~44 items**
 
@@ -277,16 +278,36 @@
 
 | # | Test | Type |
 |---|------|------|
-| R1 | Single: adjust stok → `ingredients.current_stock` berubah, `outlet_inventories` TIDAK berubah | Single |
-| R2 | Single: sale → `ingredients.current_stock` berkurang langsung | Single |
-| R3 | Multi: adjust stok → `outlet_inventories` berubah, `ingredients` TIDAK berubah | Multi |
-| R4 | Multi: sale → `outlet_inventories` berkurang, `ingredients` TIDAK berubah | Multi |
+| R1 | Single: adjust stok → `outlet_inventories` berubah | Single |
+| R2 | Single: sale → `outlet_inventories` berkurang | Single |
+| R3 | Multi: adjust stok → `outlet_inventories` berubah | Multi |
+| R4 | Multi: sale → `outlet_inventories` berkurang | Multi |
 | R5 | Multi: distribusi Gudang Pusat → `ingredients` berkurang, `outlet_inventories` bertambah | Multi |
 | R6 | Multi: distribusi Antar Outlet → from `outlet_inventories` berkurang, to bertambah | Multi |
 | R7 | Multi: kasir pilih outlet A → hanya lihat stok outlet A | Multi |
 | R8 | Multi: kasir pindah outlet → stok berubah sesuai outlet baru | Multi |
-| R9 | Single: dashboard stok warning = `ingredients.current_stock` ≤ minimum | Single |
+| R9 | Single: dashboard stok warning = `outlet_inventories` ≤ minimum | Single |
 | R10 | Multi: dashboard stok warning = `outlet_inventories` ≤ minimum per outlet | Multi |
+
+### S. Riwayat Transaksi Outlet Deep Test
+
+| # | Test | Expected |
+|---|------|----------|
+| S1 | Staff klik "Riwayat" di sidebar | halaman load, default 7 hari terakhir |
+| S2 | Filter Semua | tampilkan pembelian + penjualan |
+| S3 | Filter Pembelian | hanya stock movements type=purchase |
+| S4 | Filter Penjualan | hanya sales |
+| S5 | Ganti tanggal | data filter sesuai rentang |
+| S6 | Kembali button | balik ke POS |
+| S7 | Staff outlet A | hanya lihat transaksi outlet A (bukan outlet lain) |
+
+### T. Dashboard Deep Test
+
+| # | Test | Expected |
+|---|------|----------|
+| T1 | Daily Revenue Chart muncul | 30 hari terakhir, gradient area |
+| T2 | Tooltip hover | menampilkan tanggal + revenue |
+| T3 | Tidak ada data | chart kosong, no error |
 
 ---
 
@@ -295,9 +316,9 @@
 | Tier | Items |
 |------|-------|
 | Tier 1 (Critical + Business Type + Security) | ~33 |
-| Tier 2 (Smoke) | ~44 |
-| Tier 3 (Deep) | ~40 |
-| **Grand Total** | **~117** |
+| Tier 2 (Smoke) | ~45 |
+| Tier 3 (Deep) | ~57 |
+| **Grand Total** | **~135** |
 
 ---
 
@@ -307,15 +328,22 @@
 2. **Fresh context per role**: owner and kasir MUST use separate `browser.new_context()`. Session cookies overlap within a context.
 3. **POS payment buttons**: button text varies (Bayar/Konfirmasi/Submit). Inspect actual DOM before writing selectors.
 4. **CSS selector syntax**: `[class*='order']` in `locator.count()` can fail with token errors. Use `.filter(has_text=...)` instead.
+5. **Unified outlet model**: ALL businesses use `outlet_inventories` now. Single outlet = 1 auto-created outlet. Don't check `ingredients.current_stock` — it's no longer the source of truth.
+6. **POS Riwayat (`/pos/history`)**: Only visible to staff + owner (single outlet). Shows purchases + sales filtered by outlet. Default 7 days.
+7. **Owner POS access**: Single outlet owner CAN access POS (`EnsureUserIsStaff` allows `pengelola` from single outlet). Multi outlet owner CANNOT.
+8. **Dead routes removed**: `/settings/team` and `/settings/branches` no longer exist. Don't test these.
+9. **Pattern A layout**: Invoices, Partners, Payables use "back button + filter outside card + table in bordered div". Not "card-wrapped table".
+10. **MobileCardTable**: Sales, Transactions, Expenses, Invoices, Partners use mobile card view on small screens. Desktop = table, mobile = cards.
 
 ## Business Type Notes
 
-- **Single outlet** = Chockles (`owner@chockles.test`). No outlet concept. Stock from `ingredients.current_stock`.
-- **Multi outlet** = Cafe Contoh (`owner@wol-ee.local`). Has outlets. Stock from `outlet_inventories`.
+- **Single outlet** = Chockles (`owner@chockles.test`). Has 1 auto-created outlet in `outlet_inventories`. Owner can access POS.
+- **Multi outlet** = Cafe Contoh (`owner@wol-ee.local`). Has multiple outlets. Owner CANNOT access POS (dashboard only).
 - Pages yang harus HIDDEN/403 untuk single: `/outlets`, `/distributions`, outlet picker di POS.
 - Pages yang boleh diakses keduanya: `/production-runs`, `/finished-goods`, `/prep-stocks`, semua owner pages lainnya.
 - Data isolation: Chockles tidak bisa lihat data Cafe Contoh dan sebaliknya.
+- Staff outlet: hanya bisa lihat POS, stok outlet, dan riwayat transaksi outlet sendiri.
 
 ---
 
-*Last updated: 2026-07-03*
+*Last updated: 2026-07-04*
