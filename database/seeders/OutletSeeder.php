@@ -27,7 +27,7 @@ class OutletSeeder extends Seeder
         $pusat = Outlet::updateOrCreate(
             ['tenant_id' => $tenant->id, 'name' => 'Pusat / Dapur'],
             [
-                'type' => Outlet::TYPE_PUSAT,
+                'type' => null,
                 'address' => 'Jl. Contoh No. 1, Jakarta',
                 'is_active' => true,
             ],
@@ -36,7 +36,7 @@ class OutletSeeder extends Seeder
         $outletA = Outlet::updateOrCreate(
             ['tenant_id' => $tenant->id, 'name' => 'Outlet Bandung'],
             [
-                'type' => Outlet::TYPE_OUTLET,
+                'type' => null,
                 'address' => 'Jl. Asia Afrika No. 10, Bandung',
                 'is_active' => true,
             ],
@@ -45,7 +45,7 @@ class OutletSeeder extends Seeder
         $outletB = Outlet::updateOrCreate(
             ['tenant_id' => $tenant->id, 'name' => 'Outlet Surabaya'],
             [
-                'type' => Outlet::TYPE_OUTLET,
+                'type' => null,
                 'address' => 'Jl. Pemuda No. 25, Surabaya',
                 'is_active' => true,
             ],

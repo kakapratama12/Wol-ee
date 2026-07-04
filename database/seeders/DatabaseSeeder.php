@@ -58,7 +58,7 @@ class DatabaseSeeder extends Seeder
         $outlet = Outlet::withoutGlobalScope('tenant')->firstOrCreate(
             ['tenant_id' => $tenant->id, 'name' => 'Outlet Bandung'],
             [
-                'type' => Outlet::TYPE_OUTLET,
+                'type' => null,
                 'address' => 'Jl. Asia Afrika No. 10, Bandung',
                 'is_active' => true,
             ],

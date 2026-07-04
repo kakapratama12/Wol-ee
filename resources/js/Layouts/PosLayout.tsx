@@ -1,6 +1,6 @@
 import { PropsWithChildren } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { Home, LogOut, ShoppingCart, Package, BarChart3, LayoutDashboard } from 'lucide-react';
+import { Home, LogOut, ShoppingCart, Package, BarChart3, LayoutDashboard, Clock } from 'lucide-react';
 import type { PageProps } from '@/types';
 import { cn } from '@/lib/utils';
 import { ThemeProvider } from '@/Components/ThemeProvider';
@@ -29,6 +29,7 @@ export default function PosLayout({
         { href: '/pos/entry', icon: ShoppingCart, label: 'Kasir' },
         { href: '/pos/stock', icon: Package, label: 'Stok' },
         { href: '/pos/today', icon: BarChart3, label: 'Hari Ini' },
+        { href: '/pos/history', icon: Clock, label: 'Riwayat' },
     ];
 
     return (

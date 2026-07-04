@@ -16,6 +16,7 @@ Route::middleware(['auth', 'staff'])->group(function () {
     Route::get('/', [SessionController::class, 'landing'])->name('landing');
     Route::get('/entry', [SessionController::class, 'entry'])->name('entry');
     Route::get('/today', [TodayController::class, 'index'])->name('today');
+    Route::get('/history', [\App\Http\Controllers\Pos\HistoryController::class, 'index'])->name('history');
 
     Route::get('/session/open', [SessionController::class, 'openForm'])->name('session.open.form');
     Route::post('/session/open', [SessionController::class, 'open'])->name('session.open');
