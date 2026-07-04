@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { FileText, Plus, Trash2, Archive } from 'lucide-react';
+import { Archive, ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import InvoiceStatusBadge from '@/Components/InvoiceStatusBadge';
 import Modal from '@/Components/ui/modal';
@@ -8,17 +8,9 @@ import { Button } from '@/Components/ui/button';
 import { CurrencyInput } from '@/Components/ui/currency-input';
 import CreatableCombobox from '@/Components/CreatableCombobox';
 import InvoiceFormFields, { type FeeRow } from '@/Components/InvoiceFormFields';
-import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/Components/ui/table';
+import { MobileCardTable } from '@/Components/ui/mobile-card-table';
 import { formatDate, formatRupiah } from '@/lib/format';
 import type { PageProps } from '@/types';
 
@@ -160,130 +152,128 @@ export default function InvoicesIndex({ invoices, customers: initialCustomers, f
         <AppLayout title="Invoices">
             <Head title="Invoices" />
 
-            <Card>
-                <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                        <FileText className="h-5 w-5" />
-                        Invoices
-                    </CardTitle>
-                    {isOwner && customers.length > 0 && (
-                        <Button onClick={() => setFormOpen(true)}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Tambah
-                        </Button>
-                    )}
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                        {[
-                            { key: '', label: 'Semua' },
-                            { key: 'draft', label: 'Draft' },
-                            { key: 'outstanding', label: 'Outstanding' },
-                            { key: 'partial', label: 'Sebagian' },
-                            { key: 'paid', label: 'Lunas' },
-                        ].map((f) => (
-                            <Button
-                                key={f.key}
-                                size="sm"
-                                variant={filters.status === f.key ? 'default' : 'outline'}
-                                onClick={() => setFilter(f.key)}
-                            >
-                                {f.label}
-                            </Button>
-                        ))}
-                        <div className="ml-2 border-l pl-2">
-                            <Button
-                                size="sm"
-                                variant={filters.archived ? 'default' : 'outline'}
-                                onClick={toggleArchived}
-                            >
-                                <Archive className="mr-1 h-4 w-4" />
-                                {filters.archived ? 'Sembunyikan Arsip' : 'Tampilkan Arsip'}
-                            </Button>
-                        </div>
-                    </div>
+            <div className="mb-4">
+                <Link
+                    href="/dashboard"
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Kembali
+                </Link>
+            </div>
 
-                    <div className="overflow-x-auto">
-<Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Nomor</TableHead>
-                                <TableHead>PO</TableHead>
-                                <TableHead>Partner</TableHead>
-                                <TableHead className="text-right">Nominal</TableHead>
-                                <TableHead className="text-right">Sisa</TableHead>
-                                <TableHead>Jatuh Tempo</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Aksi</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {invoices.length === 0 ? (
-                                <TableRow>
-                                    <TableCell
-                                        colSpan={8}
-                                        className="text-center text-muted-foreground"
+            {/* Filter + Add button */}
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap gap-2">
+                    {[
+                        { key: '', label: 'Semua' },
+                        { key: 'draft', label: 'Draft' },
+                        { key: 'outstanding', label: 'Outstanding' },
+                        { key: 'partial', label: 'Sebagian' },
+                        { key: 'paid', label: 'Lunas' },
+                    ].map((f) => (
+                        <Button
+                            key={f.key}
+                            size="sm"
+                            variant={filters.status === f.key ? 'default' : 'outline'}
+                            onClick={() => setFilter(f.key)}
+                        >
+                            {f.label}
+                        </Button>
+                    ))}
+                    <Button
+                        size="sm"
+                        variant={filters.archived ? 'default' : 'outline'}
+                        onClick={toggleArchived}
+                    >
+                        <Archive className="mr-1 h-4 w-4" />
+                        {filters.archived ? 'Sembunyikan Arsip' : 'Tampilkan Arsip'}
+                    </Button>
+                </div>
+                {isOwner && customers.length > 0 && (
+                    <Button size="sm" onClick={() => setFormOpen(true)} className="ml-auto">
+                        <Plus className="mr-1 h-4 w-4" />
+                        Tambah
+                    </Button>
+                )}
+            </div>
+
+            {/* Table */}
+            <div className="rounded-lg border border-border bg-card">
+                <MobileCardTable
+                    data={invoices}
+                    keyFn={(inv) => inv.id}
+                    emptyMessage="Belum ada invoice."
+                    columns={[
+                        {
+                            header: 'Nomor',
+                            render: (inv) => (
+                                <Link
+                                    href={`/invoices/${inv.id}`}
+                                    className="font-medium hover:underline"
+                                >
+                                    {inv.invoice_number}
+                                </Link>
+                            ),
+                            primary: true,
+                        },
+                        {
+                            header: 'PO',
+                            render: (inv) => inv.po_number || '-',
+                            hideOnMobile: true,
+                        },
+                        {
+                            header: 'Partner',
+                            render: (inv) => inv.partner ?? '-',
+                            secondary: true,
+                        },
+                        {
+                            header: 'Nominal',
+                            render: (inv) => formatRupiah(inv.amount),
+                            amount: true,
+                        },
+                        {
+                            header: 'Sisa',
+                            render: (inv) => formatRupiah(inv.remaining),
+                            hideOnMobile: true,
+                        },
+                        {
+                            header: 'Jatuh Tempo',
+                            render: (inv) => formatDate(inv.due_date),
+                            secondary: true,
+                        },
+                        {
+                            header: 'Status',
+                            render: (inv) => <InvoiceStatusBadge status={inv.status} />,
+                            badge: true,
+                        },
+                    ]}
+                    actions={(inv) =>
+                        isOwner ? (
+                            <div className="flex items-center justify-end gap-1">
+                                {(inv.status === 'draft' || inv.status === 'outstanding') && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleDelete(inv)}
                                     >
-                                        Belum ada invoice.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                invoices.map((invoice) => (
-                                    <TableRow key={invoice.id}>
-                                        <TableCell>
-                                            <Link
-                                                href={`/invoices/${invoice.id}`}
-                                                className="font-medium hover:underline"
-                                            >
-                                                {invoice.invoice_number}
-                                            </Link>
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground">
-                                            {invoice.po_number || '-'}
-                                        </TableCell>
-                                        <TableCell>{invoice.partner ?? '-'}</TableCell>
-                                        <TableCell className="text-right text-number">
-                                            {formatRupiah(invoice.amount)}
-                                        </TableCell>
-                                        <TableCell className="text-right text-number">
-                                            {formatRupiah(invoice.remaining)}
-                                        </TableCell>
-                                        <TableCell>{formatDate(invoice.due_date)}</TableCell>
-                                        <TableCell>
-                                            <InvoiceStatusBadge status={invoice.status} />
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {isOwner && (
-                                                <div className="flex items-center justify-end gap-1">
-                                                    {(invoice.status === 'draft' || invoice.status === 'outstanding') && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleDelete(invoice)}
-                                                        >
-                                                            <Trash2 className="h-4 w-4 text-red-500" />
-                                                        </Button>
-                                                    )}
-                                                    {(invoice.status === 'partial' || invoice.status === 'paid') && !filters.archived && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleArchive(invoice)}
-                                                        >
-                                                            <Archive className="h-4 w-4" />
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-</div>
-                </CardContent>
-            </Card>
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                )}
+                                {(inv.status === 'partial' || inv.status === 'paid') && !filters.archived && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleArchive(inv)}
+                                    >
+                                        <Archive className="h-4 w-4" />
+                                    </Button>
+                                )}
+                            </div>
+                        ) : null
+                    }
+                />
+            </div>
 
             <Modal
                 open={formOpen}
