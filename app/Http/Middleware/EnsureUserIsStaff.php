@@ -13,7 +13,14 @@ class EnsureUserIsStaff
         $user = $request->user();
 
         if (! $user || ! $user->isStaff()) {
+            // Allow pengelola (owner) from single-outlet businesses to access POS
             if ($user && $user->isPengelola()) {
+                $isSingleOutlet = $user->tenant && $user->tenant->business_type === 'single';
+
+                if ($isSingleOutlet) {
+                    return $next($request);
+                }
+
                 return redirect()
                     ->route('dashboard')
                     ->with('error', 'POS hanya untuk akun staff.');
