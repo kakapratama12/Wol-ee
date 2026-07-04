@@ -49,63 +49,67 @@ class TransactionController extends Controller
 
     public function store(StorePurchaseRequest $request, InventoryService $inventory, PayableService $payableService): RedirectResponse
     {
-        $data = $request->validated();
-        $ingredient = Ingredient::findOrFail($data['ingredient_id']);
+        try {
+            $data = $request->validated();
+            $ingredient = Ingredient::findOrFail($data['ingredient_id']);
 
-        $quantity = (float) $data['quantity'];
-        $unitPrice = round((float) $data['total'] / max($quantity, 1e-9), 4);
-        $idempotencyKey = $data['idempotency_key'] ?? null;
-        $bayarNanti = $data['bayar_nanti'] ?? false;
+            $quantity = (float) $data['quantity'];
+            $unitPrice = round((float) $data['total'] / max($quantity, 1e-9), 4);
+            $idempotencyKey = $data['idempotency_key'] ?? null;
+            $bayarNanti = $data['bayar_nanti'] ?? false;
 
-        // Create payable first if "Bayar Nanti"
-        $payableId = null;
-        if ($bayarNanti) {
-            $partner = Partner::findOrFail($data['partner_id']);
-            if ($partner->type !== Partner::TYPE_SUPPLIER) {
-                throw new InvalidArgumentException('Partner harus berupa supplier.');
+            // Create payable first if "Bayar Nanti"
+            $payableId = null;
+            if ($bayarNanti) {
+                $partner = Partner::findOrFail($data['partner_id']);
+                if ($partner->type !== Partner::TYPE_SUPPLIER) {
+                    throw new InvalidArgumentException('Partner harus berupa supplier.');
+                }
+
+                $payable = $payableService->create([
+                    'partner_id' => $data['partner_id'],
+                    'due_date' => $data['due_date'] ?? null,
+                    'note' => 'Pembelian bahan: ' . $ingredient->name,
+                    'items' => [
+                        [
+                            'description' => $ingredient->name,
+                            'quantity' => $quantity,
+                            'unit_price' => $unitPrice,
+                        ],
+                    ],
+                ]);
+                $payableId = $payable->id;
             }
 
-            $payable = $payableService->create([
-                'partner_id' => $data['partner_id'],
-                'due_date' => $data['due_date'] ?? null,
-                'note' => 'Pembelian bahan: ' . $ingredient->name,
-                'items' => [
-                    [
-                        'description' => $ingredient->name,
-                        'quantity' => $quantity,
-                        'unit_price' => $unitPrice,
-                    ],
-                ],
-            ]);
-            $payableId = $payable->id;
+            // Record purchase & update stock
+            $inventory->recordPurchase(
+                ingredient: $ingredient,
+                quantity: $quantity,
+                unitPrice: $unitPrice,
+                source: 'web',
+                userId: $request->user()->id,
+                note: $data['note'] ?? null,
+                occurredAt: $request->date('occurred_at'),
+                idempotencyKey: $idempotencyKey,
+            );
+
+            // Link transaction to payable if exists
+            if ($payableId) {
+                Transaction::where('ingredient_id', $ingredient->id)
+                    ->where('tenant_id', $request->user()->tenant_id)
+                    ->latest()
+                    ->first()
+                    ?->update(['payable_id' => $payableId]);
+            }
+
+            $message = $bayarNanti
+                ? 'Pembelian tercatat & tagihan supplier dibuat.'
+                : 'Pembelian tercatat & stok diperbarui.';
+
+            return back()->with('success', $message);
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()])->withInput();
         }
-
-        // Record purchase & update stock
-        $inventory->recordPurchase(
-            ingredient: $ingredient,
-            quantity: $quantity,
-            unitPrice: $unitPrice,
-            source: 'web',
-            userId: $request->user()->id,
-            note: $data['note'] ?? null,
-            occurredAt: $request->date('occurred_at'),
-            idempotencyKey: $idempotencyKey,
-        );
-
-        // Link transaction to payable if exists
-        if ($payableId) {
-            Transaction::where('ingredient_id', $ingredient->id)
-                ->where('tenant_id', $request->user()->tenant_id)
-                ->latest()
-                ->first()
-                ?->update(['payable_id' => $payableId]);
-        }
-
-        $message = $bayarNanti
-            ? 'Pembelian tercatat & tagihan supplier dibuat.'
-            : 'Pembelian tercatat & stok diperbarui.';
-
-        return back()->with('success', $message);
     }
 
     public function update(UpdatePurchaseRequest $request, Transaction $transaction, PurchaseService $purchases): RedirectResponse
@@ -133,10 +137,14 @@ class TransactionController extends Controller
 
     public function destroy(Transaction $transaction, InventoryService $inventory): RedirectResponse
     {
-        $inventory->reversePurchase($transaction);
+        try {
+            $inventory->reversePurchase($transaction);
 
-        $transaction->delete();
+            $transaction->delete();
 
-        return back()->with('success', 'Pembelian dihapus & stok dikembalikan.');
+            return back()->with('success', 'Pembelian dihapus & stok dikembalikan.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()])->withInput();
+        }
     }
 }

@@ -54,4 +54,14 @@ class Invoice extends Model
     {
         return $this->hasMany(InvoiceFee::class);
     }
+
+    public function getRemainingAttribute(): float
+    {
+        return max(0, round((float) $this->amount - (float) $this->paid_amount, 2));
+    }
+
+    public function getSubtotalAttribute(): float
+    {
+        return round((float) $this->items->sum('total'), 2);
+    }
 }

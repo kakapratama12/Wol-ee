@@ -40,15 +40,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/inventory/{ingredient}/adjust', [IngredientController::class, 'adjust'])->name('ingredients.adjust');
     Route::delete('/inventory/{ingredient}', [IngredientController::class, 'destroy'])->name('ingredients.destroy')->middleware('owner');
 
-    Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
-    Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
-    Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
-    Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
+    Route::middleware('owner')->group(function () {
+        Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+        Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+        Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
+        Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
+    });
 
-    Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
-    Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
-    Route::put('/sales/{sale}', [SaleController::class, 'update'])->name('sales.update');
-    Route::delete('/sales/{sale}', [SaleController::class, 'destroy'])->name('sales.destroy');
+    Route::middleware('owner')->group(function () {
+        Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
+        Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
+        Route::put('/sales/{sale}', [SaleController::class, 'update'])->name('sales.update');
+        Route::delete('/sales/{sale}', [SaleController::class, 'destroy'])->name('sales.destroy');
+    });
 
         Route::get("/production-runs", [ProductionRunController::class, "index"])->name("production-runs.index");
         Route::post("/production-runs", [ProductionRunController::class, "store"])->name("production-runs.store");
@@ -140,11 +144,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // AP — Tagihan Supplier
-    Route::get('/payables', [PayableController::class, 'index'])->name('payables.index');
-    Route::get('/payables/{payable}', [PayableController::class, 'show'])->name('payables.show');
-    Route::post('/payables', [PayableController::class, 'store'])->name('payables.store');
-    Route::post('/payables/{payable}/pay', [PayableController::class, 'pay'])->name('payables.pay');
-    Route::post('/payables/{payable}/archive', [PayableController::class, 'archive'])->name('payables.archive');
+    Route::middleware('owner')->group(function () {
+        Route::get('/payables', [PayableController::class, 'index'])->name('payables.index');
+        Route::get('/payables/{payable}', [PayableController::class, 'show'])->name('payables.show');
+        Route::post('/payables', [PayableController::class, 'store'])->name('payables.store');
+        Route::post('/payables/{payable}/pay', [PayableController::class, 'pay'])->name('payables.pay');
+        Route::post('/payables/{payable}/archive', [PayableController::class, 'archive'])->name('payables.archive');
+    });
 
     // Staff management (pengelola only)
     Route::middleware('owner')->group(function () {
