@@ -230,7 +230,7 @@ export default function InventoryIndex({ ingredients, itemType, counts, canManag
                             <p className="mt-1 text-xs text-destructive">{form.errors.name}</p>
                         )}
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3 *:min-w-0">
                         <div>
                             <Label htmlFor="unit_type">Tipe</Label>
                             <Select
@@ -289,7 +289,7 @@ export default function InventoryIndex({ ingredients, itemType, counts, canManag
                             </p>
                         )}
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3 *:min-w-0">
                         {!editing && (
                             <div>
                                 <Label htmlFor="current_stock">Stok awal</Label>
@@ -379,7 +379,7 @@ export default function InventoryIndex({ ingredients, itemType, counts, canManag
                         Masukkan jumlah yang dibeli (dalam{' '}
                         <strong>{form.data.base_unit || 'satuan'}</strong>) dan harga belinya.
                     </p>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3 *:min-w-0">
                         <div>
                             <Label>Jumlah dibeli ({form.data.base_unit || '...'})</Label>
                             <Input

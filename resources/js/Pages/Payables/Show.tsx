@@ -103,7 +103,7 @@ export default function Show({
                 </Link>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-3">
+            <div className="grid gap-6 lg:grid-cols-3 *:min-w-0">
                 {/* Detail Tagihan */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="rounded-lg border border-border bg-card p-6">
@@ -112,7 +112,7 @@ export default function Show({
                             <StatusBadge status={payable.status} />
                         </div>
 
-                        <dl className="grid grid-cols-2 gap-4 text-sm">
+                        <dl className="grid grid-cols-2 gap-4 *:min-w-0 text-sm">
                             <div>
                                 <dt className="text-muted-foreground">Supplier</dt>
                                 <dd className="font-medium">{payable.partner.name}</dd>

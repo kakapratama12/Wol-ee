@@ -207,7 +207,7 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                 </Button>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 *:min-w-0 md:grid-cols-2 xl:grid-cols-3">
                 {products.map((p) => (
                     <Card key={p.id}>
                         <CardHeader className="flex-row items-start justify-between space-y-0">
@@ -245,7 +245,7 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                             {!p.is_active && <Badge variant="secondary">Nonaktif</Badge>}
                         </CardHeader>
                         <CardContent>
-                            <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/50 p-3">
+                            <div className="grid grid-cols-2 gap-3 *:min-w-0 rounded-lg bg-muted/50 p-3">
                                 <div>
                                     <p className="text-xs text-muted-foreground">COGS</p>
                                     <p className="font-semibold text-number">
@@ -346,7 +346,7 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                             )}
                         </div>
                     )}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3 *:min-w-0">
                         <div>
                             <Label htmlFor="unit">Satuan</Label>
                             <Input
@@ -495,7 +495,7 @@ export default function ProductsIndex({ products, ingredients }: Props) {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/50 p-3">
+                    <div className="grid grid-cols-2 gap-3 *:min-w-0 rounded-lg bg-muted/50 p-3">
                         <div>
                             <p className="text-xs text-muted-foreground">COGS / porsi</p>
                             <p className="text-number-lg font-bold">{formatRupiah(preview.cogs)}</p>

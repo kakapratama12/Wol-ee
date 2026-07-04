@@ -221,47 +221,49 @@ export default function OutletShow({ outlet, inventory, movements, products, ing
                                     Belum ada stok di outlet ini
                                 </div>
                             ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-12">No</TableHead>
-                                            <TableHead>Item</TableHead>
-                                            <TableHead>Tipe</TableHead>
-                                            <TableHead className="text-right">Stok</TableHead>
-                                            <TableHead>Satuan</TableHead>
-                                            <TableHead>Terakhir Update</TableHead>
-                                            <TableHead className="text-right">Aksi</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {inventory.map((item, index) => (
-                                            <TableRow key={item.id}>
-                                                <TableCell>{index + 1}</TableCell>
-                                                <TableCell className="font-medium">{getItemName(item)}</TableCell>
-                                                <TableCell>
-                                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                                        item.product
-                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                                                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-                                                    }`}>
-                                                        {getItemType(item)}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell className="text-right font-mono">
-                                                    {item.quantity.toLocaleString('id-ID')}
-                                                </TableCell>
-                                                <TableCell>{item.unit}</TableCell>
-                                                <TableCell>{formatDate(item.last_updated)}</TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button variant="ghost" size="sm" onClick={() => openAdjustModal(item)}>
-                                                        <Wrench className="mr-1 h-4 w-4" />
-                                                        Adjust
-                                                    </Button>
-                                                </TableCell>
+                                <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="w-12">No</TableHead>
+                                                <TableHead>Item</TableHead>
+                                                <TableHead>Tipe</TableHead>
+                                                <TableHead className="text-right">Stok</TableHead>
+                                                <TableHead>Satuan</TableHead>
+                                                <TableHead>Terakhir Update</TableHead>
+                                                <TableHead className="text-right">Aksi</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {inventory.map((item, index) => (
+                                                <TableRow key={item.id}>
+                                                    <TableCell>{index + 1}</TableCell>
+                                                    <TableCell className="font-medium">{getItemName(item)}</TableCell>
+                                                    <TableCell>
+                                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                                            item.product
+                                                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+                                                        }`}>
+                                                            {getItemType(item)}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="text-right font-mono">
+                                                        {item.quantity.toLocaleString('id-ID')}
+                                                    </TableCell>
+                                                    <TableCell>{item.unit}</TableCell>
+                                                    <TableCell>{formatDate(item.last_updated)}</TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button variant="ghost" size="sm" onClick={() => openAdjustModal(item)}>
+                                                            <Wrench className="mr-1 h-4 w-4" />
+                                                            Adjust
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             )}
                         </CardContent>
                     </Card>

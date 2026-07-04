@@ -111,6 +111,7 @@ export default function DistributionsIndex({ distributions, outlets, products, i
 
                 <Card>
                     <CardContent className="p-0">
+                        <div className="overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -149,6 +150,7 @@ export default function DistributionsIndex({ distributions, outlets, products, i
                                 )}
                             </TableBody>
                         </Table>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

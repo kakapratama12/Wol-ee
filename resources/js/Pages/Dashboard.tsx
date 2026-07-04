@@ -166,7 +166,7 @@ export default function Dashboard(props: Props) {
                 </div>
 
                 {/* Today's Sales Summary */}
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 *:min-w-0 sm:grid-cols-3">
                     <StatCard
                         label="Omset Hari Ini"
                         value={formatRupiah(todayRevenue)}
@@ -391,7 +391,7 @@ export default function Dashboard(props: Props) {
                 <span className="text-sm text-muted-foreground ml-auto">{periodLabel}</span>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 *:min-w-0 sm:grid-cols-2 lg:grid-cols-4">
                 <StatCard
                     label="Omset"
                     value={formatRupiah(metrics.revenue)}
@@ -443,7 +443,7 @@ export default function Dashboard(props: Props) {
                                     Expense
                                 </span>
                             </div>
-                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            <div className="grid gap-4 *:min-w-0 sm:grid-cols-2 lg:grid-cols-3">
                                 {monthlyChart.map((point) => (
                                     <div
                                         key={`${point.year}-${point.month}`}
@@ -488,7 +488,7 @@ export default function Dashboard(props: Props) {
                 </CardContent>
             </Card>
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+            <div className="mt-6 grid gap-6 *:min-w-0 lg:grid-cols-2">
                 <Card>
                     <CardHeader>
                         <CardTitle>Stok Perlu Perhatian</CardTitle>
@@ -589,6 +589,7 @@ export default function Dashboard(props: Props) {
                                 Belum ada pembelian.
                             </p>
                         ) : (
+                            <div className="overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -619,6 +620,7 @@ export default function Dashboard(props: Props) {
                                     ))}
                                 </TableBody>
                             </Table>
+                            </div>
                         )}
                         <Link
                             href="/transactions"

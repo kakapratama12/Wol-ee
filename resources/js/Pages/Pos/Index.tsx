@@ -76,7 +76,7 @@ export default function PosIndex({ todaySession, recentSessions, activeSession, 
                     </div>
 
                     {isOpen && todaySession && todaySession.status === 'open' && (
-                        <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+                        <div className="mt-4 grid grid-cols-3 gap-4 *:min-w-0 text-center">
                             <div>
                                 <p className="text-2xl font-bold text-primary">{formatRupiah(todaySession.total_omset)}</p>
                                 <p className="text-xs text-muted-foreground">Omset Hari Ini</p>
