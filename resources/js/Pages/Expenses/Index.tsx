@@ -4,20 +4,14 @@ import { type PageProps } from '@/types';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import Modal from '@/Components/ui/modal';
+import Pagination from '@/Components/Pagination';
 import { Button } from '@/Components/ui/button';
 import { CurrencyInput } from '@/Components/ui/currency-input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
+import { MobileCardTable } from '@/Components/ui/mobile-card-table';
 import { Select } from '@/Components/ui/select';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/Components/ui/table';
 import { formatRupiah, formatDate } from '@/lib/format';
 
 interface Outlet {
@@ -263,75 +257,62 @@ export default function ExpensesIndex({
                         <span className="text-sm font-semibold">Total: {formatRupiah(total)}</span>
                     </CardHeader>
                     <CardContent className="p-0">
-                        <div className="overflow-x-auto">
-<Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-32">Kategori</TableHead>
-                                    <TableHead>Tanggal</TableHead>
-                                    <TableHead>Deskripsi</TableHead>
-                                    <TableHead className="w-36">Outlet</TableHead>
-                                    <TableHead className="text-right">Jumlah</TableHead>
-                                    <TableHead></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {expenses.length === 0 && (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={6}
-                                            className="py-8 text-center text-muted-foreground"
+                        <MobileCardTable
+                            data={expenses}
+                            keyFn={(e) => e.id}
+                            emptyMessage="Belum ada biaya."
+                            columns={[
+                                {
+                                    header: 'Kategori',
+                                    render: (e) => (
+                                        <span
+                                            className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${categoryColors[e.category] ?? 'bg-gray-100 text-gray-800'}`}
                                         >
-                                            Belum ada biaya.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                                {expenses.map((e) => (
-                                    <TableRow key={e.id}>
-                                        <TableCell className="font-medium">
-                                            <span
-                                                className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${categoryColors[e.category] ?? 'bg-gray-100 text-gray-800'}`}
-                                            >
-                                                {categories[e.category] ?? e.category}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className="text-sm">
-                                            {formatDate(e.occurred_at)}
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground">
-                                            {e.description ?? '-'}
-                                        </TableCell>
-                                        <TableCell className="text-sm">
-                                            {e.outlet_name ?? (
-                                                <span className="text-muted-foreground">—</span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            {formatRupiah(e.amount)}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex justify-end gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => openEdit(e)}
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => remove(e.id)}
-                                                >
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-</div>
+                                            {categories[e.category] ?? e.category}
+                                        </span>
+                                    ),
+                                    badge: true,
+                                },
+                                {
+                                    header: 'Tanggal',
+                                    render: (e) => formatDate(e.occurred_at),
+                                    secondary: true,
+                                },
+                                {
+                                    header: 'Deskripsi',
+                                    render: (e) => e.description ?? '-',
+                                    primary: true,
+                                },
+                                {
+                                    header: 'Outlet',
+                                    render: (e) => e.outlet_name ?? '—',
+                                    hideOnMobile: true,
+                                },
+                                {
+                                    header: 'Jumlah',
+                                    render: (e) => formatRupiah(e.amount),
+                                    amount: true,
+                                },
+                            ]}
+                            actions={(e) => (
+                                <div className="flex justify-end gap-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => openEdit(e)}
+                                    >
+                                        <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => remove(e.id)}
+                                    >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </div>
+                            )}
+                        />
                     </CardContent>
                 </Card>
             </div>
