@@ -1,6 +1,6 @@
 import { PropsWithChildren } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { Home, LogOut, ShoppingCart, Package, BarChart3 } from 'lucide-react';
+import { Home, LogOut, ShoppingCart, Package, BarChart3, LayoutDashboard } from 'lucide-react';
 import type { PageProps } from '@/types';
 import { cn } from '@/lib/utils';
 import { ThemeProvider } from '@/Components/ThemeProvider';
@@ -21,6 +21,8 @@ export default function PosLayout({
     children,
 }: PropsWithChildren<PosLayoutProps>) {
     const { auth } = usePage<PageProps>().props;
+    const user = auth.user;
+    const isOwnerOperated = auth.businessType === 'single';
 
     const navItems = [
         { href: '/pos', icon: Home, label: 'Home', exact: true },
@@ -39,14 +41,23 @@ export default function PosLayout({
                             Wol-ee POS
                         </p>
                         <h1 className="text-lg font-semibold leading-tight">{title}</h1>
-                        {(branch || auth.user?.name) && (
+                        {(branch || user?.name) && (
                             <p className="text-xs text-muted-foreground">
-                                {[branch, auth.user?.name].filter(Boolean).join(' · ')}
+                                {[branch, user?.name].filter(Boolean).join(' · ')}
                             </p>
                         )}
                     </div>
                     <div className="flex items-center gap-2">
                         {actions}
+                        {isOwnerOperated && (
+                            <Link
+                                href="/dashboard"
+                                className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
+                                title="Dashboard"
+                            >
+                                <LayoutDashboard className="h-4 w-4" />
+                            </Link>
+                        )}
                         <ThemeToggle />
                         <Link
                             href="/pos/logout"
