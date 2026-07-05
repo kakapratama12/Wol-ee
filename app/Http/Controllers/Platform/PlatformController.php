@@ -95,9 +95,18 @@ class PlatformController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'plan' => ['required', 'in:free,pro,business'],
+            'business_type' => ['required', 'in:single,multi'],
             'pengelola_name' => ['required', 'string', 'max:255'],
             'pengelola_email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'pengelola_password' => ['required', 'string', 'min:8', 'confirmed'],
+            // Multi outlet fields (conditional)
+            'create_outlet' => ['required', 'boolean'],
+            'outlet_name' => ['required_if:create_outlet,true', 'nullable', 'string', 'max:255'],
+            'outlet_address' => ['nullable', 'string', 'max:500'],
+            'staff_name' => ['required_if:create_outlet,true', 'nullable', 'string', 'max:255'],
+            'staff_email' => ['required_if:create_outlet,true', 'nullable', 'email', 'max:255', 'unique:users,email'],
+            'staff_password' => ['required_if:create_outlet,true', 'nullable', 'string', 'min:8', 'confirmed'],
+            'staff_password_confirmation' => ['nullable', 'string'],
         ]);
 
         $slug = \Illuminate\Support\Str::slug($data['name']);
@@ -106,11 +115,12 @@ class PlatformController extends Controller
             'name' => $data['name'],
             'slug' => $slug,
             'plan' => $data['plan'],
-            'business_type' => 'single',
+            'business_type' => $data['business_type'],
             'status' => Tenant::STATUS_ACTIVE,
         ]);
 
-        $user = User::create([
+        // Always create owner (pengelola)
+        $owner = User::create([
             'name' => $data['pengelola_name'],
             'email' => $data['pengelola_email'],
             'password' => $data['pengelola_password'],
@@ -118,13 +128,35 @@ class PlatformController extends Controller
             'tenant_id' => $tenant->id,
         ]);
 
-        // Single outlet: auto-create outlet + assign to owner
-        $outlet = Outlet::create([
-            'tenant_id' => $tenant->id,
-            'name' => $tenant->name,
-            'is_active' => true,
-        ]);
-        $user->update(['outlet_id' => $outlet->id]);
+        if ($data['business_type'] === 'single') {
+            // Single: auto-create 1 outlet + assign to owner
+            $outlet = Outlet::create([
+                'tenant_id' => $tenant->id,
+                'name' => $tenant->name,
+                'is_active' => true,
+            ]);
+            $owner->update(['outlet_id' => $outlet->id]);
+        } elseif ($data['create_outlet'] && ! empty($data['outlet_name'])) {
+            // Multi + create outlet: create outlet + staff
+            $outlet = Outlet::create([
+                'tenant_id' => $tenant->id,
+                'name' => $data['outlet_name'],
+                'address' => $data['outlet_address'] ?? null,
+                'is_active' => true,
+            ]);
+
+            // Create staff and assign to outlet
+            if (! empty($data['staff_name']) && ! empty($data['staff_email'])) {
+                User::create([
+                    'name' => $data['staff_name'],
+                    'email' => $data['staff_email'],
+                    'password' => $data['staff_password'],
+                    'role' => User::ROLE_STAFF,
+                    'tenant_id' => $tenant->id,
+                    'outlet_id' => $outlet->id,
+                ]);
+            }
+        }
 
         return redirect()->route('platform.tenants')->with('success', 'Usaha berhasil dibuat.');
     }

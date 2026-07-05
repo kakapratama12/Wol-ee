@@ -50,10 +50,18 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
     const addForm = useForm({
         name: '',
         plan: 'free',
+        business_type: 'single',
         pengelola_name: '',
         pengelola_email: '',
         pengelola_password: '',
         pengelola_password_confirmation: '',
+        create_outlet: false,
+        outlet_name: '',
+        outlet_address: '',
+        staff_name: '',
+        staff_email: '',
+        staff_password: '',
+        staff_password_confirmation: '',
     });
 
     const editForm = useForm({
@@ -163,6 +171,22 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                 </div>
                             </div>
 
+                            <div>
+                                <Label htmlFor="add-business-type">Tipe Usaha</Label>
+                                <Select
+                                    id="add-business-type"
+                                    value={addForm.data.business_type}
+                                    onChange={(e) => addForm.setData('business_type', e.target.value)}
+                                    className="mt-1"
+                                >
+                                    <option value="single">Single Outlet</option>
+                                    <option value="multi">Multi Outlet</option>
+                                </Select>
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                    Single = 1 lokasi, owner langsung jadi kasir. Multi = banyak cabang, staff khusus buat POS.
+                                </p>
+                            </div>
+
                             <div className="border-t pt-4">
                                 <h4 className="mb-3 text-sm font-medium">Pengelola (Owner)</h4>
                                 <div className="grid gap-4 sm:grid-cols-2">
@@ -238,6 +262,118 @@ export default function Tenants({ tenants }: { tenants: TenantRow[] }) {
                                     </div>
                                 </div>
                             </div>
+
+                            {addForm.data.business_type === 'multi' && (
+                                <div className="border-t pt-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <input
+                                            type="checkbox"
+                                            id="create_outlet"
+                                            checked={addForm.data.create_outlet}
+                                            onChange={(e) => addForm.setData('create_outlet', e.target.checked)}
+                                            className="h-4 w-4 rounded border-gray-300"
+                                        />
+                                        <Label htmlFor="create_outlet" className="text-sm font-medium">
+                                            Buat outlet sekarang
+                                        </Label>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mb-3">
+                                        Centang kalau mau langsung buat outlet + staff. Bisa dibuat nanti.
+                                    </p>
+
+                                    {addForm.data.create_outlet && (
+                                        <>
+                                            <div className="grid gap-4 sm:grid-cols-2 mb-4">
+                                                <div>
+                                                    <Label htmlFor="add-outlet-name">Nama Outlet</Label>
+                                                    <Input
+                                                        id="add-outlet-name"
+                                                        value={addForm.data.outlet_name}
+                                                        onChange={(e) => addForm.setData('outlet_name', e.target.value)}
+                                                        placeholder="Outlet Utama"
+                                                        className="mt-1"
+                                                    />
+                                                    {addForm.errors.outlet_name && (
+                                                        <p className="mt-1 text-xs text-destructive">
+                                                            {addForm.errors.outlet_name}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor="add-outlet-address">Alamat (opsional)</Label>
+                                                    <Input
+                                                        id="add-outlet-address"
+                                                        value={addForm.data.outlet_address}
+                                                        onChange={(e) => addForm.setData('outlet_address', e.target.value)}
+                                                        placeholder="Jl. Merdeka No. 1"
+                                                        className="mt-1"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="border-t pt-4">
+                                                <h4 className="mb-3 text-sm font-medium">Staff (Kasir)</h4>
+                                                <div className="grid gap-4 sm:grid-cols-2">
+                                                    <div>
+                                                        <Label htmlFor="add-staff-name">Nama</Label>
+                                                        <Input
+                                                            id="add-staff-name"
+                                                            value={addForm.data.staff_name}
+                                                            onChange={(e) => addForm.setData('staff_name', e.target.value)}
+                                                            className="mt-1"
+                                                        />
+                                                        {addForm.errors.staff_name && (
+                                                            <p className="mt-1 text-xs text-destructive">
+                                                                {addForm.errors.staff_name}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <Label htmlFor="add-staff-email">Email</Label>
+                                                        <Input
+                                                            id="add-staff-email"
+                                                            type="email"
+                                                            value={addForm.data.staff_email}
+                                                            onChange={(e) => addForm.setData('staff_email', e.target.value)}
+                                                            className="mt-1"
+                                                        />
+                                                        {addForm.errors.staff_email && (
+                                                            <p className="mt-1 text-xs text-destructive">
+                                                                {addForm.errors.staff_email}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <Label htmlFor="add-staff-password">Password</Label>
+                                                        <Input
+                                                            id="add-staff-password"
+                                                            type="password"
+                                                            value={addForm.data.staff_password}
+                                                            onChange={(e) => addForm.setData('staff_password', e.target.value)}
+                                                            className="mt-1"
+                                                        />
+                                                        {addForm.errors.staff_password && (
+                                                            <p className="mt-1 text-xs text-destructive">
+                                                                {addForm.errors.staff_password}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <Label htmlFor="add-staff-password-confirm">Konfirmasi Password</Label>
+                                                        <Input
+                                                            id="add-staff-password-confirm"
+                                                            type="password"
+                                                            value={addForm.data.staff_password_confirmation}
+                                                            onChange={(e) => addForm.setData('staff_password_confirmation', e.target.value)}
+                                                            className="mt-1"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
 
                             <div className="flex gap-2">
                                 <Button type="submit" disabled={addForm.processing}>
