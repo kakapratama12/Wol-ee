@@ -44,25 +44,25 @@ class PnlExport
         $expensesByCategory = $report['expenses_by_category'] ?? [];
         if (($expensesByCategory['bahan_baku'] ?? 0) > 0) {
             $sheet->setCellValue("A{$row}", 'Biaya Bahan Baku');
-            $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setColor(\PhpOffice\PhpSpreadsheet\Style\Color::getInstance('FF0000FF'));
+            $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF0000FF'));
             $row++;
             $write('  Bahan Baku', (float) $expensesByCategory['bahan_baku'], false, true);
         }
         if (($expensesByCategory['operasional'] ?? 0) > 0) {
             $sheet->setCellValue("A{$row}", 'Biaya Operasional');
-            $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setColor(\PhpOffice\PhpSpreadsheet\Style\Color::getInstance('FF008000'));
+            $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF008000'));
             $row++;
             $write('  Operasional', (float) $expensesByCategory['operasional'], false, true);
         }
         if (($expensesByCategory['logistik'] ?? 0) > 0) {
             $sheet->setCellValue("A{$row}", 'Biaya Logistik/Pengiriman');
-            $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setColor(\PhpOffice\PhpSpreadsheet\Style\Color::getInstance('FF800080'));
+            $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF800080'));
             $row++;
             $write('  Logistik/Pengiriman', (float) $expensesByCategory['logistik'], false, true);
         }
         if (($expensesByCategory['overhead'] ?? 0) > 0) {
             $sheet->setCellValue("A{$row}", 'Biaya Overhead');
-            $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setColor(\PhpOffice\PhpSpreadsheet\Style\Color::getInstance('FFFF8C00'));
+            $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFFF8C00'));
             $row++;
             $write('  Overhead', (float) $expensesByCategory['overhead'], false, true);
         }
