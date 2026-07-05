@@ -8,7 +8,21 @@ class CloseCashierSessionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isStaff() ?? false;
+         = ->user();
+        if (! ) {
+            return false;
+        }
+
+        if (->isStaff()) {
+            return true;
+        }
+
+        // Allow pengelola (owner) from single-outlet businesses to close POS session
+        if (->isPengelola() && ->tenant?->business_type === 'single') {
+            return true;
+        }
+
+        return false;
     }
 
     /**
