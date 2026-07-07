@@ -124,6 +124,7 @@ const navigation: (NavSingle | NavGroup)[] = [
         pengelolaOnly: true,
         children: [
             { label: 'Bot Integration', href: '/settings/bot' },
+            { label: 'Riwayat Input Bot', href: '/settings/bot/history' },
             { label: 'Perusahaan', href: '/settings/company' },
         ],
     },
@@ -165,7 +166,15 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
     const hasInvoices = props.hasInvoices ?? false;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-    const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+    const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+        // Restore from localStorage
+        try {
+            const saved = localStorage.getItem('sidebar_open_groups');
+            return saved ? JSON.parse(saved) : {};
+        } catch {
+            return {};
+        }
+    });
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -255,6 +264,15 @@ function AppLayoutInner({ title, children }: PropsWithChildren<{ title?: string 
         });
         setOpenGroups((prev) => ({ ...prev, ...initial }));
     }, [url, visibleNav]);
+
+    // Persist openGroups to localStorage
+    useEffect(() => {
+        try {
+            localStorage.setItem('sidebar_open_groups', JSON.stringify(openGroups));
+        } catch {
+            // Ignore storage errors
+        }
+    }, [openGroups]);
 
     const toggleGroup = (label: string) => {
         setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
