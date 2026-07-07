@@ -62,7 +62,7 @@ export default function BotInputHistory({ inputs, filters }: Props) {
 
     const archive = (id: number) => {
         if (confirm('Arsipkan input ini?')) {
-            router.put(`/api/bot-inputs/${id}/archive`, {}, { preserveState: true });
+            router.put(`/settings/bot/history/${id}/archive`, {}, { preserveState: true });
         }
     };
 

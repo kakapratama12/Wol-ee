@@ -128,6 +128,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/settings/bot', [BotIntegrationController::class, 'index'])->name('settings.bot');
         Route::post('/settings/bot/token', [BotIntegrationController::class, 'generate'])->name('settings.bot.generate');
         Route::get('/settings/bot/history', [\App\Http\Controllers\BotInputHistoryController::class, 'index'])->name('settings.bot.history');
+        Route::put('/settings/bot/history/{botInput}/archive', [\App\Http\Controllers\BotInputHistoryController::class, 'archive'])->name('settings.bot.history.archive');
 
         Route::get('/settings/company', [CompanySettingsController::class, 'edit'])->name('settings.company');
         Route::put('/settings/company', [CompanySettingsController::class, 'update'])->name('settings.company.update');

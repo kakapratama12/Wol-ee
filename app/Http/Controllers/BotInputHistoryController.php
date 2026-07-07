@@ -42,4 +42,16 @@ class BotInputHistoryController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Archive a bot input (hide from active view).
+     *
+     * PUT /settings/bot/history/{botInput}/archive
+     */
+    public function archive(BotInput $botInput): \Illuminate\Http\RedirectResponse
+    {
+        $botInput->update(['status' => BotInput::STATUS_ARCHIVED]);
+
+        return back()->with('success', 'Input diarsipkan.');
+    }
 }
