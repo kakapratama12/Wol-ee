@@ -20,7 +20,7 @@ it('membaca stok bahan dari saldo global saat ini', function () {
         'tenant_id' => $this->tenant->id,
         'name' => 'Susu',
         'item_type' => Ingredient::ITEM_RAW_MATERIAL,
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'ml',
         'unit_price' => 20,
         'current_stock' => 1500,

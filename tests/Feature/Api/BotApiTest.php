@@ -27,7 +27,7 @@ it('mencatat pembelian via API dan menambah stok', function () {
     $ingredient = Ingredient::create([
         'tenant_id' => $this->auth['tenant']->id,
         'name' => 'Tepung',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 20,
         'current_stock' => 3000,
@@ -52,7 +52,7 @@ it('mencatat penjualan via API dengan COGS dan alert', function () {
     $tepung = Ingredient::create([
         'tenant_id' => $this->auth['tenant']->id,
         'name' => 'Tepung',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 20,
         'current_stock' => 1050,
@@ -130,7 +130,7 @@ it('mencatat batch penjualan via API secara atomic', function () {
     $tepung = Ingredient::create([
         'tenant_id' => $this->auth['tenant']->id,
         'name' => 'Tepung',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 20,
         'current_stock' => 5000,
@@ -178,7 +178,7 @@ it('menampilkan daftar stok', function () {
     Ingredient::create([
         'tenant_id' => $this->auth['tenant']->id,
         'name' => 'Susu',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'ml',
         'unit_price' => 18,
         'current_stock' => 3000,
@@ -225,7 +225,7 @@ it('menampilkan riwayat pembelian via API', function () {
     $ingredient = Ingredient::create([
         'tenant_id' => $this->auth['tenant']->id,
         'name' => 'Gula',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 15,
         'current_stock' => 1000,
@@ -291,7 +291,7 @@ it('mengembalikan laporan pnl bulanan via API', function () {
     $ingredient = Ingredient::create([
         'tenant_id' => $tenantId,
         'name' => 'Biji Kopi',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 1,
         'current_stock' => 1000,
@@ -327,7 +327,7 @@ it('mengembalikan alert stok menipis via API', function () {
     Ingredient::create([
         'tenant_id' => $this->auth['tenant']->id,
         'name' => 'Susu',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'ml',
         'unit_price' => 20,
         'current_stock' => 100,
@@ -336,7 +336,7 @@ it('mengembalikan alert stok menipis via API', function () {
     Ingredient::create([
         'tenant_id' => $this->auth['tenant']->id,
         'name' => 'Gula',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 15,
         'current_stock' => 5000,
@@ -379,7 +379,7 @@ it('mengembalikan produk paling laku via API', function () {
         $ingredient = Ingredient::create([
             'tenant_id' => $tenantId,
             'name' => 'Bahan '.$product->name,
-            'unit_type' => 'gramasi',
+            'unit_type' => 'weight',
             'base_unit' => 'g',
             'unit_price' => 10,
             'current_stock' => 10000,
@@ -423,7 +423,7 @@ it('mengembalikan produk paling sepi via API', function () {
         $ingredient = Ingredient::create([
             'tenant_id' => $tenantId,
             'name' => 'Bahan '.$product->name,
-            'unit_type' => 'gramasi',
+            'unit_type' => 'weight',
             'base_unit' => 'g',
             'unit_price' => 10,
             'current_stock' => 10000,

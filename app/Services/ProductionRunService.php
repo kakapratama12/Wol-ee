@@ -484,7 +484,7 @@ class ProductionRunService
             $finishedGoods = Ingredient::create([
                 'name' => $name,
                 'item_type' => $itemType,
-                'unit_type' => 'gramasi',
+                'unit_type' => 'count',
                 'base_unit' => $product->unit,
                 'unit_price' => 0,
                 'current_stock' => 0,

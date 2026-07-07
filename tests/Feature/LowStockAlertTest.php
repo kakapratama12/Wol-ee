@@ -18,7 +18,7 @@ function makeProductWithStock(float $stock, float $minimum, float $usagePerUnit 
     authenticateTestTenant();
     $ingredient = Ingredient::create([
         'name' => 'Tepung',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 20,
         'current_stock' => $stock,

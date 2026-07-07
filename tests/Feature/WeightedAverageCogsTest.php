@@ -16,7 +16,7 @@ beforeEach(function () {
 it('menghitung weighted average setelah beberapa pembelian', function () {
     $tepung = Ingredient::create([
         'name' => 'Tepung',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'kg',
         'unit_price' => 10000,
         'weighted_avg_price' => 10000,
@@ -45,7 +45,7 @@ it('menghitung weighted average setelah beberapa pembelian', function () {
 it('snapshot COGS penjualan tidak berubah setelah pembelian baru', function () {
     $tepung = Ingredient::create([
         'name' => 'Tepung WA',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'kg',
         'unit_price' => 10000,
         'weighted_avg_price' => 10000,
@@ -89,7 +89,7 @@ it('snapshot COGS penjualan tidak berubah setelah pembelian baru', function () {
 it('COGS produk memakai weighted average bukan harga beli terakhir', function () {
     $tepung = Ingredient::create([
         'name' => 'Tepung COGS',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 12,
         'weighted_avg_price' => 10,

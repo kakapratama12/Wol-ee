@@ -12,7 +12,7 @@ beforeEach(function () {
 it('menghapus pembelian dan menyesuaikan weighted average', function () {
     $tepung = Ingredient::create([
         'name' => 'Tepung',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'kg',
         'unit_price' => 10000,
         'weighted_avg_price' => 10000,
@@ -40,7 +40,7 @@ it('menghapus pembelian dan menyesuaikan weighted average', function () {
 it('menolak hapus pembelian jika stok sudah terpakai', function () {
     $tepung = Ingredient::create([
         'name' => 'Gula',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'kg',
         'unit_price' => 8000,
         'weighted_avg_price' => 8000,
@@ -60,7 +60,7 @@ it('menolak hapus pembelian jika stok sudah terpakai', function () {
 it('memperbarui pembelian dengan bahan dan jumlah baru', function () {
     $tepung = Ingredient::create([
         'name' => 'Tepung',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'kg',
         'unit_price' => 10000,
         'weighted_avg_price' => 10000,
@@ -70,7 +70,7 @@ it('memperbarui pembelian dengan bahan dan jumlah baru', function () {
 
     $gula = Ingredient::create([
         'name' => 'Gula',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'kg',
         'unit_price' => 5000,
         'weighted_avg_price' => 5000,

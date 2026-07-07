@@ -11,7 +11,7 @@ function makeMatchaLatte(): Product
     // Harga disimpan per base_unit.
     $susu = Ingredient::create([
         'name' => 'Susu',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'ml',
         'unit_price' => 18,      // Rp 18.000/L => 18/ml
         'current_stock' => 5000,
@@ -19,7 +19,7 @@ function makeMatchaLatte(): Product
     ]);
     $matcha = Ingredient::create([
         'name' => 'Pasta Matcha',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 250,     // Rp 250.000/kg => 250/g
         'current_stock' => 1000,
@@ -27,7 +27,7 @@ function makeMatchaLatte(): Product
     ]);
     $gula = Ingredient::create([
         'name' => 'Gula',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 15,      // Rp 15.000/kg => 15/g
         'current_stock' => 5000,

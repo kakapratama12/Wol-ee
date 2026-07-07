@@ -20,7 +20,7 @@ class StoreIngredientRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('ingredients', 'name')],
             'item_type' => ['required', Rule::in(['raw_material', 'prep'])],
-            'unit_type' => ['required', Rule::in(['gramasi', 'packaged'])],
+            'unit_type' => ['required', Rule::in(['weight', 'volume', 'count'])],
             'base_unit' => ['required', 'string', 'max:20'],
 'unit_price' => ['required', 'numeric', 'min:0', 'max:99999999999'],
             'current_stock' => ['nullable', 'numeric', 'gte:0'],

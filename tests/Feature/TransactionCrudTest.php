@@ -29,7 +29,7 @@ it('owner bisa update dan delete penjualan', function () {
     $tepung = Ingredient::create([
         'tenant_id' => $this->tenant->id,
         'name' => 'Tepung',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 20,
         'current_stock' => 5000,
@@ -76,7 +76,7 @@ it('owner bisa update dan delete pembelian', function () {
     $ingredient = Ingredient::create([
         'tenant_id' => $this->tenant->id,
         'name' => 'Susu',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'ml',
         'unit_price' => 18,
         'current_stock' => 0,
@@ -156,7 +156,7 @@ it('menolak hapus pembelian jika stok tidak cukup', function () {
     $ingredient = Ingredient::create([
         'tenant_id' => $this->tenant->id,
         'name' => 'Mentega',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 50,
         'current_stock' => 0,

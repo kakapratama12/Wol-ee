@@ -19,7 +19,7 @@ class CogsService
     }
 
     /**
-     * COGS per 1 porsi produk = Σ (gramasi resep × harga per base_unit bahan).
+     * COGS per 1 porsi produk = Σ (quantity resep × harga per base_unit bahan).
      * For batch products: divide by estimated_yield_per_batch to get per-unit COGS.
      */
     public function cogsForProduct(Product $product): float

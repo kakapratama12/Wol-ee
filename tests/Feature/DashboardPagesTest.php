@@ -62,7 +62,7 @@ it('admin tidak bisa membuat bahan (owner only)', function () {
 
     $this->post('/inventory', [
         'name' => 'Tepung',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 20,
         'minimum_stock' => 100,
@@ -76,7 +76,7 @@ it('menampilkan chart bulanan dan pembelian terbaru di dashboard', function () {
     $ingredient = Ingredient::create([
         'tenant_id' => $user->tenant_id,
         'name' => 'Susu',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'ml',
         'unit_price' => 20,
         'current_stock' => 1000,

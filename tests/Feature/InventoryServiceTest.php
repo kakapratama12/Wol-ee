@@ -18,7 +18,7 @@ beforeEach(function () {
 it('recordPurchase creates Transaction + StockMovement + updates ingredient', function () {
     $ingredient = Ingredient::create([
         'name' => 'Tepung Terigu',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'kg',
         'unit_price' => 10000,
         'weighted_avg_price' => 10000,
@@ -61,7 +61,7 @@ it('recordPurchase creates Transaction + StockMovement + updates ingredient', fu
 it('recordPurchase computes weighted average across multiple purchases', function () {
     $ingredient = Ingredient::create([
         'name' => 'Gula Pasir',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'kg',
         'unit_price' => 8000,
         'weighted_avg_price' => 8000,
@@ -86,7 +86,7 @@ it('recordPurchase computes weighted average across multiple purchases', functio
 it('recordPurchase creates PriceHistory when price changes', function () {
     $ingredient = Ingredient::create([
         'name' => 'Susu Segar',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'ml',
         'unit_price' => 5000,
         'weighted_avg_price' => 5000,
@@ -104,7 +104,7 @@ it('recordPurchase creates PriceHistory when price changes', function () {
 it('recordPurchase stores idempotency key', function () {
     $ingredient = Ingredient::create([
         'name' => 'Cokelat Bubuk',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 200,
         'weighted_avg_price' => 200,
@@ -133,7 +133,7 @@ it('recordPurchase stores idempotency key', function () {
 it('adjustStock sets quantity to an absolute value and records delta', function () {
     $ingredient = Ingredient::create([
         'name' => 'Tepung Beras',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'kg',
         'unit_price' => 7000,
         'weighted_avg_price' => 7000,
@@ -155,7 +155,7 @@ it('adjustStock sets quantity to an absolute value and records delta', function 
 it('adjustStock handles decrease correctly', function () {
     $ingredient = Ingredient::create([
         'name' => 'Mentega',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'kg',
         'unit_price' => 30000,
         'weighted_avg_price' => 30000,
@@ -173,7 +173,7 @@ it('adjustStock handles decrease correctly', function () {
 it('adjustStock sets stock to zero', function () {
     $ingredient = Ingredient::create([
         'name' => 'Garam',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'kg',
         'unit_price' => 3000,
         'weighted_avg_price' => 3000,
@@ -191,7 +191,7 @@ it('adjustStock sets stock to zero', function () {
 it('adjustStock with zero delta creates zero-quantity movement', function () {
     $ingredient = Ingredient::create([
         'name' => 'Kayu Manis',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 50,
         'weighted_avg_price' => 50,
@@ -215,7 +215,7 @@ it('adjustStock with zero delta creates zero-quantity movement', function () {
 it('reversePurchase undoes the original purchase stock effect', function () {
     $ingredient = Ingredient::create([
         'name' => 'Telur Ayam',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'butir',
         'unit_price' => 2500,
         'weighted_avg_price' => 2500,
@@ -239,7 +239,7 @@ it('reversePurchase undoes the original purchase stock effect', function () {
 it('reversePurchase creates reversal StockMovement', function () {
     $ingredient = Ingredient::create([
         'name' => 'Madu',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'ml',
         'unit_price' => 15000,
         'weighted_avg_price' => 15000,
@@ -266,7 +266,7 @@ it('reversePurchase creates reversal StockMovement', function () {
 it('reversePurchase deletes the original purchase StockMovement', function () {
     $ingredient = Ingredient::create([
         'name' => 'Vanili',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 50000,
         'weighted_avg_price' => 50000,
@@ -297,7 +297,7 @@ it('reversePurchase deletes the original purchase StockMovement', function () {
 it('reversePurchase throws when stock is insufficient', function () {
     $ingredient = Ingredient::create([
         'name' => 'Matcha',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 300000,
         'weighted_avg_price' => 300000,
@@ -318,7 +318,7 @@ it('reversePurchase throws when stock is insufficient', function () {
 it('reversePurchase with sufficient stock after partial usage succeeds', function () {
     $ingredient = Ingredient::create([
         'name' => 'Kopi Arabica',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 80000,
         'weighted_avg_price' => 80000,
@@ -347,7 +347,7 @@ it('reversePurchase with sufficient stock after partial usage succeeds', functio
 it('recordPurchase with zero quantity creates zero-stock transaction', function () {
     $ingredient = Ingredient::create([
         'name' => 'Pewarna',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'ml',
         'unit_price' => 500,
         'weighted_avg_price' => 500,
@@ -366,7 +366,7 @@ it('recordPurchase with zero quantity creates zero-stock transaction', function 
 it('adjustStock to negative value is allowed by the service', function () {
     $ingredient = Ingredient::create([
         'name' => 'Bawang Putih',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'kg',
         'unit_price' => 30000,
         'weighted_avg_price' => 30000,
@@ -386,7 +386,7 @@ it('adjustStock to negative value is allowed by the service', function () {
 it('recordPurchase with very small quantity preserves precision', function () {
     $ingredient = Ingredient::create([
         'name' => 'Ragi Instan',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 15,
         'weighted_avg_price' => 15,
@@ -405,7 +405,7 @@ it('recordPurchase with very small quantity preserves precision', function () {
 it('adjustStock persists note and user_id', function () {
     $ingredient = Ingredient::create([
         'name' => 'Keju Cheddar',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'kg',
         'unit_price' => 90000,
         'weighted_avg_price' => 90000,
@@ -429,7 +429,7 @@ it('adjustStock persists note and user_id', function () {
 it('recordPurchase records source and occurred_at', function () {
     $ingredient = Ingredient::create([
         'name' => 'Santan',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'ml',
         'unit_price' => 8000,
         'weighted_avg_price' => 8000,

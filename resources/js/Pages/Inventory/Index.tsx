@@ -42,7 +42,7 @@ interface Props {
 const emptyForm = {
     name: '',
     item_type: 'raw_material',
-    unit_type: 'gramasi',
+    unit_type: 'weight',
     base_unit: 'g',
     unit_price: '',
     current_stock: '',
@@ -155,7 +155,7 @@ export default function InventoryIndex({ ingredients, itemType, counts, canManag
                                 <TableRow key={ing.id}>
                                     <TableCell className="font-medium">{ing.name}</TableCell>
                                     <TableCell className="capitalize text-muted-foreground">
-                                        {ing.unit_type}
+                                        {({ weight: 'Berat', volume: 'Volume', count: 'Jumlah' }[ing.unit_type] || ing.unit_type)}
                                     </TableCell>
                                     <TableCell>
                                         {formatRupiah(ing.unit_price)}
@@ -238,9 +238,13 @@ export default function InventoryIndex({ ingredients, itemType, counts, canManag
                                 value={form.data.unit_type}
                                 onChange={(e) => form.setData('unit_type', e.target.value)}
                             >
-                                <option value="gramasi">Gramasi</option>
-                                <option value="packaged">Packaged</option>
+                                <option value="weight">Berat (g, kg, ons)</option>
+                                <option value="volume">Volume (ml, liter)</option>
+                                <option value="count">Jumlah (pcs, butir, sachet, pack)</option>
                             </Select>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Berat: tepung, gula, kopi. Volume: susu, sirup, air. Jumlah: telur, sachet, botol.
+                            </p>
                         </div>
                         <div>
                             <Label htmlFor="base_unit">Satuan dasar</Label>

@@ -14,7 +14,7 @@ it('mengisolasi data antar tenant', function () {
     $this->actingAs($userA);
     Ingredient::create([
         'name' => 'Tepung A',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 20,
         'current_stock' => 1000,
@@ -24,7 +24,7 @@ it('mengisolasi data antar tenant', function () {
     $this->actingAs($userB);
     Ingredient::create([
         'name' => 'Tepung B',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 25,
         'current_stock' => 500,
@@ -43,7 +43,7 @@ it('menolak akses user tanpa tenant ke data scoped', function () {
     Ingredient::withoutGlobalScope('tenant')->create([
         'tenant_id' => $tenant->id,
         'name' => 'Gula',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 15,
         'current_stock' => 100,

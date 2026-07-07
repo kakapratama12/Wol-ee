@@ -119,7 +119,7 @@ export default function PrepStockIndex({ prepItems, canManage }: Props) {
                                                 <StockStatusBadge status={item.status} />
                                             </CardTitle>
                                             <p className="text-sm text-muted-foreground">
-                                                {item.unit_type} &middot; satuan: {item.base_unit}
+                                                {({ weight: 'Berat', volume: 'Volume', count: 'Jumlah' }[item.unit_type] || item.unit_type)} &middot; satuan: {item.base_unit}
                                             </p>
                                         </div>
                                         <div className="text-right">

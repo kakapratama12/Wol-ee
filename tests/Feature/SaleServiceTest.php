@@ -13,7 +13,7 @@ function setupProduct(): Product
     authenticateTestTenant();
     $tepung = Ingredient::create([
         'name' => 'Tepung',
-        'unit_type' => 'gramasi',
+        'unit_type' => 'weight',
         'base_unit' => 'g',
         'unit_price' => 20,       // Rp 20/g
         'current_stock' => 5000,  // 5kg

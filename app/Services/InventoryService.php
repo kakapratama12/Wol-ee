@@ -269,7 +269,7 @@ class InventoryService
             $finishedGoods = Ingredient::create([
                 'name' => $finishedGoodsName,
                 'item_type' => Ingredient::ITEM_FINISHED_GOODS,
-                'unit_type' => 'gramasi',
+                'unit_type' => 'count',
                 'base_unit' => $product->unit,
                 'unit_price' => 0,
                 'current_stock' => 0,

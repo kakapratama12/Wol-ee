@@ -21,7 +21,7 @@ export default function CreateIngredientModal({
     const [form, setForm] = useState({
         name: '',
         item_type: defaultItemType,
-        unit_type: 'gramasi',
+        unit_type: 'weight',
         base_unit: '',
         unit_price: '',
         current_stock: '',
@@ -74,7 +74,7 @@ export default function CreateIngredientModal({
         setForm({
             name: '',
             item_type: defaultItemType,
-            unit_type: 'gramasi',
+            unit_type: 'weight',
             base_unit: '',
             unit_price: '',
             current_stock: '',
@@ -122,9 +122,13 @@ export default function CreateIngredientModal({
                                 value={form.unit_type}
                                 onChange={(e) => setForm({ ...form, unit_type: e.target.value })}
                             >
-                                <option value="gramasi">Gramasi (timbang)</option>
-                                <option value="packaged">Packaged (pcs/kg)</option>
+                                <option value="weight">Berat (g, kg, ons)</option>
+                                <option value="volume">Volume (ml, liter)</option>
+                                <option value="count">Jumlah (pcs, butir, sachet, pack)</option>
                             </select>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Berat: tepung, gula, kopi. Volume: susu, sirup, air. Jumlah: telur, sachet, botol.
+                            </p>
                         </div>
                         <div>
                             <Label htmlFor="ing-unit">Satuan dasar</Label>
