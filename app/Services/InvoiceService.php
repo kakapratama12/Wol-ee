@@ -67,6 +67,11 @@ class InvoiceService
             ? round(array_sum(array_map(fn ($item) => (float) $item['quantity'] * (float) $item['unit_price'], $items)), 2)
             : 0;
 
+        // If no items, use the flat amount from request
+        if ($subtotal === 0 && ! empty($data['amount']) && (float) $data['amount'] > 0) {
+            $subtotal = (float) $data['amount'];
+        }
+
         // Calculate total with fees
         $amount = $this->calculateTotal($subtotal, $fees);
 
