@@ -68,6 +68,7 @@ class BotInputHistoryController extends Controller
 
     /**
      * Get edit URL for the entity.
+     * For entities with inline editing (modal), use query param to auto-open.
      */
     private function getEditUrl(?string $entityType, ?int $entityId): ?string
     {
@@ -76,13 +77,13 @@ class BotInputHistoryController extends Controller
         }
 
         return match ($entityType) {
-            'product' => "/products/{$entityId}/edit",
-            'ingredient' => "/inventory/{$entityId}/edit",
-            'partner' => "/partners/{$entityId}/edit",
+            'product' => "/products?edit={$entityId}",
+            'ingredient' => "/inventory?edit={$entityId}",
+            'partner' => "/partners?edit={$entityId}",
             'invoice' => "/invoices/{$entityId}/edit",
-            'transaction' => "/transactions/{$entityId}/edit",
-            'sale' => "/sales/{$entityId}/edit",
-            'expense' => "/expenses/{$entityId}/edit",
+            'transaction' => "/transactions?edit={$entityId}",
+            'sale' => "/sales?edit={$entityId}",
+            'expense' => "/expenses?edit={$entityId}",
             default => null,
         };
     }
