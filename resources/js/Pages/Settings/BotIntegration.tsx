@@ -1,6 +1,6 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useRef, useState } from 'react';
-import { Bot, Check, Copy, RefreshCw } from 'lucide-react';
+import { Bot, Check, Copy, History, RefreshCw } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -113,6 +113,13 @@ export default function BotIntegration({ hasToken, tenantName, plainToken }: Pro
                                 {hasToken ? 'Regenerate Token' : 'Generate Token'}
                             </Button>
                         </div>
+
+                        <Link href="/settings/bot/history">
+                            <Button variant="outline" className="w-full">
+                                <History className="mr-2 h-4 w-4" />
+                                Lihat Riwayat Input Bot
+                            </Button>
+                        </Link>
                     </CardContent>
                 </Card>
             </div>
