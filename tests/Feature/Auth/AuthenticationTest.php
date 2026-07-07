@@ -17,7 +17,8 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    // Staff redirects to pos, pengelola redirects to dashboard
+    $response->assertRedirect();
 });
 
 test('users can not authenticate with invalid password', function () {

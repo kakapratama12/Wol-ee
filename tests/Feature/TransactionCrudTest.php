@@ -16,9 +16,9 @@ beforeEach(function () {
         'role' => 'pengelola',
         'email_verified_at' => now(),
     ]);
-    $this->admin = User::factory()->create([
+    $this->staff = User::factory()->create([
         'tenant_id' => $this->tenant->id,
-        'role' => 'admin',
+        'role' => 'staff',
         'email_verified_at' => now(),
     ]);
 });
@@ -108,7 +108,7 @@ it('owner bisa update biaya operasional', function () {
     $this->actingAs($this->owner);
 
     $this->post('/expenses', [
-        'category' => 'Listrik',
+        'category' => 'operasional',
         'description' => 'PLN',
         'amount' => 500000,
         'period_month' => 6,
@@ -118,7 +118,7 @@ it('owner bisa update biaya operasional', function () {
     $expense = Expense::first();
 
     $this->put("/expenses/{$expense->id}", [
-        'category' => 'Listrik',
+        'category' => 'operasional',
         'description' => 'PLN Juni',
         'amount' => 550000,
         'period_month' => 6,
@@ -128,11 +128,11 @@ it('owner bisa update biaya operasional', function () {
     expect((float) $expense->fresh()->amount)->toBe(550000.0);
 });
 
-it('admin tidak bisa update biaya operasional', function () {
+it('staff tidak bisa update biaya operasional', function () {
     $this->actingAs($this->owner);
 
     $this->post('/expenses', [
-        'category' => 'Sewa',
+        'category' => 'operasional',
         'amount' => 3000000,
         'period_month' => 6,
         'period_year' => 2026,
@@ -140,10 +140,10 @@ it('admin tidak bisa update biaya operasional', function () {
 
     $expense = Expense::first();
 
-    $this->actingAs($this->admin);
+    $this->actingAs($this->staff);
 
     $this->put("/expenses/{$expense->id}", [
-        'category' => 'Sewa',
+        'category' => 'operasional',
         'amount' => 3500000,
         'period_month' => 6,
         'period_year' => 2026,
@@ -151,7 +151,7 @@ it('admin tidak bisa update biaya operasional', function () {
 });
 
 it('menolak hapus pembelian jika stok tidak cukup', function () {
-    $this->actingAs($this->admin);
+    $this->actingAs($this->owner);
 
     $ingredient = Ingredient::create([
         'tenant_id' => $this->tenant->id,
@@ -174,5 +174,5 @@ it('menolak hapus pembelian jika stok tidak cukup', function () {
 
     $this->delete("/transactions/{$transaction->id}")
         ->assertRedirect()
-        ->assertSessionHasErrors('quantity');
+        ->assertSessionHasErrors('error');
 });

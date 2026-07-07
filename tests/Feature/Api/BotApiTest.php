@@ -308,7 +308,7 @@ it('mengembalikan laporan pnl bulanan via API', function () {
 
     \App\Models\Expense::create([
         'tenant_id' => $tenantId,
-        'category' => 'Listrik',
+        'category' => 'operasional',
         'description' => 'PLN',
         'amount' => 500000,
         'period_month' => now()->month,
@@ -482,7 +482,7 @@ it('memberi kuota ai lebih besar untuk tenant pro', function () {
 
 it('mencatat biaya operasional via API bot', function () {
     $response = $this->postJson('/api/expenses', [
-        'category' => 'Listrik',
+        'category' => 'operasional',
         'description' => 'bayar listrik bulan ini 1.5jt',
         'amount' => 1500000,
         'period_month' => 6,
@@ -491,12 +491,12 @@ it('mencatat biaya operasional via API bot', function () {
 
     $response->assertCreated()
         ->assertJsonPath('success', true)
-        ->assertJsonPath('data.category', 'Listrik')
+        ->assertJsonPath('data.category', 'operasional')
         ->assertJsonPath('data.amount', 1500000);
 
     $this->assertDatabaseHas('expenses', [
         'tenant_id' => $this->auth['tenant']->id,
-        'category' => 'Listrik',
+        'category' => 'operasional',
         'amount' => 1500000,
     ]);
 });
