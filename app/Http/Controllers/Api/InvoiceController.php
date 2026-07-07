@@ -71,6 +71,27 @@ class InvoiceController extends Controller
         ], 201);
     }
 
+    public function pdf(Invoice $invoice)
+    {
+        try {
+            $invoice->load('partner', 'items', 'fees');
+            $tenant = $invoice->partner->tenant ?? auth()->user()->tenant;
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('invoices.pdf', [
+                'invoice' => $invoice,
+                'tenant' => $tenant,
+                'subtotal' => $invoice->subtotal,
+            ]);
+
+            return response($pdf->output(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$invoice->invoice_number.'.pdf"',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Gagal generate PDF: '.$e->getMessage()], 500);
+        }
+    }
+
     public function show(Invoice $invoice): JsonResponse
     {
         return response()->json($this->invoiceResource($invoice->load('partner')));

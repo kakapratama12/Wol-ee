@@ -86,6 +86,7 @@ Route::middleware(['bot.token', 'throttle:bot'])->group(function () {
     Route::get('/invoices', [InvoiceController::class, 'index']);
     Route::post('/invoices', [InvoiceController::class, 'store']);
     Route::get('/invoices/{invoice}', [InvoiceController::class, 'show']);
+    Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf']);
     Route::put('/invoices/{invoice}', [InvoiceController::class, 'update']);
     Route::post('/invoices/{invoice}/pay', [InvoiceController::class, 'pay']);
 
