@@ -49,8 +49,7 @@ class SaleController extends Controller
             $product = Product::findOrFail($data['product_id']);
 
             $idempotencyKey = $data['idempotency_key'] ?? null;
-
-            $sales->record(
+            $sale = $sales->record(
                 product: $product,
                 quantity: (int) $data['quantity'],
                 unitPrice: isset($data['unit_price']) ? (float) $data['unit_price'] : null,
@@ -60,8 +59,13 @@ class SaleController extends Controller
                 occurredAt: $request->date('occurred_at'),
                 idempotencyKey: $idempotencyKey,
             );
+            $warning = $sale->unit_price <= 0
+                ? 'Peringatan: Harga jual 0 — produk belum di-setup harga atau harga sengaja 0.'
+                : null;
 
-            return back()->with('success', 'Penjualan tercatat & stok dikurangi.');
+            return back()
+                ->with('success', 'Penjualan tercatat & stok dikurangi.')
+                ->with('warning', $warning);
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()])->withInput();
         }

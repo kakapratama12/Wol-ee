@@ -107,6 +107,9 @@ class SaleController extends Controller
             'profit' => (float) $sale->profit,
             'margin' => (float) $sale->margin,
             'alerts' => $this->lowStockAlerts(),
+            'warning' => $sale->unit_price <= 0
+                ? 'Harga jual 0 — produk belum di-setup harga atau harga sengaja 0.'
+                : null,
         ], 201);
     }
 
