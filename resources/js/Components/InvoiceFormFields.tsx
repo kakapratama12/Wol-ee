@@ -161,7 +161,7 @@ export default function InvoiceFormFields({
                                     <Input
                                         type="number"
                                         min="0"
-                                        step={fee.type === 'percentage' ? '0.5' : '1000'}
+                                        step={fee.type === 'percentage' ? '0.5' : '1'}
                                         value={fee.value}
                                         onChange={(e) => onUpdateFee(i, 'value', e.target.value)}
                                         placeholder={fee.type === 'percentage' ? '11' : '0'}
